@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>短剧提示词库</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<style>
+:root{
+  --bg:#101010; --bg-2:#161618; --panel:#1b1b1f; --panel-2:#222227;
+  --line:rgba(255,255,255,.08); --line-2:rgba(255,255,255,.14);
+  --text:#f8fafc; --text-2:rgba(255,255,255,.72); --text-3:rgba(255,255,255,.46);
+  --brand:#731dfb; --brand-2:#8b45ff; --brand-soft:rgba(115,29,251,.16);
+  --yellow:#ffe000; --green:#3ddc97; --amber:#f5b94a; --red:#ff5d6c;
+  --glass:linear-gradient(-17deg,rgba(214,225,255,.06),rgba(214,225,255,.11));
+  --r:12px; --r-lg:18px;
+  --font:Inter,"Noto Sans SC",-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font:14px/1.6 var(--font);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+a.cta,a.btn-white,a.btn-dark{text-decoration:none}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+::selection{background:var(--brand);color:#fff}
+.app{display:grid;grid-template-columns:244px 1fr;min-height:100vh}
+
+/* ---------- sidebar ---------- */
+.side{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:16px 12px;gap:6px;border-right:1px solid var(--line);background:var(--bg)}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 14px;font-weight:700;font-size:15px}
+.logo{width:30px;height:30px;border-radius:9px;background:#fff;display:grid;place-items:center}
+.logo svg{width:18px;height:18px}
+.nav{flex:1;overflow:auto;scrollbar-width:none;display:flex;flex-direction:column;gap:2px}
+.nav::-webkit-scrollbar{display:none}
+.nav-sep{height:1px;background:var(--line);margin:10px 8px}
+.nav-label{font-size:11px;letter-spacing:.08em;color:var(--text-3);padding:8px 10px 4px;text-transform:uppercase}
+.nav a{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:10px;text-decoration:none;color:#e3e3e3;font-size:14px;font-weight:500}
+.nav a:hover{background:rgba(255,255,255,.05)}
+.nav a.on{background:rgba(255,255,255,.08);color:#fff}
+.nav a.sub{padding-left:38px;font-size:13px;color:var(--text-2);font-weight:400}
+.nav a.sub.on{color:#fff}
+.nav svg{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:.9}
+.nav .n{margin-left:auto;font-size:11px;color:var(--text-3)}
+.badge-new{margin-left:auto;font-size:10px;font-weight:800;font-style:italic;background:var(--brand);color:#fff;padding:1px 7px;border-radius:5px;transform:skewX(-8deg)}
+.side-foot{display:flex;flex-direction:column;gap:8px;padding-top:8px}
+.tip{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:var(--r);border:1px solid var(--line);color:#e8c46a;font-size:13px;background:var(--bg-2)}
+.cta{height:46px;border-radius:var(--r);background:var(--brand);color:#fff;font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)}
+.cta:hover{background:var(--brand-2)}
+
+/* ---------- main ---------- */
+main{min-width:0}
+.wrap{max-width:1120px;margin:0 auto;padding:0 32px 80px}
+.hero{position:relative;overflow:hidden;padding:64px 0 34px;text-align:center;isolation:isolate}
+.hero::before{content:"";position:absolute;inset:-40% -10% 0;z-index:-1;
+  background:radial-gradient(closest-side at 50% 55%,rgba(170,20,40,.35),transparent 70%),radial-gradient(closest-side at 70% 30%,rgba(115,29,251,.22),transparent 70%)}
+.hero .rings{position:absolute;left:50%;top:52%;width:640px;height:640px;transform:translate(-50%,-50%);z-index:-1;opacity:.35}
+.hero h1{margin:0 auto;font-family:"Noto Sans SC",var(--font);font-weight:900;font-size:clamp(30px,5vw,52px);line-height:1.15;letter-spacing:.02em;
+  background:linear-gradient(90deg,#aeb4be 0%,#f2f4f7 28%,#fff 50%,#f2f4f7 72%,#aeb4be 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--text-2);margin:14px auto 0;max-width:560px}
+
+.composer{margin:28px auto 0;max-width:760px;text-align:left;border-radius:var(--r-lg);border:1px solid var(--line-2);background:rgba(22,22,26,.82);backdrop-filter:blur(12px);padding:14px 16px 14px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+.composer .top{display:flex;align-items:center;gap:10px;font-size:11px;letter-spacing:.08em;color:var(--text-3);text-transform:uppercase}
+.search{display:flex;align-items:center;gap:10px;margin:10px 0 12px}
+.search svg{width:18px;height:18px;stroke:var(--text-3);fill:none;stroke-width:2}
+.search input{flex:1;min-width:0;background:none;border:0;outline:0;color:var(--text);font:15px var(--font)}
+.search input::placeholder{color:var(--text-3)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:inline-flex;padding:3px;border-radius:999px;background:var(--glass);gap:2px;max-width:100%;overflow-x:auto;scrollbar-width:none}
+.seg button{height:30px;padding:0 13px;border-radius:999px;font-size:13px;font-weight:500;color:var(--text-2);white-space:nowrap}
+.seg button.on{background:#fff;color:#111214}
+.chip-btn{height:36px;padding:0 14px;border-radius:999px;background:var(--glass);color:var(--text-2);font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:7px}
+.chip-btn.on{color:#fff;box-shadow:inset 0 0 0 1px var(--brand-2);background:var(--brand-soft)}
+.chip-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+
+.sec-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:44px 0 16px}
+.sec-head h2{margin:0;font-family:"Noto Sans SC",var(--font);font-weight:900;font-size:26px}
+.sec-head .meta{color:var(--text-3);font-size:13px}
+.sec-head .sp{flex:1}
+.btn-white{height:40px;padding:0 16px;border-radius:10px;background:#fff;color:#111;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:8px}
+.btn-dark{height:40px;padding:0 14px;border-radius:10px;background:var(--panel);border:1px solid var(--line);color:#fff;font-size:13px;display:inline-flex;align-items:center;gap:8px}
+.btn-white svg,.btn-dark svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.card{position:relative;display:flex;flex-direction:column;gap:10px;text-align:left;min-height:168px;padding:16px;border-radius:var(--r-lg);background:linear-gradient(180deg,#1c1c20,#151517);border:1px solid var(--line);transition:border-color .15s,transform .15s}
+.card:hover{border-color:rgba(139,69,255,.6);transform:translateY(-2px)}
+.card .id{font:600 12px/1 Inter,monospace;color:var(--text-3)}
+.card h3{margin:0;font-size:15px;font-weight:700;line-height:1.45}
+.card .desc{color:var(--text-3);font-size:12.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card .tags{margin-top:auto;display:flex;flex-wrap:wrap;gap:6px}
+.card .tl{position:absolute;top:14px;right:14px;display:flex;gap:6px}
+.tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:rgba(255,255,255,.07);color:var(--text-2);white-space:nowrap}
+.tag.prod{background:var(--yellow);color:#111}
+.tag.ref{background:rgba(245,185,74,.14);color:var(--amber)}
+.tag.int{background:var(--brand-soft);color:#c9a8ff}
+.tag.patch{background:rgba(61,220,151,.12);color:var(--green)}
+.tag.tool{background:rgba(255,255,255,.05);color:var(--text-3)}
+.empty{padding:60px 0;text-align:center;color:var(--text-3)}
+
+/* ---------- detail ---------- */
+.detail{max-width:860px;margin:0 auto;padding:36px 0 0}
+.crumb{display:flex;gap:8px;align-items:center;color:var(--text-3);font-size:13px;margin-bottom:18px;flex-wrap:wrap}
+.crumb a{text-decoration:none}.crumb a:hover{color:#fff}
+.detail h1{font-family:"Noto Sans SC",var(--font);font-weight:900;font-size:clamp(24px,3.4vw,34px);line-height:1.3;margin:0 0 12px}
+.detail .tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:24px}
+.md{color:var(--text-2);font-size:14.5px;line-height:1.8}
+.md strong{color:#fff}
+.md h2,.md h3,.md h4{color:#fff;margin:28px 0 10px}
+.md a{color:#c9a8ff}
+.md blockquote{margin:14px 0;padding:12px 16px;border-radius:var(--r);background:var(--brand-soft);border:1px solid rgba(139,69,255,.35);color:#e6dbff}
+.md blockquote p{margin:0}
+.md table{width:100%;border-collapse:collapse;font-size:13px;margin:14px 0;display:block;overflow-x:auto}
+.md th,.md td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+.md th{background:var(--panel);color:#fff}
+.md code{font-family:ui-monospace,Consolas,monospace;background:rgba(255,255,255,.07);padding:1px 5px;border-radius:5px;font-size:.92em}
+.code{position:relative;margin:16px 0;border-radius:var(--r-lg);border:1px solid var(--line-2);background:#0b0b0d;overflow:hidden}
+.code .bar{display:flex;align-items:center;gap:8px;padding:8px 10px 8px 14px;border-bottom:1px solid var(--line);font-size:12px;color:var(--text-3)}
+.code .bar .sp{flex:1}
+.code pre{margin:0;padding:16px;max-height:520px;overflow:auto;white-space:pre-wrap;word-break:break-word;font:13px/1.75 "Noto Sans SC",ui-monospace,Consolas,monospace;color:#e9e9ee}
+.copy{height:30px;padding:0 12px;border-radius:8px;background:var(--brand);color:#fff;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.copy:hover{background:var(--brand-2)}
+.copy.done{background:var(--green);color:#062}
+.copy svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2}
+.pager{display:flex;gap:12px;margin-top:40px}
+.pager a{flex:1;padding:14px 16px;border-radius:var(--r);border:1px solid var(--line);text-decoration:none;background:var(--bg-2)}
+.pager a:hover{border-color:var(--brand-2)}
+.pager small{display:block;color:var(--text-3);font-size:12px}
+.pager .r{text-align:right}
+
+/* ---------- assembler ---------- */
+.asm{display:grid;grid-template-columns:330px 1fr;gap:18px;margin-top:8px;align-items:start}
+.panel{border-radius:var(--r-lg);border:1px solid var(--line);background:var(--bg-2);padding:16px}
+.panel h4{margin:0 0 10px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);font-weight:600}
+.panel + .panel{margin-top:14px}
+.toggle{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.toggle:first-of-type{border-top:0}
+.toggle .t{flex:1}
+.toggle .t b{display:block;font-size:13.5px}
+.toggle .t span{font-size:12px;color:var(--text-3)}
+.sw{position:relative;width:38px;height:22px;flex:none;border-radius:99px;background:rgba(255,255,255,.14);transition:background .15s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s}
+.sw.on{background:var(--brand)}
+.sw.on::after{transform:translateX(16px)}
+.warn{margin-top:8px;font-size:12px;color:var(--amber)}
+textarea.style{width:100%;min-height:150px;margin-top:10px;resize:vertical;border-radius:10px;border:1px solid var(--line);background:#0b0b0d;color:var(--text);padding:10px;font:12.5px/1.7 var(--font)}
+.plist a{display:flex;gap:8px;padding:6px 0;text-decoration:none;font-size:13px;color:var(--text-2);border-top:1px dashed var(--line)}
+.plist a:hover{color:#fff}
+.plist .s{flex:none;width:28px;color:var(--green);font-weight:700}
+.stat{display:flex;gap:18px;font-size:12px;color:var(--text-3);margin-bottom:10px}
+.stat b{color:#fff;font-size:14px}
+
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);opacity:0;background:#fff;color:#111;padding:9px 16px;border-radius:999px;font-weight:600;font-size:13px;transition:.2s;pointer-events:none;z-index:9}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.menu-btn{display:none}
+
+@media (max-width:900px){
+  .asm{grid-template-columns:1fr}
+}
+@media (max-width:760px){
+  .app{grid-template-columns:1fr}
+  .side{position:fixed;inset:0 auto 0 0;width:260px;z-index:8;transform:translateX(-100%);transition:transform .2s;box-shadow:20px 0 60px rgba(0,0,0,.6)}
+  .side.open{transform:none}
+  .menu-btn{display:inline-flex;position:sticky;top:0;z-index:7;width:100%;align-items:center;gap:10px;padding:12px 16px;background:rgba(16,16,16,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);font-weight:700}
+  .menu-btn svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2}
+  .wrap{padding:0 16px 60px}
+  .hero{padding:36px 0 20px}
+  .grid{grid-template-columns:1fr}
+  .sec-head{margin-top:30px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side" id="side">
+    <div class="brand">
+      <span class="logo"><svg viewBox="0 0 24 24"><path d="M4 18 9 7l4 7 3-5 4 9" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      短剧提示词库
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-foot">
+      <div class="tip"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM17 6h3v2a3 3 0 0 1-3 3M7 6H4v2a3 3 0 0 0 3 3"/></svg><span id="ver"></span></div>
+      <a class="cta" href="#/assembler"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 4 5 5-11 11H4v-5L15 4Z"/></svg>组装 6.0 视频提示词</a>
+    </div>
+  </aside>
+  <main>
+    <button class="menu-btn" id="menuBtn"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>短剧提示词库</button>
+    <div class="wrap" id="view"></div>
+  </main>
+</div>
+<div class="toast" id="toast">已复制</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+
+const ICONS = {
+  home:'<path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-9Z"/>',
+  bulb:'<path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2Z"/>',
+  book:'<path d="M4 5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2V5Z"/><path d="M4 19a2 2 0 0 1 2-2h14"/>',
+  pen:'<path d="m15 4 5 5-11 11H4v-5L15 4Z"/>',
+  film:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/>',
+  shield:'<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3Z"/>',
+  box:'<path d="M3 7h18v13H3zM2 3h20v4H2zM10 11h4"/>',
+  wand:'<path d="m4 20 12-12M14 4l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2ZM19 11l.6 1.4L21 13l-1.4.6L19 15l-.6-1.4L17 13l1.4-.6L19 11Z"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  link:'<path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>',
+  copy:'<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  dl:'<path d="M12 4v12m0 0-5-5m5 5 5-5M4 20h16"/>',
+  check:'<path d="M5 12l5 5L20 7"/>',
+};
+const ico = n => `<svg viewBox="0 0 24 24">${ICONS[n]}</svg>`;
+
+const NAV = [
+  {key:'01-outline', icon:'bulb', label:'立项与大纲'},
+  {key:'02-adaptation', icon:'book', label:'小说转剧本'},
+  {key:'03-revision', icon:'pen', label:'剧本精修', subs:[
+    ['03-revision/dialogue','对白与台词'],['03-revision/de-ai','去 AI 味'],['03-revision/trim','删减'],
+    ['03-revision/review','审核与检查'],['03-revision/shootability','可拍性 / OS·VO'],['03-revision/craft','其他手法']]},
+  {key:'06-video', icon:'film', label:'视频生成', subs:[
+    ['06-video/core','6.0 主模板'],['06-video/patches','6.0 补丁'],['06-video/styles','画风块'],['06-video/reference','参考与示例']]},
+  {key:'07-compliance', icon:'shield', label:'合规'},
+  {key:'archive', icon:'box', label:'归档'},
+];
+const GROUP_LABEL = Object.fromEntries(DATA.groups.map(g => [g.key, g.label]));
+const ENTRIES = DATA.entries.slice().sort((a,b)=>cmpId(a.id,b.id));
+function cmpId(a,b){const x=a.split('.').map(Number),y=b.split('.').map(Number);return x[0]-y[0]||x[1]-y[1]}
+const byId = Object.fromEntries(ENTRIES.map(e=>[e.id,e]));
+const inFolder = k => ENTRIES.filter(e => e.folder === k || e.folder.startsWith(k + '/'));
+
+/* ---------- helpers ---------- */
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function store(k, v){ try{ if(v===undefined) return JSON.parse(localStorage.getItem('pl.'+k)); localStorage.setItem('pl.'+k, JSON.stringify(v)); }catch(e){ return null } }
+function toast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),1400)}
+async function copyText(text, btn){
+  try{ await navigator.clipboard.writeText(text) }
+  catch(e){ const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove() }
+  toast('已复制到剪贴板');
+  if(btn){btn.classList.add('done');const h=btn.innerHTML;btn.innerHTML=ico('check')+'已复制';setTimeout(()=>{btn.classList.remove('done');btn.innerHTML=h},1300)}
+}
+function firstCode(md){const m=md.match(/```[^\n]*\n([\s\S]*?)\n```/);return m?m[1]:''}
+function usage(md){const m=md.match(/\*\*用法\*\*[:：]\s*([^\n]+)/);return m?m[1].replace(/[*`]/g,''):''}
+function licClass(l){return l.startsWith('内部')?'int':l.includes('仅参考')?'ref':''}
+function tagsHtml(e, full){
+  const t=[];
+  if(e.status) t.push(`<span class="tag prod">${esc(full?e.status:(e.status.includes('已用于生产')?'已用于生产':e.status.slice(0,10)))}</span>`);
+  t.push(`<span class="tag ${licClass(e.license)}">${esc(e.license)}</span>`);
+  if(e.patches) t.push(`<span class="tag patch">补 6.0【${e.patches.join('】【')}】</span>`);
+  if(e.tool) t.push(`<span class="tag tool">适用 ${esc(e.tool)}</span>`);
+  return t.join('');
+}
+function renderMd(md){
+  let html;
+  if(window.marked){ html = marked.parse(md, {gfm:true, breaks:false}) }
+  else { html = '<pre style="white-space:pre-wrap">'+esc(md)+'</pre>' }
+  const box=document.createElement('div');box.innerHTML=html;
+  box.querySelectorAll('a[href^="http"]').forEach(a=>{a.target='_blank';a.rel='noopener'});
+  box.querySelectorAll('pre').forEach(pre=>{
+    const code=pre.textContent;
+    const w=document.createElement('div');w.className='code';
+    w.innerHTML=`<div class="bar">${ico('copy').replace('<svg','<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"')}提示词正文 · ${code.length} 字<span class="sp"></span><button class="copy">${ico('copy')}复制</button></div><pre></pre>`;
+    w.querySelector('pre').textContent=code;
+    w.querySelector('.copy').onclick=e=>copyText(code,e.currentTarget);
+    pre.replaceWith(w);
+  });
+  return box;
+}
+
+/* ---------- nav ---------- */
+function drawNav(route){
+  const cur = route.folder || '';
+  let h = `<a href="#/" class="${route.view==='home'?'on':''}">${ico('home')}全部提示词<span class="n">${ENTRIES.length}</span></a>
+  <a href="#/assembler" class="${route.view==='assembler'?'on':''}">${ico('wand')}6.0 组装器<span class="badge-new">TOOL</span></a>
+  <div class="nav-sep"></div><div class="nav-label">按流程</div>`;
+  for(const n of NAV){
+    const open = cur===n.key || cur.startsWith(n.key+'/');
+    h += `<a href="#/f/${n.key}" class="${cur===n.key?'on':''}">${ico(n.icon)}${n.label}<span class="n">${inFolder(n.key).length}</span></a>`;
+    if(n.subs && open) for(const [k,l] of n.subs) h += `<a class="sub ${cur===k?'on':''}" href="#/f/${k}">${l}<span class="n">${inFolder(k).length}</span></a>`;
+  }
+  h += `<div class="nav-sep"></div>
+  <a href="#/changelog" class="${route.view==='changelog'?'on':''}">${ico('clock')}更新记录</a>
+  <a href="#/sources" class="${route.view==='sources'?'on':''}">${ico('link')}来源与许可</a>`;
+  document.getElementById('nav').innerHTML = h;
+}
+
+/* ---------- views ---------- */
+const state = {q:'', lic:'all', prod:false};
+function filtered(list){
+  const q=state.q.trim().toLowerCase();
+  return list.filter(e=>{
+    if(state.lic==='direct' && !e.license.includes('可直接用')) return false;
+    if(state.lic==='ref' && !e.license.includes('仅参考')) return false;
+    if(state.lic==='int' && !e.license.startsWith('内部')) return false;
+    if(state.prod && !(e.status||'').includes('已用于生产')) return false;
+    if(q && !(e.id+' '+e.title+' '+e.body).toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+function cardsHtml(list){
+  if(!list.length) return '<div class="empty">没有符合条件的提示词</div>';
+  return '<div class="grid">'+list.map(e=>`<a class="card" href="#/e/${e.id}" style="text-decoration:none">
+    <span class="id">${e.id}</span>
+    <h3>${esc(e.title)}</h3>
+    <div class="desc">${esc(usage(e.body))}</div>
+    <div class="tags">${tagsHtml(e)}</div></a>`).join('')+'</div>';
+}
+
+function viewList(route){
+  const isHome = route.view==='home';
+  const folder = route.folder;
+  const label = isHome ? '全部提示词' : (GROUP_LABEL[folder] || (NAV.find(n=>n.key===folder)||{}).label || folder);
+  const base = isHome ? ENTRIES : inFolder(folder);
+  const v = document.getElementById('view');
+  v.innerHTML = `
+  ${isHome ? `<section class="hero">
+    <svg class="rings" viewBox="0 0 200 200" fill="none" stroke="#ff3355" stroke-width=".4">
+      <circle cx="100" cy="100" r="96"/><circle cx="100" cy="100" r="80"/><circle cx="100" cy="100" r="58" stroke-dasharray="2 3"/>
+      <path d="M100 4 183 148H17Z"/><path d="M100 196 17 52h166Z"/></svg>
+    <h1>短剧提示词<br>从灵感到成片的模块库</h1>
+    <p>${ENTRIES.length} 条提示词，按立项 → 改编 → 精修 → 视频 → 合规排好。点开即可复制正文，或用 6.0 组装器生成视频提示词。</p>
+    ${composer()}
+  </section>` : `<div class="sec-head" style="margin-top:36px"><h2>${esc(label)}</h2><span class="meta" id="cnt"></span></div>${composer(true)}`}
+  ${isHome ? `<div class="sec-head"><h2>全部提示词</h2><span class="meta" id="cnt"></span><span class="sp"></span>
+    <a class="btn-white" href="#/assembler">${ico('wand')}组装视频提示词</a></div>` : '<div style="height:18px"></div>'}
+  <div id="cards"></div>`;
+  bindComposer(()=>{
+    const list = filtered(base);
+    document.getElementById('cards').innerHTML = isHome && !state.q && state.lic==='all' && !state.prod ? grouped(list) : cardsHtml(list);
+    document.getElementById('cnt').textContent = `${list.length} / ${base.length} 条`;
+  });
+}
+function grouped(list){
+  return DATA.groups.map(g=>{
+    const l=list.filter(e=>e.folder===g.key); if(!l.length) return '';
+    return `<div class="sec-head" style="margin:30px 0 12px"><h2 style="font-size:18px">${esc(g.label)}</h2><span class="meta">${l.length} 条</span></div>${cardsHtml(l)}`;
+  }).join('');
+}
+function composer(compact){
+  return `<div class="composer" ${compact?'style="margin:0;max-width:none"':''}>
+    <div class="top">Prompt Library<span style="margin-left:auto;text-transform:none;letter-spacing:0">${esc(versionLine())}</span></div>
+    <label class="search">${ico('search')}<input id="q" placeholder="搜索编号、名称或正文，如“台词”“OS”“钩子”" value="${esc(state.q)}"></label>
+    <div class="row">
+      <span class="seg" id="lic">
+        <button data-v="all">全部来源</button><button data-v="direct">可直接用</button><button data-v="ref">仅参考</button><button data-v="int">内部</button>
+      </span>
+      <button class="chip-btn ${state.prod?'on':''}" id="prod">${ico('check')}只看已用于生产</button>
+    </div></div>`;
+}
+function bindComposer(update){
+  const q=document.getElementById('q');
+  q.oninput=()=>{state.q=q.value;update()};
+  document.querySelectorAll('#lic button').forEach(b=>{
+    b.classList.toggle('on',b.dataset.v===state.lic);
+    b.onclick=()=>{state.lic=b.dataset.v;document.querySelectorAll('#lic button').forEach(x=>x.classList.toggle('on',x===b));update()};
+  });
+  const p=document.getElementById('prod');
+  p.onclick=()=>{state.prod=!state.prod;p.classList.toggle('on',state.prod);update()};
+  update();
+}
+function versionLine(){const m=DATA.changelog.match(/版本：([^｜\n]+)/);return m?m[1].trim():''}
+
+function viewEntry(id){
+  const e=byId[id]; const v=document.getElementById('view');
+  if(!e){v.innerHTML='<div class="empty">找不到这条提示词</div>';return}
+  const sib=inFolder(e.folder); const i=sib.indexOf(e);
+  const prev=sib[i-1], next=sib[i+1];
+  const prompt=firstCode(e.body);
+  v.innerHTML=`<article class="detail">
+    <div class="crumb"><a href="#/">全部</a>›<a href="#/f/${e.folder}">${esc(GROUP_LABEL[e.folder]||e.folder)}</a>›<span>${e.id}</span></div>
+    <h1>${e.id}　${esc(e.title)}</h1>
+    <div class="tags">${tagsHtml(e,true)}</div>
+    <div class="row" style="margin-bottom:20px">
+      ${prompt?`<button class="btn-white" id="cp">${ico('copy')}复制提示词正文</button>`:''}
+      ${e.id==='6.0'?`<a class="btn-dark" href="#/assembler">${ico('wand')}在组装器里调整</a>`:''}
+      <span class="tag tool" style="align-self:center">${esc(e.path)}</span>
+    </div>
+    <div class="md" id="md"></div>
+    <div class="pager">${prev?`<a href="#/e/${prev.id}"><small>上一条</small>${prev.id} ${esc(prev.title)}</a>`:'<span style="flex:1"></span>'}
+      ${next?`<a class="r" href="#/e/${next.id}"><small>下一条</small>${next.id} ${esc(next.title)}</a>`:'<span style="flex:1"></span>'}</div>
+  </article>`;
+  document.getElementById('md').appendChild(renderMd(e.body));
+  if(prompt) document.getElementById('cp').onclick=ev=>copyText(prompt,ev.currentTarget);
+}
+
+function viewDoc(title, md){
+  const v=document.getElementById('view');
+  v.innerHTML=`<article class="detail"><div class="crumb"><a href="#/">全部</a>›<span>${title}</span></div><h1>${title}</h1><div class="md" id="md"></div></article>`;
+  document.getElementById('md').appendChild(renderMd(md.replace(/^# .*\n/,'')));
+}
+
+/* ---------- 6.0 assembler ---------- */
+const OPT_INFO = {'成人内容':'6.0【一】第 7 条：成人镜头的详细描写要求。只用于成人线项目，全年龄线不要打开（和第七章合规红线冲突）。'};
+function viewAssembler(){
+  const styles=Object.keys(DATA.core.styles);
+  const saved=store('asm')||{};
+  const st={style:saved.style&&(saved.style==='__custom'||styles.includes(saved.style))?saved.style:styles[0],
+            custom:saved.custom||'', opts:{}};
+  const SEC='一二三四五六七';
+  const patches={}; ENTRIES.forEach(e=>(e.patches||[]).forEach(s=>(patches[s]=patches[s]||[]).push(e)));
+  const v=document.getElementById('view');
+  v.innerHTML=`<div class="sec-head" style="margin-top:36px"><h2>6.0 视频专用提示词 · 组装器</h2><span class="meta">分镜表 → 每集 4~6 段长视频提示词（生产在用）</span></div>
+  <div class="asm">
+    <div>
+      <div class="panel"><h4>统一视觉风格（第三部分）</h4>
+        <span class="seg" id="sty">${styles.map(s=>`<button data-v="${esc(s)}">${esc(s)}</button>`).join('')}<button data-v="__custom">自定义</button></span>
+        <textarea class="style" id="customStyle" placeholder="粘贴这个项目的画风描述，会替换【三、统一视觉风格】的正文" style="display:none">${esc(st.custom)}</textarea>
+      </div>
+      <div class="panel"><h4>可选条款</h4>
+        ${Object.keys(DATA.core.options).map(o=>`<div class="toggle"><div class="t"><b>${esc(o)}</b><span>${esc(OPT_INFO[o]||'')}</span></div><button class="sw" data-o="${esc(o)}" aria-label="${esc(o)}"></button></div>`).join('')}
+        <div class="warn" id="optWarn" style="display:none">已打开成人内容条款，请确认这是成人线项目。</div>
+      </div>
+      <div class="panel"><h4>可补进各部分的条目</h4><div class="plist">
+        ${[...SEC].filter(s=>patches[s]).map(s=>patches[s].sort((a,b)=>cmpId(a.id,b.id)).map(e=>`<a href="#/e/${e.id}"><span class="s">【${s}】</span><span>${e.id} ${esc(e.title)}</span></a>`).join('')).join('')}
+      </div></div>
+    </div>
+    <div>
+      <div class="code" style="margin:0">
+        <div class="bar"><span id="stat"></span><span class="sp"></span>
+          <button class="btn-dark" id="dl" style="height:30px">${ico('dl')}下载 .txt</button>
+          <button class="copy" id="cpAll">${ico('copy')}复制全部</button></div>
+        <pre id="out" style="max-height:calc(100vh - 220px)"></pre>
+      </div>
+    </div>
+  </div>`;
+  const out=document.getElementById('out'), ta=document.getElementById('customStyle');
+  function assemble(){
+    const style = st.style==='__custom' ? st.custom : DATA.core.styles[st.style];
+    let text = DATA.core.parts.join('\n');
+    text = text.replace(/^\{\{OPT:([^}]+)\}\}\n?/gm,(m,n)=> st.opts[n] ? DATA.core.options[n]+(m.endsWith('\n')?'\n':'') : '');
+    return text.replace('{{STYLE}}', style);
+  }
+  function update(){
+    document.querySelectorAll('#sty button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.style));
+    ta.style.display = st.style==='__custom'?'block':'none';
+    document.querySelectorAll('.sw').forEach(b=>b.classList.toggle('on',!!st.opts[b.dataset.o]));
+    document.getElementById('optWarn').style.display = st.opts['成人内容']?'block':'none';
+    const t=assemble(); out.textContent=t;
+    document.getElementById('stat').textContent=`${t.length} 字 · 风格：${st.style==='__custom'?'自定义':st.style} · 可选条款：${Object.keys(st.opts).filter(k=>st.opts[k]).join('、')||'无'}`;
+    store('asm',{style:st.style,custom:st.custom});
+  }
+  document.querySelectorAll('#sty button').forEach(b=>b.onclick=()=>{st.style=b.dataset.v;update()});
+  ta.oninput=()=>{st.custom=ta.value;update()};
+  document.querySelectorAll('.sw').forEach(b=>b.onclick=()=>{st.opts[b.dataset.o]=!st.opts[b.dataset.o];update()});
+  document.getElementById('cpAll').onclick=e=>copyText(assemble(),e.currentTarget);
+  document.getElementById('dl').onclick=()=>{
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([assemble()],{type:'text/plain;charset=utf-8'}));
+    a.download='6.0视频专用提示词.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  };
+  update();
+}
+
+/* ---------- router ---------- */
+function parse(){
+  const h=location.hash.replace(/^#\/?/,'');
+  if(h.startsWith('e/')) {const e=byId[h.slice(2)];return {view:'entry',id:h.slice(2),folder:e&&e.folder}}
+  if(h.startsWith('f/')) return {view:'list',folder:h.slice(2)};
+  if(h==='assembler'||h==='changelog'||h==='sources') return {view:h};
+  return {view:'home'};
+}
+function route(){
+  const r=parse(); drawNav(r);
+  document.getElementById('side').classList.remove('open');
+  if(r.view==='entry') viewEntry(r.id);
+  else if(r.view==='assembler') viewAssembler();
+  else if(r.view==='changelog') viewDoc('更新记录', DATA.changelog);
+  else if(r.view==='sources') viewDoc('来源与许可', DATA.sources);
+  else viewList(r);
+  window.scrollTo(0,0);
+}
+document.getElementById('ver').textContent = (versionLine().match(/第[^，,）)]+版/)||['当前版本'])[0] + ` · ${ENTRIES.length} 条`;
+document.getElementById('menuBtn').onclick=()=>document.getElementById('side').classList.toggle('open');
+addEventListener('hashchange',route);
+route();
+</script>
+</body>
