@@ -30,8 +30,8 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 /* ---------- top bar ---------- */
 .topbar{position:sticky;top:0;z-index:6;height:60px;display:flex;align-items:center;gap:14px;padding:0 18px 0 22px;background:rgba(13,13,13,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .tb-logo{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:44px;margin-right:12px;flex:none;text-decoration:none}
-.tb-logo svg{width:28px;height:28px}
-.tb-name{font-size:11px;font-weight:600;letter-spacing:.12em;color:#e9e9ee;white-space:nowrap;line-height:1}
+.tb-logo svg{width:24px;height:24px}
+.tb-name{font-size:15px;font-weight:500;letter-spacing:.04em;color:#e9e9ee;white-space:nowrap;line-height:1}
 .tb-seg{display:flex;gap:4px;padding:4px;border-radius:14px;background:#141416;border:1px solid var(--line)}
 .tb-seg a{display:flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:10px;text-decoration:none;color:var(--text-2);font-size:15px;font-weight:500;white-space:nowrap}
 .tb-seg a:hover{color:#fff}
@@ -417,6 +417,14 @@ a.pill{text-decoration:none}
 .next h4{margin:0 0 6px;font-size:15px}
 .next p{margin:0 0 12px;color:var(--text-2);font-size:13.5px}
 .minework{margin-top:40px}
+.fhits{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.fhit{display:flex;flex-direction:column;gap:6px;padding:14px 16px;border-radius:18px;border:1px solid var(--line);background:#151517;text-decoration:none;color:#fff}
+.fhit:hover{border-color:rgba(139,69,255,.6);background:#1a1720}
+.fhit .ft{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#b896ff}
+.fhit .ft svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.fhit b{font-size:15px}
+.fhit .fd{font-size:12.5px;color:var(--text-3);line-height:1.5}
+@media (max-width:760px){.fhits{grid-template-columns:1fr}}
 .seedbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:860px;margin:-10px auto 22px;padding:12px 14px;border-radius:16px;background:var(--brand-soft);border:1px solid rgba(139,69,255,.35);font-size:14px}
 .seedbar>span{display:inline-flex;align-items:center;gap:6px;color:#fff;font-weight:600}
 .seedbar>span .sn{width:22px;height:22px}
@@ -445,9 +453,15 @@ a.pill{text-decoration:none}
   .tb-logo{margin-right:0;width:34px}
   .tb-logo svg{width:24px;height:24px}
   .tb-stat{display:none}
-  .tb-name{font-size:10px}
+  .tb-name{font-size:13px}
+  .tb-pro .pro{height:34px;padding:0 6px;gap:4px;font-size:11px}
+  .tb-pro .pro .sw{display:none}
+  .tb-pro .pro:not(.on){opacity:.6}
+  .topbar{gap:6px}
+  .tb-seg{padding:3px;gap:0}
+  .tb-pro .pro em{display:none}
   .tb-seg{flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}
-  .tb-seg a{height:36px;padding:0 8px;gap:4px;font-size:13px}
+  .tb-seg a{height:34px;padding:0 6px;gap:3px;font-size:13px}
   .tb-seg svg{width:16px;height:16px}
   .shell{min-height:calc(100vh - 56px)}
   .as-cards{grid-template-columns:1fr}
@@ -483,12 +497,12 @@ a.pill{text-decoration:none}
     <span class="tb-name">天玑</span>
   </a>
   <nav class="tb-seg" id="tbSeg"></nav>
-  <span class="tb-stat" id="tbStat"></span>
+  <span class="pro-slot tb-pro"></span>
 </header>
 <div class="shell">
   <aside class="pside" id="pside"></aside>
   <main>
-    <div class="ps-float"><button class="pill" id="psOpen"></button><span class="pro-slot"></span></div>
+    <div class="ps-float"><button class="pill" id="psOpen"></button></div>
     <div class="wrap" id="view"></div>
   </main>
 </div>
@@ -1439,7 +1453,6 @@ function drawNav(route){
 
   document.getElementById('tbSeg').innerHTML = FUNCS.map(f =>
     `<a href="${f.href}" class="${fn===f.k?'on':''}">${ico(f.icon)}${f.label}</a>`).join('');
-  document.getElementById('tbStat').textContent = fn==='prompts' ? `条目 ${ENTRIES.length}` : '';
 
   // 目录面板：四大功能各自一套
   const A = (href, label, o={}) => `<a class="${o.cls||''} ${o.on ?? hash===href ? 'on':''}" href="${href}">${o.icon?ico(o.icon):''}<span>${esc(label)}${o.d?`<span class="d">${esc(o.d)}</span>`:''}</span>${o.n!=null?`<span class="n">${o.n}</span>`:''}</a>`;
@@ -1448,7 +1461,7 @@ function drawNav(route){
   const F = FUNCS.find(f=>f.k===fn);
   const title = fn==='prompts' ? (ch ? ch.label : '目录') : F.label+'目录';
   const pill = `${esc(title)} ${ico('panel')}`;
-  let h = `<div class="ps-row"><button class="pill" id="psClose" title="收起">${pill}</button><span class="pro-slot"></span></div>`;
+  let h = `<div class="ps-row"><button class="pill" id="psClose" title="收起">${pill}</button></div>`;
 
   if(fn==='script'){
     const works = store('works')||[];
@@ -1536,16 +1549,47 @@ function viewList(route){
       <circle cx="100" cy="100" r="96"/><circle cx="100" cy="100" r="80"/><circle cx="100" cy="100" r="58" stroke-dasharray="2 3"/>
       <path d="M100 4 183 148H17Z"/><path d="M100 196 17 52h166Z"/></svg>
     <h1>短剧提示词<br>从灵感到成片的模块库</h1>
-    <p>${ENTRIES.length} 条提示词，按立项 → 改编 → 精修 → 视频 → 合规排好。点开即可复制正文，或用 6.0 组装器生成视频提示词。</p>
     ${composer()}
   </section>` : `<div class="sec-head" style="margin-top:36px"><h2>${esc(label)}</h2><span class="meta" id="cnt"></span></div>${composer(true)}`}
   ${isHome ? `<div class="sec-head"><h2>全部提示词</h2><span class="meta" id="cnt"></span><span class="sp"></span>
     <a class="btn-white" href="#/assembler">${ico('wand')}组装视频提示词</a></div>` : '<div style="height:18px"></div>'}
-  <div id="cards"></div>`;
+  <div id="fhits"></div><div id="cards"></div>`;
   bindComposer(()=>{
+    drawFuncHits(isHome);
     const list = filtered(base);
     document.getElementById('cards').innerHTML = isHome && !state.q && state.lic==='all' && !state.prod ? grouped(list) : cardsHtml(list);
     document.getElementById('cnt').textContent = `${list.length} / ${base.length} 条`;
+  });
+}
+/* 搜索时一并找出剧本 / 资产库 / 分镜里的相关功能 */
+function funcIndex(){
+  const L=[];
+  const add=(fn,title,desc,href,kw,pick)=>L.push({fn,title,desc,href,kw:(title+' '+desc+' '+kw).toLowerCase(),pick});
+  add('script','人物即剧本','标准版：选主角，一键产出 10 集剧本','#/script','剧本 编剧 人物 角色 主角 男主 女主 男频 女频 一键 10集',{pro:false});
+  add('script','新增作品','PRO：策划文件 → 骨架 → 规格 → 补充设定 → 确认','#/script/new','剧本 编剧 策划 大纲 小说 改编 卖点 作品 男主 女主 主角 对手',{pro:true});
+  for(const g of ['male','female']) DATA.roles[g].forEach((t,i)=>add('script',t.type,`${g==='male'?'男频':'女频'} · ${t.gold}`,'#/script',
+    `剧本 人物 角色 主角 ${g==='male'?'男频 男主':'女频 女主'} ${Object.values(t).join(' ')}`,{pro:false,g,idx:i}));
+  for(const m of ASSET_MENUS) for(const i of m.items) add('assets',i.label,i.desc,'#/assets/'+i.id,
+    `资产 ${m.title} ${m.key==='role'?'角色 人物 主角 男主 女主 对手 设定 三视图 特写':'场景 空镜 设定 天气 昼夜'}`);
+  add('storyboard','分镜','把剧本拆成分镜表，再组装成视频提示词','#/storyboard','分镜 镜头 视频 分镜表 成片');
+  add('storyboard','6.0 组装器','组装每集 4～6 段视频提示词，可换画风','#/assembler','分镜 视频 组装 6.0 画风 镜头');
+  return L;
+}
+function drawFuncHits(on){
+  const box=document.getElementById('fhits'); if(!box) return;
+  const toks=state.q.trim().toLowerCase().split(/[\s,，、]+/).filter(Boolean);
+  if(!on || !toks.length){ box.innerHTML=''; return; }
+  const hits=funcIndex().filter(x=>toks.every(t=>x.kw.includes(t))).sort((a,b)=>!!(a.pick&&a.pick.g)-!!(b.pick&&b.pick.g));
+  if(!hits.length){ box.innerHTML=''; return; }
+  const F=Object.fromEntries(FUNCS.map(f=>[f.k,f]));
+  const show=hits.slice(0,9);
+  box.innerHTML=`<div class="sec-head" style="margin:30px 0 12px"><h2 style="font-size:18px">相关功能</h2><span class="meta">${hits.length} 项${hits.length>show.length?' · 显示前 '+show.length+' 项':''}</span></div>
+    <div class="fhits">${show.map((x,k)=>`<a class="fhit" href="${x.href}" data-k="${k}"><span class="ft">${ico(F[x.fn].icon)}${F[x.fn].label}</span><b>${esc(x.title)}</b><span class="fd">${esc(x.desc)}</span></a>`).join('')}</div>
+    <div class="sec-head" style="margin:30px 0 0"><h2 style="font-size:18px">提示词</h2></div>`;
+  box.querySelectorAll('.fhit').forEach(a=>a.onclick=()=>{
+    const p=show[+a.dataset.k].pick; if(!p) return;
+    store('pro',p.pro);
+    if(p.g) store('sxPick',{g:p.g,idx:p.idx,name:'',title:'',q:''});
   });
 }
 function grouped(list){
@@ -1557,7 +1601,7 @@ function grouped(list){
 function composer(compact){
   return `<div class="composer" ${compact?'style="margin:0;max-width:none"':''}>
     <div class="top">Prompt Library<span style="margin-left:auto;text-transform:none;letter-spacing:0">${esc(versionLine())}</span></div>
-    <label class="search">${ico('search')}<input id="q" placeholder="搜索编号、名称或正文，如“台词”“OS”“钩子”" value="${esc(state.q)}"></label>
+    <label class="search">${ico('search')}<input id="q" placeholder="搜索，如：剧本、角色、男主、女主、分镜" value="${esc(state.q)}"></label>
     <div class="row">
       <span class="seg" id="lic">
         <button data-v="all">全部来源</button><button data-v="direct">可直接用</button><button data-v="ref">仅参考</button><button data-v="int">内部</button>
