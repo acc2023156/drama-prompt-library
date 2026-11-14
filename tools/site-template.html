@@ -27,32 +27,50 @@ a{color:inherit}
 a.cta,a.btn-white,a.btn-dark{text-decoration:none}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 ::selection{background:var(--brand);color:#fff}
-.app{display:grid;grid-template-columns:244px 1fr;min-height:100vh}
+/* ---------- top bar ---------- */
+.topbar{position:sticky;top:0;z-index:6;height:60px;display:flex;align-items:center;gap:14px;padding:0 18px 0 22px;background:rgba(13,13,13,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.tb-logo{width:40px;height:40px;display:grid;place-items:center;margin-right:18px;flex:none}
+.tb-logo svg{width:34px;height:34px}
+.tb-name{font-size:17px;font-weight:500;color:#e9e9ee;white-space:nowrap}
+.tb-seg{display:flex;gap:4px;padding:4px;border-radius:14px;background:#141416;border:1px solid var(--line)}
+.tb-seg a{display:flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:10px;text-decoration:none;color:var(--text-2);font-size:15px;font-weight:500;white-space:nowrap}
+.tb-seg a:hover{color:#fff}
+.tb-seg a.on{background:#2a2a2e;color:#fff}
+.tb-seg svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tb-stat{font-size:14px;color:var(--text-2);white-space:nowrap}
 
-/* ---------- sidebar ---------- */
-.side{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:16px 12px;gap:6px;border-right:1px solid var(--line);background:var(--bg)}
-.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 14px;font-weight:700;font-size:15px}
-.logo{width:30px;height:30px;border-radius:9px;background:#fff;display:grid;place-items:center}
-.logo svg{width:18px;height:18px}
-.nav{flex:1;overflow:auto;scrollbar-width:none;display:flex;flex-direction:column;gap:2px}
-.nav::-webkit-scrollbar{display:none}
-.nav-sep{height:1px;background:var(--line);margin:10px 8px}
-.nav-label{font-size:11px;letter-spacing:.08em;color:var(--text-3);padding:8px 10px 4px;text-transform:uppercase}
-.nav a{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:10px;text-decoration:none;color:#e3e3e3;font-size:14px;font-weight:500}
-.nav a:hover{background:rgba(255,255,255,.05)}
-.nav a.on{background:rgba(255,255,255,.08);color:#fff}
-.nav a.sub{padding-left:38px;font-size:13px;color:var(--text-2);font-weight:400}
-.nav a.sub.on{color:#fff}
-.nav svg{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:.9}
-.nav .n{margin-left:auto;font-size:11px;color:var(--text-3)}
-.badge-new{margin-left:auto;font-size:10px;font-weight:800;font-style:italic;background:var(--brand);color:#fff;padding:1px 7px;border-radius:5px;transform:skewX(-8deg)}
-.side-foot{display:flex;flex-direction:column;gap:8px;padding-top:8px}
-.tip{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:var(--r);border:1px solid var(--line);color:#e8c46a;font-size:13px;background:var(--bg-2)}
-.cta{height:46px;border-radius:var(--r);background:var(--brand);color:#fff;font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)}
-.cta:hover{background:var(--brand-2)}
+/* ---------- shell: rail + collapsible panel + main ---------- */
+.shell{display:flex;min-height:calc(100vh - 60px)}
+.rail{position:sticky;top:60px;height:calc(100vh - 60px);width:88px;flex:none;display:flex;flex-direction:column;align-items:center;gap:20px;padding:30px 0 20px;border-right:1px solid var(--line);background:#0d0d0d;z-index:5}
+.rail .sep{width:26px;height:1px;background:rgba(255,255,255,.14)}
+.rail .sp{flex:1}
+.ri{position:relative;width:64px;height:64px;border-radius:16px;display:grid;place-items:center;color:#f2f2f2;text-decoration:none}
+.ri:hover{background:rgba(255,255,255,.06)}
+.ri.on{background:#232326}
+.ri svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ri.on svg.fill-on{fill:currentColor}
+.ri::after{content:attr(data-tip);position:absolute;left:calc(100% + 14px);top:50%;transform:translate(-4px,-50%);opacity:0;pointer-events:none;
+  white-space:nowrap;padding:14px 22px;border-radius:14px;background:#38383b;color:#fff;font-size:16px;font-weight:500;box-shadow:0 10px 30px rgba(0,0,0,.45);transition:opacity .12s,transform .12s;z-index:10}
+.ri:hover::after{opacity:1;transform:translate(0,-50%)}
 
-/* ---------- main ---------- */
-main{min-width:0}
+.pside{position:sticky;top:60px;height:calc(100vh - 60px);width:264px;flex:none;overflow:auto;scrollbar-width:thin;border-right:1px solid var(--line);background:#111113;padding:16px 12px 24px;transition:width .2s,padding .2s}
+body.ps-off .pside{width:0;padding:0;border-right:0;overflow:hidden}
+.pill{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 14px 0 16px;border-radius:12px;background:#1d1d20;border:1px solid var(--line);color:#e9e9ee;font-size:15px;white-space:nowrap}
+.pill:hover{background:#26262a}
+.pill svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7}
+.pill.float{position:absolute;top:24px;left:26px;z-index:4;display:none}
+body.ps-off .pill.float{display:inline-flex}
+.ps-title{font-size:12px;letter-spacing:.06em;color:var(--text-3);padding:18px 10px 6px}
+.pside a{display:flex;gap:10px;align-items:baseline;padding:7px 10px;border-radius:9px;text-decoration:none;color:var(--text-2);font-size:13.5px;line-height:1.45}
+.pside a:hover{background:rgba(255,255,255,.05);color:#fff}
+.pside a.on{background:#232326;color:#fff}
+.pside a .i{flex:none;min-width:30px;font:600 12px Inter,monospace;color:var(--text-3)}
+.pside a .n{margin-left:auto;font-size:11px;color:var(--text-3)}
+.pside a.head{color:#fff;font-weight:600;font-size:14px}
+
+main{position:relative;flex:1;min-width:0;background-color:var(--bg);
+  background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1.2px);background-size:22px 22px}
+body.ps-off main .wrap{padding-top:56px}
 .wrap{max-width:1120px;margin:0 auto;padding:0 32px 80px}
 .hero{position:relative;overflow:hidden;padding:64px 0 34px;text-align:center;isolation:isolate}
 .hero::before{content:"";position:absolute;inset:-40% -10% 0;z-index:-1;
@@ -154,17 +172,27 @@ textarea.style{width:100%;min-height:150px;margin-top:10px;resize:vertical;borde
 
 .toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);opacity:0;background:#fff;color:#111;padding:9px 16px;border-radius:999px;font-weight:600;font-size:13px;transition:.2s;pointer-events:none;z-index:9}
 .toast.show{opacity:1;transform:translate(-50%,0)}
-.menu-btn{display:none}
 
-@media (max-width:900px){
+@media (max-width:1100px){
   .asm{grid-template-columns:1fr}
 }
 @media (max-width:760px){
-  .app{grid-template-columns:1fr}
-  .side{position:fixed;inset:0 auto 0 0;width:260px;z-index:8;transform:translateX(-100%);transition:transform .2s;box-shadow:20px 0 60px rgba(0,0,0,.6)}
-  .side.open{transform:none}
-  .menu-btn{display:inline-flex;position:sticky;top:0;z-index:7;width:100%;align-items:center;gap:10px;padding:12px 16px;background:rgba(16,16,16,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);font-weight:700}
-  .menu-btn svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2}
+  .topbar{padding:0 12px;gap:10px;height:56px}
+  .tb-logo{margin-right:0;width:32px}
+  .tb-logo svg{width:28px;height:28px}
+  .tb-name,.tb-stat{display:none}
+  .tb-seg{flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}
+  .tb-seg a{height:36px;padding:0 12px;font-size:14px}
+  .shell{min-height:calc(100vh - 56px)}
+  .rail{position:fixed;top:auto;bottom:0;left:0;right:0;width:auto;height:64px;flex-direction:row;justify-content:space-around;gap:0;padding:6px 8px;border-right:0;border-top:1px solid var(--line)}
+  .rail .sep,.rail .sp,.ri.extra{display:none}
+  .ri{width:48px;height:48px;border-radius:12px}
+  .ri svg{width:22px;height:22px}
+  .ri::after{display:none}
+  .pside{position:fixed;top:56px;left:0;bottom:64px;height:auto;z-index:7;width:min(300px,86vw);box-shadow:20px 0 60px rgba(0,0,0,.6)}
+  .pill.float{top:14px;left:16px;height:36px;font-size:14px}
+  body.ps-off main .wrap{padding-top:50px}
+  main{padding-bottom:64px}
   .wrap{padding:0 16px 60px}
   .hero{padding:36px 0 20px}
   .grid{grid-template-columns:1fr}
@@ -173,20 +201,20 @@ textarea.style{width:100%;min-height:150px;margin-top:10px;resize:vertical;borde
 </style>
 </head>
 <body>
-<div class="app">
-  <aside class="side" id="side">
-    <div class="brand">
-      <span class="logo"><svg viewBox="0 0 24 24"><path d="M4 18 9 7l4 7 3-5 4 9" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      短剧提示词库
-    </div>
-    <nav class="nav" id="nav"></nav>
-    <div class="side-foot">
-      <div class="tip"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM17 6h3v2a3 3 0 0 1-3 3M7 6H4v2a3 3 0 0 0 3 3"/></svg><span id="ver"></span></div>
-      <a class="cta" href="#/assembler"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 4 5 5-11 11H4v-5L15 4Z"/></svg>组装 6.0 视频提示词</a>
-    </div>
-  </aside>
+<header class="topbar">
+  <a class="tb-logo" href="#/" aria-label="首页">
+    <svg viewBox="0 0 40 40"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd23f"/><stop offset=".45" stop-color="#3fb6ff"/><stop offset="1" stop-color="#7a5cff"/></linearGradient></defs>
+      <path d="M6 6 34 18 21 21 17 34Z" fill="url(#lg)"/><path d="M21 21 34 18 26 26Z" fill="#1e7fd6" opacity=".7"/></svg>
+  </a>
+  <span class="tb-name">短剧提示词库</span>
+  <nav class="tb-seg" id="tbSeg"></nav>
+  <span class="tb-stat" id="tbStat"></span>
+</header>
+<div class="shell">
+  <nav class="rail" id="rail"></nav>
+  <aside class="pside" id="pside"></aside>
   <main>
-    <button class="menu-btn" id="menuBtn"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>短剧提示词库</button>
+    <button class="pill float" id="psOpen"></button>
     <div class="wrap" id="view"></div>
   </main>
 </div>
@@ -210,6 +238,9 @@ const ICONS = {
   search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
   dl:'<path d="M12 4v12m0 0-5-5m5 5 5-5M4 20h16"/>',
   check:'<path d="M5 12l5 5L20 7"/>',
+  play:'<rect x="3" y="5" width="18" height="14" rx="3.5"/><path d="m10 9 5 3-5 3V9Z"/>',
+  grid:'<rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/>',
+  panel:'<rect x="3.5" y="4.5" width="17" height="15" rx="3.5"/><path d="M9.5 4.5v15"/>',
 };
 const ico = n => `<svg viewBox="0 0 24 24">${ICONS[n]}</svg>`;
 
@@ -219,7 +250,7 @@ const NAV = [
   {key:'03-revision', icon:'pen', label:'剧本精修', subs:[
     ['03-revision/dialogue','对白与台词'],['03-revision/de-ai','去 AI 味'],['03-revision/trim','删减'],
     ['03-revision/review','审核与检查'],['03-revision/shootability','可拍性 / OS·VO'],['03-revision/craft','其他手法']]},
-  {key:'06-video', icon:'film', label:'视频生成', subs:[
+  {key:'06-video', icon:'play', label:'视频生成', subs:[
     ['06-video/core','6.0 主模板'],['06-video/patches','6.0 补丁'],['06-video/styles','画风块'],['06-video/reference','参考与示例']]},
   {key:'07-compliance', icon:'shield', label:'合规'},
   {key:'archive', icon:'box', label:'归档'},
@@ -268,22 +299,51 @@ function renderMd(md){
   return box;
 }
 
-/* ---------- nav ---------- */
+/* ---------- nav: top bar + icon rail + collapsible panel ---------- */
+const chapterOf = folder => folder ? NAV.find(n => folder===n.key || folder.startsWith(n.key+'/')) : null;
 function drawNav(route){
   const cur = route.folder || '';
-  let h = `<a href="#/" class="${route.view==='home'?'on':''}">${ico('home')}全部提示词<span class="n">${ENTRIES.length}</span></a>
-  <a href="#/assembler" class="${route.view==='assembler'?'on':''}">${ico('wand')}6.0 组装器<span class="badge-new">TOOL</span></a>
-  <div class="nav-sep"></div><div class="nav-label">按流程</div>`;
-  for(const n of NAV){
-    const open = cur===n.key || cur.startsWith(n.key+'/');
-    h += `<a href="#/f/${n.key}" class="${cur===n.key?'on':''}">${ico(n.icon)}${n.label}<span class="n">${inFolder(n.key).length}</span></a>`;
-    if(n.subs && open) for(const [k,l] of n.subs) h += `<a class="sub ${cur===k?'on':''}" href="#/f/${k}">${l}<span class="n">${inFolder(k).length}</span></a>`;
+  const ch = chapterOf(cur);
+  const lib = route.view==='home' || route.view==='list' || route.view==='entry';
+
+  document.getElementById('tbSeg').innerHTML =
+    `<a href="#/" class="${lib?'on':''}">${ico('grid')}提示词</a>
+     <a href="#/assembler" class="${route.view==='assembler'?'on':''}">${ico('wand')}6.0 组装器</a>`;
+  document.getElementById('tbStat').textContent = `条目 ${ENTRIES.length}`;
+
+  const ri = (href,icon,tip,on,extra) => `<a class="ri ${on?'on':''} ${extra||''}" href="${href}" data-tip="${tip}" aria-label="${tip}">${ico(icon)}</a>`;
+  const main = NAV.slice(0,4), more = NAV.slice(4);
+  document.getElementById('rail').innerHTML =
+    main.map(n=>ri('#/f/'+n.key,n.icon,n.label,ch===n)).join('') + '<span class="sep"></span>' +
+    more.map(n=>ri('#/f/'+n.key,n.icon,n.label,ch===n)).join('') + '<span class="sp"></span>' +
+    ri('#/changelog','clock','更新记录',route.view==='changelog','extra') +
+    ri('#/sources','link','来源与许可',route.view==='sources','extra');
+
+  // 二级面板：当前章节的子类与条目；不在章节里时列出全部章节
+  const title = ch ? ch.label : '目录';
+  const pill = `${esc(title)} ${ico('panel')}`;
+  let h = `<button class="pill" id="psClose" title="收起">${pill}</button>`;
+  if(ch){
+    const groups = ch.subs || [[ch.key, '']];
+    for(const [k,l] of groups){
+      const list = inFolder(k); if(!list.length) continue;
+      h += l ? `<a class="head ${cur===k&&route.view==='list'?'on':''}" href="#/f/${k}" style="margin-top:12px">${esc(l)}<span class="n">${list.length}</span></a>`
+             : `<div class="ps-title">共 ${list.length} 条</div>`;
+      h += list.map(e=>`<a class="${route.id===e.id?'on':''}" href="#/e/${e.id}"><span class="i">${e.id}</span><span>${esc(e.title)}</span></a>`).join('');
+    }
+  } else {
+    h += `<div class="ps-title">按流程</div>` + NAV.map(n=>`<a class="head" href="#/f/${n.key}">${esc(n.label)}<span class="n">${inFolder(n.key).length}</span></a>`).join('');
   }
-  h += `<div class="nav-sep"></div>
-  <a href="#/changelog" class="${route.view==='changelog'?'on':''}">${ico('clock')}更新记录</a>
-  <a href="#/sources" class="${route.view==='sources'?'on':''}">${ico('link')}来源与许可</a>`;
-  document.getElementById('nav').innerHTML = h;
+  const ps = document.getElementById('pside'); ps.innerHTML = h;
+  document.getElementById('psOpen').innerHTML = pill;
+  document.getElementById('psClose').onclick = () => setPanel(false);
+  const on = ps.querySelector('a.on'); if(on) on.scrollIntoView({block:'nearest'});
 }
+function setPanel(open){
+  document.body.classList.toggle('ps-off', !open);
+  if(!matchMedia('(max-width:760px)').matches) store('panel', open);
+}
+document.getElementById('psOpen').onclick = () => setPanel(true);
 
 /* ---------- views ---------- */
 const state = {q:'', lic:'all', prod:false};
@@ -461,7 +521,8 @@ function parse(){
 }
 function route(){
   const r=parse(); drawNav(r);
-  document.getElementById('side').classList.remove('open');
+  // 手机上每次换页都收起面板；电脑上沿用上次的展开/收起状态
+  document.body.classList.toggle('ps-off', matchMedia('(max-width:760px)').matches || store('panel')===false);
   if(r.view==='entry') viewEntry(r.id);
   else if(r.view==='assembler') viewAssembler();
   else if(r.view==='changelog') viewDoc('更新记录', DATA.changelog);
@@ -469,8 +530,6 @@ function route(){
   else viewList(r);
   window.scrollTo(0,0);
 }
-document.getElementById('ver').textContent = (versionLine().match(/第[^，,）)]+版/)||['当前版本'])[0] + ` · ${ENTRIES.length} 条`;
-document.getElementById('menuBtn').onclick=()=>document.getElementById('side').classList.toggle('open');
 addEventListener('hashchange',route);
 route();
 </script>
