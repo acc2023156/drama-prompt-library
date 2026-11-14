@@ -29,23 +29,15 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 ::selection{background:var(--brand);color:#fff}
 /* ---------- top bar ---------- */
 .topbar{position:sticky;top:0;z-index:6;height:60px;display:flex;align-items:center;gap:14px;padding:0 18px 0 22px;background:rgba(13,13,13,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-.tb-logo{width:40px;height:40px;display:grid;place-items:center;margin-right:18px;flex:none}
-.tb-logo svg{width:34px;height:34px}
-.tb-name{font-size:17px;font-weight:500;color:#e9e9ee;white-space:nowrap}
+.tb-logo{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:44px;margin-right:12px;flex:none;text-decoration:none}
+.tb-logo svg{width:28px;height:28px}
+.tb-name{font-size:11px;font-weight:600;letter-spacing:.12em;color:#e9e9ee;white-space:nowrap;line-height:1}
 .tb-seg{display:flex;gap:4px;padding:4px;border-radius:14px;background:#141416;border:1px solid var(--line)}
 .tb-seg a{display:flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:10px;text-decoration:none;color:var(--text-2);font-size:15px;font-weight:500;white-space:nowrap}
 .tb-seg a:hover{color:#fff}
 .tb-seg a.on{background:#2a2a2e;color:#fff}
 .tb-seg svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .tb-stat{font-size:14px;color:var(--text-2);white-space:nowrap}
-.tb-tools{display:flex;align-items:center;gap:6px;margin-left:10px;padding-right:12px;border-right:1px solid rgba(255,255,255,.12)}
-.ti{position:relative;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:#f2f2f2;text-decoration:none}
-.ti:hover{background:rgba(255,255,255,.06)}
-.ti.on{background:#2a2a2e}
-.ti svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.ti::after{content:attr(data-tip);position:absolute;top:calc(100% + 10px);left:50%;transform:translate(-50%,-4px);opacity:0;pointer-events:none;
-  white-space:nowrap;padding:10px 18px;border-radius:12px;background:#38383b;color:#fff;font-size:15px;font-weight:500;box-shadow:0 10px 30px rgba(0,0,0,.45);transition:opacity .12s,transform .12s;z-index:10}
-.ti:hover::after{opacity:1;transform:translate(-50%,0)}
 .soon{max-width:560px;margin:90px auto 0;text-align:center}
 .soon .big{width:88px;height:88px;margin:0 auto 22px;border-radius:24px;background:#1d1d20;border:1px solid var(--line-2);display:grid;place-items:center}
 .soon .big svg{width:42px;height:42px;stroke:#fff;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
@@ -54,17 +46,6 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 
 /* ---------- shell: rail + collapsible panel + main ---------- */
 .shell{display:flex;min-height:calc(100vh - 60px)}
-.rail{position:sticky;top:60px;height:calc(100vh - 60px);width:88px;flex:none;display:flex;flex-direction:column;align-items:center;gap:20px;padding:30px 0 20px;border-right:1px solid var(--line);background:#0d0d0d;z-index:5}
-.rail .sep{width:26px;height:1px;background:rgba(255,255,255,.14)}
-.rail .sp{flex:1}
-.ri{position:relative;width:64px;height:64px;border-radius:16px;display:grid;place-items:center;color:#f2f2f2;text-decoration:none}
-.ri:hover{background:rgba(255,255,255,.06)}
-.ri.on{background:#232326}
-.ri svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.ri.on svg.fill-on{fill:currentColor}
-.ri::after{content:attr(data-tip);position:absolute;left:calc(100% + 14px);top:50%;transform:translate(-4px,-50%);opacity:0;pointer-events:none;
-  white-space:nowrap;padding:14px 22px;border-radius:14px;background:#38383b;color:#fff;font-size:16px;font-weight:500;box-shadow:0 10px 30px rgba(0,0,0,.45);transition:opacity .12s,transform .12s;z-index:10}
-.ri:hover::after{opacity:1;transform:translate(0,-50%)}
 
 .pside{position:sticky;top:60px;height:calc(100vh - 60px);width:264px;flex:none;overflow:auto;scrollbar-width:thin;border-right:1px solid var(--line);background:#111113;padding:16px 12px 24px;transition:width .2s,padding .2s}
 body.ps-off .pside{width:0;padding:0;border-right:0;overflow:hidden}
@@ -89,6 +70,11 @@ body.ps-off .ps-float{display:flex}
 .pside a .i{flex:none;min-width:30px;font:600 12px Inter,monospace;color:var(--text-3)}
 .pside a .n{margin-left:auto;font-size:11px;color:var(--text-3)}
 .pside a.head{color:#fff;font-weight:600;font-size:14px}
+.pside a.fn{align-items:center}
+.pside a svg{flex:none;width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;align-self:center}
+.pside a.sub{padding-left:37px}
+.pside a .d{display:block;font-size:12px;color:var(--text-3);margin-top:1px}
+.pside .ps-hr{height:1px;background:var(--line);margin:14px 6px 4px}
 
 main{position:relative;flex:1;min-width:0;background-color:var(--bg);
   background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1.2px);background-size:22px 22px}
@@ -446,22 +432,14 @@ a.pill{text-decoration:none}
 }
 @media (max-width:760px){
   .topbar{padding:0 12px;gap:10px;height:56px}
-  .tb-logo{margin-right:0;width:32px}
-  .tb-logo svg{width:28px;height:28px}
+  .tb-logo{margin-right:0;width:34px}
+  .tb-logo svg{width:24px;height:24px}
   .tb-stat{display:none}
-  .tb-name{font-size:15px}
-  .tb-tools{margin-left:0;padding-right:8px;gap:2px}
-  .ti{width:38px;height:38px}
-  .ti svg{width:21px;height:21px}
-  .ti::after{display:none}
+  .tb-name{font-size:10px}
   .tb-seg{flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}
-  .tb-seg a{height:36px;padding:0 12px;font-size:14px}
+  .tb-seg a{height:36px;padding:0 8px;gap:4px;font-size:13px}
+  .tb-seg svg{width:16px;height:16px}
   .shell{min-height:calc(100vh - 56px)}
-  .rail{position:fixed;top:auto;bottom:0;left:0;right:0;width:auto;height:64px;flex-direction:row;justify-content:space-around;gap:0;padding:6px 8px;border-right:0;border-top:1px solid var(--line)}
-  .rail .sep,.rail .sp,.ri.extra{display:none}
-  .ri{width:48px;height:48px;border-radius:12px}
-  .ri svg{width:22px;height:22px}
-  .ri::after{display:none}
   .as-cards{grid-template-columns:1fr}
   .mcard{min-height:380px}
   .pop{display:none}
@@ -471,16 +449,15 @@ a.pill{text-decoration:none}
   .sgrid{grid-template-columns:repeat(3,1fr)}
   .g3,.g2{grid-template-columns:1fr}
   .eps{grid-template-columns:1fr}
-  .dock{bottom:76px;padding:10px}
+  .dock{bottom:12px;padding:10px}
   .dock .who{display:none}
   .magic{flex:1;justify-content:center}
   .gseg{width:100%}.gseg button{flex:1}
   .step{padding:16px}
-  .pside{position:fixed;top:56px;left:0;bottom:64px;height:auto;z-index:7;width:min(300px,86vw);box-shadow:20px 0 60px rgba(0,0,0,.6)}
+  .pside{position:fixed;top:56px;left:0;bottom:0;height:auto;z-index:7;width:min(300px,86vw);box-shadow:20px 0 60px rgba(0,0,0,.6)}
   .ps-float{top:14px;left:16px}
   .ps-float .pill,.ps-float .pro{height:36px;font-size:13px}
   body.ps-off main .wrap{padding-top:50px}
-  main{padding-bottom:64px}
   .wrap{padding:0 16px 60px}
   .hero{padding:36px 0 20px}
   .grid{grid-template-columns:1fr}
@@ -493,14 +470,12 @@ a.pill{text-decoration:none}
   <a class="tb-logo" href="#/" aria-label="首页">
     <svg viewBox="0 0 40 40"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd23f"/><stop offset=".45" stop-color="#3fb6ff"/><stop offset="1" stop-color="#7a5cff"/></linearGradient></defs>
       <path d="M6 6 34 18 21 21 17 34Z" fill="url(#lg)"/><path d="M21 21 34 18 26 26Z" fill="#1e7fd6" opacity=".7"/></svg>
+    <span class="tb-name">天玑</span>
   </a>
-  <span class="tb-name">天玑</span>
-  <nav class="tb-tools" id="tbTools"></nav>
   <nav class="tb-seg" id="tbSeg"></nav>
   <span class="tb-stat" id="tbStat"></span>
 </header>
 <div class="shell">
-  <nav class="rail" id="rail"></nav>
   <aside class="pside" id="pside"></aside>
   <main>
     <div class="ps-float"><button class="pill" id="psOpen"></button><span class="pro-slot"></span></div>
@@ -1416,43 +1391,69 @@ function viewScriptResult(id, fresh){
   document.getElementById('delWork').onclick=()=>{ if(!confirm('删除这部剧本？')) return; store('works',(store('works')||[]).filter(x=>x.id!==w.id)); location.hash='#/script'; };
 }
 
-/* ---------- nav: top bar + icon rail + collapsible panel ---------- */
+/* ---------- nav: 顶栏四大功能 + 各自的目录面板 ---------- */
 const isPro = () => store('pro') !== false;
 const chapterOf = folder => folder ? NAV.find(n => folder===n.key || folder.startsWith(n.key+'/')) : null;
+const FUNCS = [
+  {k:'script', icon:'script', label:'剧本', href:'#/script'},
+  {k:'assets', icon:'assets', label:'资产库', href:'#/assets'},
+  {k:'storyboard', icon:'play', label:'分镜', href:'#/storyboard'},
+  {k:'prompts', icon:'grid', label:'提示词', href:'#/'},
+];
+const funcOf = r => r.view==='tool' ? r.tool : 'prompts';
 function drawNav(route){
   const cur = route.folder || '';
   const ch = chapterOf(cur);
-  const lib = route.view==='home' || route.view==='list' || route.view==='entry';
+  const fn = funcOf(route);
+  const hash = location.hash || '#/';
 
-  document.getElementById('tbSeg').innerHTML =
-    `<a href="#/" class="${lib?'on':''}">${ico('grid')}提示词</a>
-     <a href="#/assembler" class="${route.view==='assembler'?'on':''}">${ico('wand')}6.0 组装器</a>`;
-  document.getElementById('tbStat').textContent = `条目 ${ENTRIES.length}`;
-  document.getElementById('tbTools').innerHTML = Object.entries(TOOLS).map(([k,t]) =>
-    `<a class="ti ${route.view==='tool'&&route.tool===k?'on':''}" href="#/${k}" data-tip="${t.label}" aria-label="${t.label}">${ico(t.icon)}</a>`).join('');
+  document.getElementById('tbSeg').innerHTML = FUNCS.map(f =>
+    `<a href="${f.href}" class="${fn===f.k?'on':''}">${ico(f.icon)}${f.label}</a>`).join('');
+  document.getElementById('tbStat').textContent = fn==='prompts' ? `条目 ${ENTRIES.length}` : '';
 
-  const ri = (href,icon,tip,on,extra) => `<a class="ri ${on?'on':''} ${extra||''}" href="${href}" data-tip="${tip}" aria-label="${tip}">${ico(icon)}</a>`;
-  const main = NAV.slice(0,4), more = NAV.slice(4);
-  document.getElementById('rail').innerHTML =
-    main.map(n=>ri('#/f/'+n.key,n.icon,n.label,ch===n)).join('') + '<span class="sep"></span>' +
-    more.map(n=>ri('#/f/'+n.key,n.icon,n.label,ch===n)).join('') + '<span class="sp"></span>' +
-    ri('#/changelog','clock','更新记录',route.view==='changelog','extra') +
-    ri('#/sources','link','来源与许可',route.view==='sources','extra');
-
-  // 二级面板：当前章节的子类与条目；不在章节里时列出全部章节
-  const title = ch ? ch.label : '目录';
+  // 目录面板：四大功能各自一套
+  const A = (href, label, o={}) => `<a class="${o.cls||''} ${o.on ?? hash===href ? 'on':''}" href="${href}">${o.icon?ico(o.icon):''}<span>${esc(label)}${o.d?`<span class="d">${esc(o.d)}</span>`:''}</span>${o.n!=null?`<span class="n">${o.n}</span>`:''}</a>`;
+  const T = t => `<div class="ps-title">${esc(t)}</div>`;
+  const F = FUNCS.find(f=>f.k===fn);
+  const title = fn==='prompts' ? (ch ? ch.label : '目录') : F.label+'目录';
   const pill = `${esc(title)} ${ico('panel')}`;
   let h = `<div class="ps-row"><button class="pill" id="psClose" title="收起">${pill}</button><span class="pro-slot"></span></div>`;
-  if(ch){
-    const groups = ch.subs || [[ch.key, '']];
-    for(const [k,l] of groups){
-      const list = inFolder(k); if(!list.length) continue;
-      h += l ? `<a class="head ${cur===k&&route.view==='list'?'on':''}" href="#/f/${k}" style="margin-top:12px">${esc(l)}<span class="n">${list.length}</span></a>`
-             : `<div class="ps-title">共 ${list.length} 条</div>`;
-      h += list.map(e=>`<a class="${route.id===e.id?'on':''}" href="#/e/${e.id}"><span class="i">${e.id}</span><span>${esc(e.title)}</span></a>`).join('');
+
+  if(fn==='script'){
+    const works = store('works')||[];
+    if(isPro()){
+      h += T('PRO 专业版') + A('#/script','我的作品',{cls:'head fn',icon:'script',n:works.length}) + A('#/script/new','新增作品',{cls:'head fn',icon:'plus',on:route.sub==='new'&&!route.wid,d:'策划文件 → 骨架 → 规格 → 补充设定 → 确认'});
+      if(works.length) h += T('作品') + works.map(w=>A(w.kind==='simple'?'#/script/s/'+w.id:'#/script/w/'+w.id, '《'+(w.title||'未命名')+'》',{on:route.wid===w.id||route.sid===w.id})).join('');
+    } else {
+      const mine = works.filter(w=>w.kind==='simple');
+      h += T('标准版') + A('#/script','人物即剧本',{cls:'head fn',icon:'sparkle',on:!route.sub,d:'选主角，一键产出 10 集'});
+      if(mine.length) h += T('我的剧本') + mine.map(w=>A('#/script/s/'+w.id,'《'+w.title+'》',{on:route.sid===w.id,d:w.sx.name+' · '+w.sx.role.type})).join('');
     }
+    h += `<div class="ps-hr"></div>` + T('相关提示词') + NAV.slice(0,3).map(n=>A('#/f/'+n.key,n.label,{cls:'fn',icon:n.icon,n:inFolder(n.key).length})).join('');
+  } else if(fn==='assets'){
+    const mine = store('assets')||[];
+    h += A('#/assets','资产首页',{cls:'head fn',icon:'assets',on:!route.fn});
+    for(const m of ASSET_MENUS) h += T(m.title) + m.items.map(i=>A('#/assets/'+i.id,i.label,{cls:'fn',icon:i.icon,on:route.fn===i.id&&route.idx==null})).join('');
+    if(mine.length) h += T('我的资产') + mine.map((x,k)=>A(`#/assets/${x.fn}?i=${k}`,x.name||'未命名',{cls:'fn',icon:FN[x.fn]?.menu.key==='scene'?'mount':'user',on:route.fn===x.fn&&route.idx===k,d:FN[x.fn]?.label||''})).join('');
+    h += `<div class="ps-hr"></div>` + T('相关提示词') + A('#/f/06-video/styles','画风块',{cls:'fn',icon:'film'}) + A('#/f/archive/05-design','角色与场景设定（归档）',{cls:'fn',icon:'box'});
+  } else if(fn==='storyboard'){
+    h += A('#/storyboard','分镜首页',{cls:'head fn',icon:'play'}) + A('#/assembler','6.0 组装器',{cls:'head fn',icon:'wand',d:'把剧本组装成视频提示词'});
+    const v = NAV.find(n=>n.key==='06-video');
+    h += T('视频提示词') + v.subs.map(([k,l])=>A('#/f/'+k,l,{cls:'fn',icon:'film',n:inFolder(k).length})).join('');
+    h += T('归档') + A('#/f/archive/04-storyboard','分镜（10/30 实测后基本不用）',{cls:'fn',icon:'box',n:inFolder('archive/04-storyboard').length});
   } else {
-    h += `<div class="ps-title">按流程</div>` + NAV.map(n=>`<a class="head" href="#/f/${n.key}">${esc(n.label)}<span class="n">${inFolder(n.key).length}</span></a>`).join('');
+    h += A('#/','全部提示词',{cls:'head fn',icon:'grid',on:route.view==='home',n:ENTRIES.length});
+    h += T('按流程');
+    for(const n of NAV){
+      h += A('#/f/'+n.key, n.label, {cls:'head fn', icon:n.icon, on:cur===n.key&&route.view==='list', n:inFolder(n.key).length});
+      if(ch!==n) continue;
+      for(const [k,l] of (n.subs || [[n.key,'']])){
+        const list = inFolder(k); if(!list.length) continue;
+        if(l) h += A('#/f/'+k, l, {cls:'head sub', on:cur===k&&route.view==='list', n:list.length});
+        h += list.map(e=>`<a class="sub ${route.id===e.id?'on':''}" href="#/e/${e.id}"><span class="i">${e.id}</span><span>${esc(e.title)}</span></a>`).join('');
+      }
+    }
+    h += `<div class="ps-hr"></div>` + T('工具与资料') + A('#/assembler','6.0 组装器',{cls:'fn',icon:'wand'}) + A('#/changelog','更新记录',{cls:'fn',icon:'clock'}) + A('#/sources','来源与许可',{cls:'fn',icon:'link'});
   }
   const ps = document.getElementById('pside'); ps.innerHTML = h;
   document.getElementById('psOpen').innerHTML = pill;
