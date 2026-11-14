@@ -414,6 +414,11 @@ a.pill{text-decoration:none}
 .next h4{margin:0 0 6px;font-size:15px}
 .next p{margin:0 0 12px;color:var(--text-2);font-size:13.5px}
 .minework{margin-top:40px}
+.seedbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:860px;margin:-10px auto 22px;padding:12px 14px;border-radius:16px;background:var(--brand-soft);border:1px solid rgba(139,69,255,.35);font-size:14px}
+.seedbar>span{display:inline-flex;align-items:center;gap:6px;color:#fff;font-weight:600}
+.seedbar svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
+.seedbar .x{margin-left:auto;width:30px;height:30px;border-radius:9px;color:var(--text-2);font-size:18px}
+.seedbar .x:hover{background:rgba(255,255,255,.08);color:#fff}
 .rtabs{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
 .rtabs .gseg{margin:0}
 .rtabs .act{margin-left:auto;display:flex;gap:8px}
@@ -665,8 +670,10 @@ function pvHtml(pv){
 
 function viewAssets(){
   const mine = store('assets')||[];
+  const seed = store('assetSeed');
   document.getElementById('view').innerHTML = `
     <h1 class="as-title">选择起点，建立天玑资产</h1>
+    ${seed?`<div class="seedbar"><span>${ico('script')}从《${esc(seed.title)}》生成：</span>${seed.items.map((x,k)=>`<button class="btn-o" data-seed="${k}">${ico(FN[x.fn].menu.key==='scene'?'mount':'user')}${esc(x.label)}设定板</button>`).join('')}<button class="x" id="seedX" title="关闭">×</button></div>`:''}
     <div class="as-cards">${ASSET_MENUS.map((m,mi)=>`
       <div class="mcard ${mi?'r':''}"><h3>${m.title}</h3>
         ${m.items.map(i=>`<a class="mi" href="#/assets/${i.id}" style="text-decoration:none">${ico(i.icon)}${i.label}
@@ -684,6 +691,8 @@ function viewAssets(){
         </div>`).join('')}</div>`
       : `<div class="empty" style="padding:30px 0">还没有资产。点上面任一功能，填好后按“保存到我的资产”。</div>`}
     </section>`;
+  document.querySelectorAll('[data-seed]').forEach(b=>b.onclick=()=>{ const x=seed.items[b.dataset.seed]; store('assetPick',x); location.hash='#/assets/'+x.fn; });
+  if(seed) document.getElementById('seedX').onclick=()=>{ store('assetSeed',null); viewAssets(); };
   document.querySelectorAll('[data-cp]').forEach(b=>b.onclick=e=>copyText(mine[b.dataset.cp].prompt,e.currentTarget));
   document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
     if(!confirm('删除这个资产？')) return;
@@ -696,6 +705,8 @@ function viewAssetEditor(fnId, idx){
   const saved = idx!=null ? (store('assets')||[])[idx] : null;
   const styles=styleList();
   const st = saved ? {...saved.state} : {name:'', profile:'', extra:'', style:'无', ratio:'16:9', res:'2K', opts:[...(f.optDefault||[])]};
+  const pk = !saved && store('assetPick');
+  if(pk && pk.fn===fnId){ st.name=pk.name; st.profile=pk.profile; store('assetPick',null); }
   st.imgs = [];
   const needProfile = /\{profile\}/.test(f.tpl);
   const v=document.getElementById('view');
@@ -816,9 +827,9 @@ const WZ_OPT = {
 const SUPP = [['core','核心设定与规则','请描述核心设定与限制⋯',true],['diff','与参考作品的差异','和相似作品最不一样的地方'],
   ['hero','主角','身分、年龄、弱点'],['rival','对手','动机与手段'],['world','场景与世界观','故事发生在哪里']];
 const MODE = {
-  paste:{tab:'贴上策划文件', btn:'建立作品并开始写剧本', sub:'依策划文件从第 1 集开始写剧本。'},
-  auto: {tab:'依设定自动产生', btn:'产生策划文件', sub:'用第 2–4 步的设定，产生完整策划文件的提示词。'},
-  novel:{tab:'汇入小说', btn:'依小说产生策划文件', sub:'把小说改编成策划文件的提示词。'},
+  paste:{tab:'贴上策划文件', btn:'资产库生成', sub:'产生影片内的生动角色与故事场景'},
+  auto: {tab:'依设定自动产生', btn:'资产库生成', sub:'产生影片内的生动角色与故事场景'},
+  novel:{tab:'汇入小说', btn:'资产库生成', sub:'产生影片内的生动角色与故事场景'},
 };
 const wzEps = W => W.eps==='自定义' ? (+W.epsCustom||0) : W.eps;
 const wzMins = W => W.mins==='自定义' ? (+W.minsCustom||0) : W.mins;
@@ -1001,7 +1012,7 @@ function viewScriptNew(workId){
       <label class="cb"><input type="checkbox" data-f="adult" ${W.adult?'checked':''}><div><b>所有角色均已年满 18 岁</b></div></label>
       <label class="fl" style="margin-top:16px">撞题比对</label>
       <button class="btn-o" id="dupBtn">跟我的作品比对撞题</button>
-      <div class="dup" id="dupRes">比对作品名、卖点和核心设定，范围是这台电脑里保存的作品。</div>
+      <div class="dup" id="dupRes">比对作品名、卖点和核心设定</div>
       <button class="bigbtn" id="go"></button>
       <p class="hint" id="goSub"></p>
     </section>
@@ -1098,13 +1109,21 @@ function viewScriptNew(workId){
     update();
   };
   $('go').onclick=()=>{
-    const text=wzPrompt(W), title=wzTitle(W)||'未命名';
+    const title=wzTitle(W)||'未命名';
     const list=store('works')||[]; const {dup,...keep}=W;
     const item={id:W.id||('w'+Date.now().toString(36)), title, W:{...keep,id:undefined}, time:Date.now()};
     const i=list.findIndex(x=>x.id===item.id); if(i>=0) list[i]=item; else list.unshift(item);
     store('works',list); W.id=item.id; if(!w) store('scriptDraft',null);
-    showModal(`《${title}》${W.mode==='paste'?'第 1 集写作提示词':'策划文件提示词'}`, text, `${title}-${W.mode==='paste'?'第1集':'策划文件'}提示词.txt`);
-    toast('已保存到我的作品');
+    // 把作品里的主角、对手、场景带到资产库，点一下就能开始做角色设定板 / 场景设定板
+    const core=[W.pitch,W.core].filter(x=>x&&x.trim()).join('；');
+    const seed=[
+      {fn:'role-board', label:'主角', name:'主角', profile:W.hero.trim()||core},
+      {fn:'role-board', label:'对手', name:'对手', profile:W.rival.trim()},
+      {fn:'scene-board', label:'主要场景', name:'主要场景', profile:W.world.trim()||[W.genre,core].filter(Boolean).join('；')},
+    ].filter(x=>x.profile||x.label!=='对手');
+    store('assetSeed',{wid:item.id, title, items:seed});
+    toast('已保存作品，前往资产库');
+    location.hash='#/assets';
   };
   drawS1(); update();
 }
