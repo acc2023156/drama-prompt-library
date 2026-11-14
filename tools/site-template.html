@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>短剧提示词库</title>
+<title>天玑 · 提示词库</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -38,6 +38,19 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 .tb-seg a.on{background:#2a2a2e;color:#fff}
 .tb-seg svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .tb-stat{font-size:14px;color:var(--text-2);white-space:nowrap}
+.tb-tools{display:flex;align-items:center;gap:6px;margin-left:10px;padding-right:12px;border-right:1px solid rgba(255,255,255,.12)}
+.ti{position:relative;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:#f2f2f2;text-decoration:none}
+.ti:hover{background:rgba(255,255,255,.06)}
+.ti.on{background:#2a2a2e}
+.ti svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ti::after{content:attr(data-tip);position:absolute;top:calc(100% + 10px);left:50%;transform:translate(-50%,-4px);opacity:0;pointer-events:none;
+  white-space:nowrap;padding:10px 18px;border-radius:12px;background:#38383b;color:#fff;font-size:15px;font-weight:500;box-shadow:0 10px 30px rgba(0,0,0,.45);transition:opacity .12s,transform .12s;z-index:10}
+.ti:hover::after{opacity:1;transform:translate(-50%,0)}
+.soon{max-width:560px;margin:90px auto 0;text-align:center}
+.soon .big{width:88px;height:88px;margin:0 auto 22px;border-radius:24px;background:#1d1d20;border:1px solid var(--line-2);display:grid;place-items:center}
+.soon .big svg{width:42px;height:42px;stroke:#fff;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.soon h1{font-family:"Noto Sans SC",var(--font);font-weight:900;font-size:30px;margin:0 0 10px}
+.soon p{color:var(--text-2);margin:0 0 24px}
 
 /* ---------- shell: rail + collapsible panel + main ---------- */
 .shell{display:flex;min-height:calc(100vh - 60px)}
@@ -180,7 +193,12 @@ textarea.style{width:100%;min-height:150px;margin-top:10px;resize:vertical;borde
   .topbar{padding:0 12px;gap:10px;height:56px}
   .tb-logo{margin-right:0;width:32px}
   .tb-logo svg{width:28px;height:28px}
-  .tb-name,.tb-stat{display:none}
+  .tb-stat{display:none}
+  .tb-name{font-size:15px}
+  .tb-tools{margin-left:0;padding-right:8px;gap:2px}
+  .ti{width:38px;height:38px}
+  .ti svg{width:21px;height:21px}
+  .ti::after{display:none}
   .tb-seg{flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}
   .tb-seg a{height:36px;padding:0 12px;font-size:14px}
   .shell{min-height:calc(100vh - 56px)}
@@ -206,7 +224,8 @@ textarea.style{width:100%;min-height:150px;margin-top:10px;resize:vertical;borde
     <svg viewBox="0 0 40 40"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd23f"/><stop offset=".45" stop-color="#3fb6ff"/><stop offset="1" stop-color="#7a5cff"/></linearGradient></defs>
       <path d="M6 6 34 18 21 21 17 34Z" fill="url(#lg)"/><path d="M21 21 34 18 26 26Z" fill="#1e7fd6" opacity=".7"/></svg>
   </a>
-  <span class="tb-name">短剧提示词库</span>
+  <span class="tb-name">天玑</span>
+  <nav class="tb-tools" id="tbTools"></nav>
   <nav class="tb-seg" id="tbSeg"></nav>
   <span class="tb-stat" id="tbStat"></span>
 </header>
@@ -239,6 +258,9 @@ const ICONS = {
   dl:'<path d="M12 4v12m0 0-5-5m5 5 5-5M4 20h16"/>',
   check:'<path d="M5 12l5 5L20 7"/>',
   play:'<rect x="3" y="5" width="18" height="14" rx="3.5"/><path d="m10 9 5 3-5 3V9Z"/>',
+  script:'<path d="M12 6.5C10 5 7.5 4.5 3.5 4.5v13c4 0 6.5.5 8.5 2 2-1.5 4.5-2 8.5-2v-13c-4 0-6.5.5-8.5 2Z"/><path d="M12 6.5V19.5"/>',
+  assets:'<path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h4l2 2.2h7A2.5 2.5 0 0 1 21 9.7v7.8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5v-10Z" fill="currentColor"/><path d="M7.5 13h9" stroke="#111" stroke-width="2.2"/>',
+  fileText:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
   grid:'<rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/>',
   panel:'<rect x="3.5" y="4.5" width="17" height="15" rx="3.5"/><path d="M9.5 4.5v15"/>',
 };
@@ -246,11 +268,11 @@ const ico = n => `<svg viewBox="0 0 24 24">${ICONS[n]}</svg>`;
 
 const NAV = [
   {key:'01-outline', icon:'bulb', label:'立项与大纲'},
-  {key:'02-adaptation', icon:'book', label:'小说转剧本'},
+  {key:'02-adaptation', icon:'fileText', label:'小说转剧本'},
   {key:'03-revision', icon:'pen', label:'剧本精修', subs:[
     ['03-revision/dialogue','对白与台词'],['03-revision/de-ai','去 AI 味'],['03-revision/trim','删减'],
     ['03-revision/review','审核与检查'],['03-revision/shootability','可拍性 / OS·VO'],['03-revision/craft','其他手法']]},
-  {key:'06-video', icon:'play', label:'视频生成', subs:[
+  {key:'06-video', icon:'film', label:'视频生成', subs:[
     ['06-video/core','6.0 主模板'],['06-video/patches','6.0 补丁'],['06-video/styles','画风块'],['06-video/reference','参考与示例']]},
   {key:'07-compliance', icon:'shield', label:'合规'},
   {key:'archive', icon:'box', label:'归档'},
@@ -299,6 +321,24 @@ function renderMd(md){
   return box;
 }
 
+/* ---------- 天玑功能入口（顶栏三个图标，功能尚在开发，先放占位页） ---------- */
+const TOOLS = {
+  script:     {icon:'script', label:'剧本',   desc:'在这里编写和管理剧本，套用左侧的立项、改编、精修提示词。', links:[['01-outline','立项与大纲'],['02-adaptation','小说转剧本'],['03-revision','剧本精修']]},
+  assets:     {icon:'assets', label:'资产库', desc:'集中管理角色、场景、道具等制作素材，生成视频时直接关联。', links:[['06-video/styles','画风块'],['archive/05-design','角色与场景设定（归档）']]},
+  storyboard: {icon:'play',   label:'分镜',   desc:'把剧本拆成分镜表，再组装成每集 4～6 段的视频提示词。', links:[['06-video','视频生成'],['archive/04-storyboard','分镜（归档）']]},
+};
+function viewTool(k){
+  const t=TOOLS[k];
+  document.getElementById('view').innerHTML=`<section class="soon">
+    <div class="big">${ico(t.icon)}</div>
+    <h1>${t.label}</h1>
+    <p>${esc(t.desc)}<br>天玑的这个功能还在开发中，先用下面的相关提示词。</p>
+    <div class="row" style="justify-content:center">
+      ${t.links.map(([f,l])=>`<a class="btn-dark" href="#/f/${f}">${esc(l)}</a>`).join('')}
+      ${k==='storyboard'?`<a class="btn-white" href="#/assembler">${ico('wand')}6.0 组装器</a>`:''}
+    </div></section>`;
+}
+
 /* ---------- nav: top bar + icon rail + collapsible panel ---------- */
 const chapterOf = folder => folder ? NAV.find(n => folder===n.key || folder.startsWith(n.key+'/')) : null;
 function drawNav(route){
@@ -310,6 +350,8 @@ function drawNav(route){
     `<a href="#/" class="${lib?'on':''}">${ico('grid')}提示词</a>
      <a href="#/assembler" class="${route.view==='assembler'?'on':''}">${ico('wand')}6.0 组装器</a>`;
   document.getElementById('tbStat').textContent = `条目 ${ENTRIES.length}`;
+  document.getElementById('tbTools').innerHTML = Object.entries(TOOLS).map(([k,t]) =>
+    `<a class="ti ${route.view==='tool'&&route.tool===k?'on':''}" href="#/${k}" data-tip="${t.label}" aria-label="${t.label}">${ico(t.icon)}</a>`).join('');
 
   const ri = (href,icon,tip,on,extra) => `<a class="ri ${on?'on':''} ${extra||''}" href="${href}" data-tip="${tip}" aria-label="${tip}">${ico(icon)}</a>`;
   const main = NAV.slice(0,4), more = NAV.slice(4);
@@ -517,6 +559,7 @@ function parse(){
   if(h.startsWith('e/')) {const e=byId[h.slice(2)];return {view:'entry',id:h.slice(2),folder:e&&e.folder}}
   if(h.startsWith('f/')) return {view:'list',folder:h.slice(2)};
   if(h==='assembler'||h==='changelog'||h==='sources') return {view:h};
+  if(TOOLS[h]) return {view:'tool',tool:h};
   return {view:'home'};
 }
 function route(){
@@ -525,6 +568,7 @@ function route(){
   document.body.classList.toggle('ps-off', matchMedia('(max-width:760px)').matches || store('panel')===false);
   if(r.view==='entry') viewEntry(r.id);
   else if(r.view==='assembler') viewAssembler();
+  else if(r.view==='tool') viewTool(r.tool);
   else if(r.view==='changelog') viewDoc('更新记录', DATA.changelog);
   else if(r.view==='sources') viewDoc('来源与许可', DATA.sources);
   else viewList(r);
