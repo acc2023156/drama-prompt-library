@@ -391,7 +391,11 @@ a.pill{text-decoration:none}
 .dock .dice svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:1.8}
 .magic{height:50px;padding:0 24px;border-radius:16px;font-size:16px;font-weight:800;color:#fff;background:linear-gradient(90deg,#731dfb,#3f7bff);box-shadow:0 8px 24px rgba(115,29,251,.45);display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
 .magic:hover{filter:brightness(1.1)}
-.magic:disabled{background:#2a2a2e;box-shadow:none;color:var(--text-3);cursor:not-allowed}
+.magic:disabled,.magic.idle{background:#2a2a2e;box-shadow:none;color:var(--text-3);cursor:not-allowed}
+.magic.idle{cursor:pointer}
+.roles{scroll-margin-top:90px}
+.roles.flash .role{animation:flash 1s ease 2}
+@keyframes flash{0%,100%{border-color:var(--line)}50%{border-color:var(--brand);box-shadow:0 0 0 3px rgba(139,69,255,.35)}}
 .magic svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
 /* 结果页 */
 .done-hero{position:relative;text-align:center;margin:40px 0 24px;overflow:hidden;padding:20px 0}
@@ -1351,7 +1355,7 @@ function viewScriptSimple(){
     });
     const t = st.idx!=null ? list()[st.idx] : null;
     $('who').textContent = t ? t.type : '还没选';
-    $('magic').disabled = !t;
+    $('magic').classList.toggle('idle', !t);
     const s1=1, s2=t?1:0;
     $('sxSteps').innerHTML=[['选频道',s1],['选主角',s2],['一键产出',0]].map(([l,d],i)=>{const c=d?'done':(i===(t?2:1)?'on':''); return `<span class="${c}">${sn(i+1,c)}${l}</span>`}).join('');
   }
@@ -1361,7 +1365,15 @@ function viewScriptSimple(){
   $('sxTitle').oninput=e=>{st.title=e.target.value;save()};
   $('dice').onclick=()=>{randomize();save()};
   $('magic').onclick=()=>{
-    const t=list()[st.idx]; if(!t) return;
+    const t=st.idx!=null ? list()[st.idx] : null;
+    if(!t){
+      // 还没选主角：提示并带到角色卡片
+      toast('先选一个主角');
+      const r=$('roles'); r.scrollIntoView({behavior:'smooth',block:'start'});
+      r.classList.remove('flash'); void r.offsetWidth; r.classList.add('flash');
+      setTimeout(()=>r.classList.remove('flash'),2100);
+      return;
+    }
     if(!st.name.trim()) randomize();
     const s={id:'s'+Date.now().toString(36), g:st.g, role:t, name:st.name.trim(), title:(st.title.trim()||pick(SX_TITLES[st.g]).replace('{n}',st.name.trim())), idea:''};
     s.outline=sxOutline(t,s.name,s.g);
