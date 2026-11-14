@@ -204,7 +204,6 @@ def build_site():
         },
         "roles": json.loads(read(ROOT / "data" / "roles.json")),
         "changelog": read(ROOT / "CHANGELOG.md"),
-        "sources": read(ROOT / "sources.md"),
     }
     blob = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     html = read(ROOT / "tools" / "site-template.html").replace("/*__DATA__*/null", blob)

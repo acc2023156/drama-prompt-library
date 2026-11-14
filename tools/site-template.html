@@ -78,6 +78,7 @@ body.ps-off .ps-float{display:flex}
 .pside a svg{flex:none;width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;align-self:center}
 .pside a.sub{padding-left:37px}
 .pside a .d{display:block;font-size:12px;color:var(--text-3);margin-top:1px}
+.pside .ptag{margin-left:auto;flex:none;align-self:center;padding:2px 7px;border-radius:6px;background:var(--brand);color:#fff;font:800 10px/1.4 Inter,var(--font);letter-spacing:.04em}
 .pside .ps-hr{height:1px;background:var(--line);margin:14px 6px 4px}
 
 main{position:relative;flex:1;min-width:0;background-color:var(--bg);
@@ -1458,7 +1459,7 @@ function drawNav(route){
     `<a href="${f.href}" class="${fn===f.k&&route.view!=='start'?'on':''}">${ico(f.icon)}${f.label}</a>`).join('');
 
   // 目录面板：四大功能各自一套
-  const A = (href, label, o={}) => `<a class="${o.cls||''} ${o.on ?? hash===href ? 'on':''}" href="${href}">${o.icon?ico(o.icon):''}<span>${esc(label)}${o.d?`<span class="d">${esc(o.d)}</span>`:''}</span>${o.n!=null?`<span class="n">${o.n}</span>`:''}</a>`;
+  const A = (href, label, o={}) => `<a class="${o.cls||''} ${o.on ?? hash===href ? 'on':''}" href="${href}">${o.icon?ico(o.icon):''}<span>${esc(label)}${o.d?`<span class="d">${esc(o.d)}</span>`:''}</span>${o.n!=null?`<span class="n">${o.n}</span>`:''}${o.pro?'<span class="ptag">PRO</span>':''}</a>`.replace('<a ', o.pro?'<a data-pro ':'<a ');
   const T = (t, icon) => `<div class="ps-title">${icon?ico(icon):''}${esc(t)}</div>`;
   const PICK = `<div class="ps-hr"></div>` + T('精选提示词','grid');
   const F = FUNCS.find(f=>f.k===fn);
@@ -1469,12 +1470,16 @@ function drawNav(route){
   if(fn==='script'){
     const works = store('works')||[];
     if(isPro() && route.view!=='start'){
-      h += T('PRO 专业版') + A('#/script','我的作品',{cls:'head fn',icon:'script',n:works.length}) + A('#/script/new','新增作品',{cls:'head fn',icon:'plus',on:route.sub==='new'&&!route.wid,d:'策划文件 → 骨架 → 规格 → 补充设定 → 确认'});
+      h += T('PRO 专业版') + A('#/script','我的作品',{cls:'head fn',icon:'script',n:works.length}) + A('#/script/new','新增作品',{cls:'head fn',icon:'plus',on:route.sub==='new'&&!route.wid});
       if(works.length) h += T('作品') + works.map(w=>A(w.kind==='simple'?'#/script/s/'+w.id:'#/script/w/'+w.id, '《'+(w.title||'未命名')+'》',{on:route.wid===w.id||route.sid===w.id})).join('');
     } else {
       const mine = works.filter(w=>w.kind==='simple');
       h += T('标准版') + A(route.view==='start'?'#/':'#/script','人物即剧本',{cls:'head fn',icon:'sparkle',on:!route.sub,d:'选主角，一键产出 10 集'});
       if(mine.length) h += T('我的剧本') + mine.map(w=>A('#/script/s/'+w.id,'《'+w.title+'》',{on:route.sid===w.id,d:w.sx.name+' · '+w.sx.role.type})).join('');
+      // 标准版也能直接进 PRO：新增作品与 PRO 作品，点了自动切到 PRO
+      const proW = works.filter(w=>w.kind!=='simple');
+      h += T('作品') + A('#/script/new','新增作品',{cls:'head fn',icon:'plus',pro:1,on:false});
+      h += proW.map(w=>A('#/script/w/'+w.id,'《'+(w.title||'未命名')+'》',{pro:1,on:false})).join('');
     }
     h += PICK + NAV.slice(0,3).map(n=>A('#/f/'+n.key,n.label,{cls:'fn',icon:n.icon,n:inFolder(n.key).length})).join('');
   } else if(fn==='assets'){
@@ -1487,7 +1492,6 @@ function drawNav(route){
     h += A('#/storyboard','分镜首页',{cls:'head fn',icon:'play'}) + A('#/assembler','6.0 组装器',{cls:'head fn',icon:'wand',d:'把剧本组装成视频提示词'});
     const v = NAV.find(n=>n.key==='06-video');
     h += PICK + v.subs.map(([k,l])=>A('#/f/'+k,l,{cls:'fn',icon:'film',n:inFolder(k).length})).join('');
-    h += A('#/f/archive/04-storyboard','分镜（10/30 实测后基本不用）',{cls:'fn',icon:'box',n:inFolder('archive/04-storyboard').length});
   } else {
     h += A('#/prompts','全部提示词',{cls:'head fn',icon:'grid',on:route.view==='home',n:ENTRIES.length});
     h += T('按流程');
@@ -1500,9 +1504,10 @@ function drawNav(route){
         h += list.map(e=>`<a class="sub ${route.id===e.id?'on':''}" href="#/e/${e.id}"><span class="i">${e.id}</span><span>${esc(e.title)}</span></a>`).join('');
       }
     }
-    h += `<div class="ps-hr"></div>` + T('工具与资料') + A('#/assembler','6.0 组装器',{cls:'fn',icon:'wand'}) + A('#/changelog','更新记录',{cls:'fn',icon:'clock'}) + A('#/sources','来源与许可',{cls:'fn',icon:'link'});
+    h += `<div class="ps-hr"></div>` + T('工具与资料') + A('#/assembler','6.0 组装器',{cls:'fn',icon:'wand'}) + A('#/changelog','更新记录',{cls:'fn',icon:'clock'});
   }
   const ps = document.getElementById('pside'); ps.innerHTML = h;
+  ps.querySelectorAll('[data-pro]').forEach(a=>a.onclick=()=>store('pro',true));
   document.getElementById('psOpen').innerHTML = pill;
   document.getElementById('psClose').onclick = () => setPanel(false);
   // PRO 开关：开 = 专业版（现有完整流程），关 = 标准版（简化流程）
@@ -1720,7 +1725,7 @@ function parse(){
   const h=location.hash.replace(/^#\/?/,'');
   if(h.startsWith('e/')) {const e=byId[h.slice(2)];return {view:'entry',id:h.slice(2),folder:e&&e.folder}}
   if(h.startsWith('f/')) return {view:'list',folder:h.slice(2)};
-  if(h==='assembler'||h==='changelog'||h==='sources') return {view:h};
+  if(h==='assembler'||h==='changelog') return {view:h};
   if(h.startsWith('script/s/')) {const [id,q]=h.slice(9).split('?');return {view:'tool',tool:'script',sub:'result',sid:id,fresh:q==='new=1'}}
   if(h==='script/new') return {view:'tool',tool:'script',sub:'new'};
   if(h.startsWith('script/w/')) return {view:'tool',tool:'script',sub:'new',wid:h.slice(9)};
@@ -1745,7 +1750,6 @@ function route(){
   }
   else if(r.view==='tool') viewTool(r.tool);
   else if(r.view==='changelog') viewDoc('更新记录', DATA.changelog);
-  else if(r.view==='sources') viewDoc('来源与许可', DATA.sources);
   else viewList(r);
   window.scrollTo(0,0);
 }
