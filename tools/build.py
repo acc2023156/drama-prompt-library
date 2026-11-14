@@ -202,6 +202,7 @@ def build_site():
             "styles": {p.stem: read(p) for p in STYLES.glob("*.md") if not re.match(r"\d", p.stem)},
             "options": {n: read(OPTIONS / f"{n}.md") for n in all_options()},
         },
+        "roles": json.loads(read(ROOT / "data" / "roles.json")),
         "changelog": read(ROOT / "CHANGELOG.md"),
         "sources": read(ROOT / "sources.md"),
     }

@@ -71,8 +71,17 @@ body.ps-off .pside{width:0;padding:0;border-right:0;overflow:hidden}
 .pill{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 14px 0 16px;border-radius:12px;background:#1d1d20;border:1px solid var(--line);color:#e9e9ee;font-size:15px;white-space:nowrap}
 .pill:hover{background:#26262a}
 .pill svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7}
-.pill.float{position:absolute;top:24px;left:26px;z-index:4;display:none}
-body.ps-off .pill.float{display:inline-flex}
+.ps-float{position:absolute;top:24px;left:26px;z-index:4;display:none;align-items:center;gap:8px}
+body.ps-off .ps-float{display:flex}
+.ps-row{display:flex;align-items:center;gap:8px}
+.pro{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 10px 0 12px;border-radius:12px;background:#1d1d20;border:1px solid var(--line);color:var(--text-2);font:800 13px/1 Inter,var(--font);letter-spacing:.04em;cursor:pointer;white-space:nowrap}
+.pro:hover{background:#26262a}
+.pro .sw{width:34px;height:20px}
+.pro .sw::after{width:14px;height:14px}
+.pro .sw.on::after{transform:translateX(14px)}
+.pro.on{color:#fff}
+.pro.on b{background:linear-gradient(90deg,#b98bff,#3fb6ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.pro em{font-style:normal;font-weight:500;font-size:12px;color:var(--text-3)}
 .ps-title{font-size:12px;letter-spacing:.06em;color:var(--text-3);padding:18px 10px 6px}
 .pside a{display:flex;gap:10px;align-items:baseline;padding:7px 10px;border-radius:9px;text-decoration:none;color:var(--text-2);font-size:13.5px;line-height:1.45}
 .pside a:hover{background:rgba(255,255,255,.05);color:#fff}
@@ -346,7 +355,83 @@ a.pill{text-decoration:none}
 .modal pre{margin:0;padding:16px 18px;overflow:auto;white-space:pre-wrap;word-break:break-word;font:13px/1.75 "Noto Sans SC",ui-monospace,monospace;color:#e9e9ee}
 .modal .mf{display:flex;gap:8px;justify-content:flex-end;padding:12px 18px;border-top:1px solid var(--line);flex-wrap:wrap}
 
+/* ---------- 标准版：人物即剧本 ---------- */
+.sx-hero{text-align:center;margin:44px 0 26px}
+.sx-hero h1{margin:0;font-family:"Noto Sans SC",var(--font);font-weight:900;font-size:clamp(30px,4.4vw,46px);
+  background:linear-gradient(90deg,#aeb4be,#fff 50%,#aeb4be);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sx-hero p{margin:10px 0 0;color:var(--text-2);font-size:15px}
+.sx-steps{display:flex;justify-content:center;gap:8px;margin:22px 0 0;flex-wrap:wrap}
+.sx-steps span{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px 0 6px;border-radius:999px;background:#18181b;border:1px solid var(--line);color:var(--text-3);font-size:13px}
+.sx-steps span i{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:#2a2a2e;font-style:normal;font-weight:700;font-size:12px}
+.sx-steps span.on{color:#fff;border-color:rgba(139,69,255,.6)}
+.sx-steps span.on i{background:var(--brand)}
+.sx-steps span.done i{background:var(--green);color:#052}
+.locks{display:flex;justify-content:center;gap:8px;margin-top:14px;flex-wrap:wrap}
+.locks span{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-2);padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.05)}
+.locks svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
+.sx-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:30px 0 16px}
+.gseg{display:inline-flex;padding:4px;border-radius:16px;background:#141416;border:1px solid var(--line)}
+.gseg button{height:44px;padding:0 22px;border-radius:12px;font-size:16px;font-weight:700;color:var(--text-2)}
+.gseg button.on{background:#fff;color:#111}
+.sx-bar .search2{flex:1;min-width:200px;display:flex;align-items:center;gap:8px;height:44px;padding:0 14px;border-radius:14px;border:1px solid var(--line);background:#141416}
+.sx-bar .search2 svg{width:16px;height:16px;stroke:var(--text-3);fill:none;stroke-width:2}
+.sx-bar .search2 input{flex:1;background:none;border:0;outline:0;color:var(--text);font:14px var(--font)}
+.roles{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;padding-bottom:140px}
+.role{position:relative;text-align:left;display:flex;flex-direction:column;gap:8px;padding:16px;border-radius:20px;border:1.5px solid var(--line);background:linear-gradient(180deg,#1b1b1f,#141416);transition:border-color .15s,transform .15s}
+.role:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.2)}
+.role.on{border-color:var(--brand-2);box-shadow:0 0 0 3px rgba(139,69,255,.25)}
+.role .av{width:44px;height:44px;border-radius:14px;display:grid;place-items:center}
+.role .av svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:1.7}
+.role h3{margin:0;font-size:16px}
+.role .s{font-size:12.5px;color:var(--text-3);line-height:1.6}
+.role .gold{font-size:12.5px;color:#d9c6ff}
+.role .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:auto}
+.role .ok{position:absolute;top:14px;right:14px;width:26px;height:26px;border-radius:50%;background:var(--brand);display:none;place-items:center}
+.role .ok svg{width:15px;height:15px;stroke:#fff;fill:none;stroke-width:3}
+.role.on .ok{display:grid}
+.dock{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:9;width:min(860px,calc(100vw - 32px));display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:12px 12px 12px 18px;border-radius:22px;border:1px solid var(--line-2);background:rgba(27,27,31,.94);backdrop-filter:blur(14px);box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.dock .who{display:flex;flex-direction:column;min-width:0;flex:1 1 160px}
+.dock .who small{color:var(--text-3);font-size:12px}
+.dock .who b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dock .in{width:auto;min-width:0;flex:1 1 110px;height:44px;padding:0 12px}
+.dock .dice{width:44px;height:44px;border-radius:12px;background:#26262a;display:grid;place-items:center}
+.dock .dice svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:1.8}
+.magic{height:50px;padding:0 24px;border-radius:16px;font-size:16px;font-weight:800;color:#fff;background:linear-gradient(90deg,#731dfb,#3f7bff);box-shadow:0 8px 24px rgba(115,29,251,.45);display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.magic:hover{filter:brightness(1.1)}
+.magic:disabled{background:#2a2a2e;box-shadow:none;color:var(--text-3);cursor:not-allowed}
+.magic svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
+/* 结果页 */
+.done-hero{position:relative;text-align:center;margin:40px 0 24px;overflow:hidden;padding:20px 0}
+.done-hero .badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:rgba(61,220,151,.14);color:var(--green);font-weight:700;font-size:13px}
+.done-hero h1{margin:14px 0 8px;font-family:"Noto Sans SC",var(--font);font-weight:900;font-size:clamp(26px,4vw,40px)}
+.stats{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:14px}
+.stats span{padding:8px 16px;border-radius:14px;background:#18181b;border:1px solid var(--line);font-size:13px;color:var(--text-2)}
+.stats b{color:#fff;font-size:18px;margin-right:4px}
+.confetti{position:absolute;inset:0;pointer-events:none}
+.confetti i{position:absolute;top:-10px;width:8px;height:14px;border-radius:2px;opacity:0;animation:fall 1.8s ease-out forwards}
+@keyframes fall{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:0;transform:translateY(260px) rotate(540deg)}}
+.res-grid{display:grid;grid-template-columns:300px minmax(0,1fr);gap:18px;align-items:start}
+.hero-card{position:sticky;top:80px;border-radius:22px;border:1px solid var(--line);background:linear-gradient(180deg,#1d1a26,#141416);padding:18px}
+.hero-card .av{width:64px;height:64px;border-radius:20px;display:grid;place-items:center;margin-bottom:10px}
+.hero-card .av svg{width:34px;height:34px;stroke:#fff;fill:none;stroke-width:1.6}
+.hero-card h3{margin:0;font-size:20px}
+.hero-card .kv{grid-template-columns:64px 1fr;margin-top:12px;line-height:1.6}
+.eps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.ep{padding:14px 16px;border-radius:18px;border:1px solid var(--line);background:#151517;animation:pop .35s ease both}
+.ep .h{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.ep .h b{font:800 12px Inter;color:#fff;background:var(--brand);border-radius:8px;padding:3px 8px}
+.ep .h span{font-weight:700}
+.ep p{margin:0;font-size:13.5px;color:var(--text-2);line-height:1.7}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.next{margin-top:18px;padding:16px 18px;border-radius:18px;background:var(--brand-soft);border:1px solid rgba(139,69,255,.35)}
+.next h4{margin:0 0 6px;font-size:15px}
+.next p{margin:0 0 12px;color:var(--text-2);font-size:13.5px}
+.minework{margin-top:40px}
+
 @media (max-width:1100px){
+  .res-grid{grid-template-columns:1fr}
+  .hero-card{position:static}
   .wz{grid-template-columns:1fr}
   .side2{position:static;order:-1}
   .asm{grid-template-columns:1fr}
@@ -377,9 +462,15 @@ a.pill{text-decoration:none}
   .wires{display:none}
   .sgrid{grid-template-columns:repeat(3,1fr)}
   .g3,.g2{grid-template-columns:1fr}
+  .eps{grid-template-columns:1fr}
+  .dock{bottom:76px;padding:10px}
+  .dock .who{display:none}
+  .magic{flex:1;justify-content:center}
+  .gseg{width:100%}.gseg button{flex:1}
   .step{padding:16px}
   .pside{position:fixed;top:56px;left:0;bottom:64px;height:auto;z-index:7;width:min(300px,86vw);box-shadow:20px 0 60px rgba(0,0,0,.6)}
-  .pill.float{top:14px;left:16px;height:36px;font-size:14px}
+  .ps-float{top:14px;left:16px}
+  .ps-float .pill,.ps-float .pro{height:36px;font-size:13px}
   body.ps-off main .wrap{padding-top:50px}
   main{padding-bottom:64px}
   .wrap{padding:0 16px 60px}
@@ -404,7 +495,7 @@ a.pill{text-decoration:none}
   <nav class="rail" id="rail"></nav>
   <aside class="pside" id="pside"></aside>
   <main>
-    <button class="pill float" id="psOpen"></button>
+    <div class="ps-float"><span class="pro-slot"></span><button class="pill" id="psOpen"></button></div>
     <div class="wrap" id="view"></div>
   </main>
 </div>
@@ -448,6 +539,10 @@ const ICONS = {
   back:'<path d="M15 18l-6-6 6-6"/>',
   save:'<path d="M5 4h11l3 3v13H5V4Z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/>',
   trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  dice:'<rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1" fill="currentColor"/><circle cx="15" cy="15" r="1" fill="currentColor"/><circle cx="15" cy="9" r="1" fill="currentColor"/><circle cx="9" cy="15" r="1" fill="currentColor"/>',
+  sparkle:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3ZM19 15l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2Z"/>',
+  female:'<circle cx="12" cy="8" r="4"/><path d="M6 21c0-4 2.7-7 6-7s6 3 6 7M8 6.5C9 4 15 4 16 6.5"/>',
   fileText:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
   grid:'<rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/>',
   panel:'<rect x="3.5" y="4.5" width="17" height="15" rx="3.5"/><path d="M9.5 4.5v15"/>',
@@ -857,7 +952,7 @@ function viewScriptHome(){
       <div class="row" style="justify-content:space-between"><h1>剧本</h1><a class="btn-white" href="#/script/new">${ico('plus')}新增作品</a></div>
       <p>新增作品分 5 步：策划文件 → 骨架 → 第一季规格 → 补充设定 → 确认与建立。</p></div>
     ${works.length?`<div class="works">${works.map((w,k)=>`<div class="acard">
-        <div class="t">${ico('script')}《${esc(w.title||'未命名')}》<span class="tag" style="margin-left:auto">${esc(MODE[w.W.mode].tab)}</span></div>
+        <div class="t">${ico('script')}《${esc(w.title||'未命名')}》<span class="tag" style="margin-left:auto">${esc(w.kind==='simple'?'人物即剧本':MODE[w.W.mode].tab)}</span></div>
         <div class="row" style="gap:6px">${[w.W.aud,w.W.pair,w.W.genre].map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
         <div class="s">${esc(w.W.pitch||'（未填卖点）')}\n${wzEps(w.W)} 集 × ${wzMins(w.W)} 分钟 · ${new Date(w.time).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
         <div class="row"><a class="tag" style="text-decoration:none;align-self:center" href="#/script/w/${w.id}">打开</a><button data-cp="${k}">复制提示词</button><button data-del="${k}" style="margin-left:auto">删除</button></div>
@@ -1031,7 +1126,179 @@ function viewScriptNew(workId){
   drawS1(); update();
 }
 
+/* ---------- 标准版：人物即剧本（选频道 → 选主角 → 一键产出 10 集） ---------- */
+const SX = {eps:10, mins:1, wpm:400};
+const SX_NAMES = {male:['陆沉','林骁','顾承','秦野','沈渊','江屿','周砚'], female:['苏晚','林知夏','顾念','温言','沈清禾','许微','姜宁']};
+const SX_TITLES = {male:['{n}，开局逆袭','{n}的隐藏身份','我，{n}，不装了','{n}归来','这一次，{n}说了算'],
+                   female:['{n}不回头','{n}的第二人生','这次换{n}来选','{n}，清醒上位','{n}的高光时刻']};
+const SX_COLORS = ['#4a5d78','#6b5a4a','#55705f','#6a4e6e','#7a5a3a','#3e6470','#6b4a52','#4f5f8a','#5f6b3e','#6e5e86'];
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const oppOf = rel => { const r=(rel||'').split(/[；;]/)[0]; return r.includes('-') ? r.split('-').slice(1).join('、') : '对手'; };
+function sxOutline(t, n, g){
+  const P = g==='male'?'他':'她', gold=t.gold.split(/[，,+（(]/)[0].trim(), genres=t.genres.split('、').slice(0,3).join('、');
+  return [
+    ['开局即高潮', t.hook.replace(/^他|^她/, n)],
+    ['被看轻', `${n}以「${t.surface}」的身份被众人看轻，${oppOf(t.rel)}步步紧逼，${P}先忍下这一口气。`],
+    ['金手指兑现', `「${gold}」第一次兑现，${n}小范围打脸，围观的人开始改口。`],
+    ['对手反扑', `${oppOf(t.rel)}不甘心，抛出更大的筹码设局，${n}一时陷入被动。`],
+    ['第一次翻盘', `${n}借「${gold}」翻盘，赢下一个看得见、数得出的回合。`],
+    ['真相一角', `${P}心里那份「${t.hidden}」被逼出一角，身边人的态度开始转变。`],
+    ['幕后现身', `真正的幕后对手现身，旧账浮出水面，局面全面升级。`],
+    ['跌入低谷', `${n}失去倚仗、被逼到绝境，必须做出选择。`],
+    ['全面反击', `${n}全面反击，${genres}的爽点集中兑现。`],
+    ['大结局', `身份与真相公开，对手付出代价；${n}站上新的位置，故事完整收尾。`],
+  ];
+}
+function sxPrompt(s){
+  const t=s.role, ch=s.g==='male'?'男频':'女频';
+  return `你是短剧编剧。请依下面的主角设定和分集大纲，写出 10 集完整短剧剧本。
+
+【固定规格】共 ${SX.eps} 集，每集约 ${SX.mins} 分钟、约 ${SX.mins*SX.wpm} 字；简体中文、中国大陆用语；第 10 集完整收尾，不预留续季。
+
+【剧名】《${s.title}》
+
+【主角】${s.name}（${ch}）
+- 角色原型：${t.type}
+- 表面人设：${t.surface}
+- 隐藏欲望 / 实力：${t.hidden}
+- 金手指 / 核心设定：${t.gold}
+- 开场钩子：${t.hook.replace(/^他|^她/, s.name)}
+- 关系：${t.rel}
+- 可组合流派：${t.genres}
+- 创作要点：${t.note}
+${s.idea?`- 我想加的点子：${s.idea}\n`:''}
+【分集大纲】
+${s.outline.map(([h,b],i)=>`第 ${i+1} 集｜${h}：${b}`).join('\n')}
+
+【写作要求】
+- 每集开头 3 秒内给出钩子，第 1–9 集集尾留悬念，第 10 集收尾。
+- 每集约 ${SX.mins*SX.wpm} 字，场次少、台词短而有力，动作要拍得出来。
+- 动作行和台词照下面的单集格式标示，每句台词标出说话人与情绪。
+
+【单集剧本格式（提示词库 2.5）】
+${lib('2.5')}`;
+}
+function sxSaveWork(s){
+  const list=store('works')||[];
+  const t=s.role, W={...WZ_DEF, mode:'auto', title:s.title, aud:s.g==='male'?'男性向':'女性向', pitch:t.hook.replace(/^他|^她/, s.name),
+    eps:SX.eps, mins:SX.mins, sequel:false, hero:`${s.name}：${t.surface}；${t.hidden}`, core:t.gold, rival:oppOf(t.rel), diff:s.idea||'', adult:true};
+  const item={id:s.id, kind:'simple', title:s.title, sx:s, W, time:Date.now()};
+  const i=list.findIndex(x=>x.id===s.id); if(i>=0) list[i]=item; else list.unshift(item);
+  store('works',list);
+}
+
+function viewScriptSimple(){
+  const st = store('sxPick') || {g:'male', idx:null, name:'', title:'', q:''};
+  const works=(store('works')||[]).filter(w=>w.kind==='simple');
+  const v=document.getElementById('view');
+  v.innerHTML=`
+    <section class="sx-hero">
+      <h1>人物即剧本</h1>
+      <p>选一个主角，一键产出 10 集短剧剧本</p>
+      <div class="sx-steps" id="sxSteps"></div>
+      <div class="locks"><span>${ico('lock')}10 集</span><span>${ico('lock')}每集 1 分钟</span><span>${ico('lock')}简体中文</span><span>${ico('lock')}一季完结</span></div>
+    </section>
+    <div class="sx-bar">
+      <div class="gseg" id="gseg"><button data-g="male">男频</button><button data-g="female">女频</button></div>
+      <label class="search2">${ico('search')}<input id="sxq" placeholder="搜角色、金手指、流派，如“系统”“真假千金”" value="${esc(st.q)}"></label>
+    </div>
+    <div class="roles" id="roles"></div>
+    ${works.length?`<section class="minework"><div class="sec-head" style="margin:0 0 14px"><h2 style="font-size:20px">我的剧本</h2><span class="meta">${works.length} 部 · 保存在这台电脑</span></div>
+      <div class="works">${works.map(w=>`<a class="acard" href="#/script/s/${w.id}" style="text-decoration:none"><div class="t">${ico(w.sx.g==='male'?'user':'female')}《${esc(w.title)}》</div><div class="s">${esc(w.sx.name)} · ${esc(w.sx.role.type)}</div></a>`).join('')}</div></section>`:''}
+    <div class="dock">
+      <div class="who"><small>主角</small><b id="who">还没选</b></div>
+      <input class="in" id="sxName" placeholder="主角名字" value="${esc(st.name)}">
+      <input class="in" id="sxTitle" placeholder="剧名" value="${esc(st.title)}">
+      <button class="dice" id="dice" title="换一组名字">${ico('dice')}</button>
+      <button class="magic" id="magic">${ico('sparkle')}一键产出剧本</button>
+    </div>`;
+  const $=id=>document.getElementById(id);
+  const list=()=>DATA.roles[st.g];
+  function save(){ store('sxPick',st); }
+  function randomize(){
+    st.name=pick(SX_NAMES[st.g]); st.title=pick(SX_TITLES[st.g]).replace('{n}',st.name);
+    $('sxName').value=st.name; $('sxTitle').value=st.title;
+  }
+  function draw(){
+    document.querySelectorAll('#gseg button').forEach(b=>b.classList.toggle('on',b.dataset.g===st.g));
+    const q=st.q.trim();
+    $('roles').innerHTML=list().map((t,i)=>({t,i})).filter(({t})=>!q||Object.values(t).join(' ').includes(q)).map(({t,i})=>`
+      <button class="role ${st.idx===i?'on':''}" data-i="${i}">
+        <span class="ok">${ico('check')}</span>
+        <span class="av" style="background:linear-gradient(160deg,${SX_COLORS[i%10]},#1a1a1d)">${ico(st.g==='male'?'user':'female')}</span>
+        <h3>${esc(t.type)}</h3>
+        <span class="s">${esc(t.surface)}</span>
+        <span class="gold">✦ ${esc(t.gold)}</span>
+        <span class="tags">${t.genres.split('、').slice(0,4).map(x=>`<span class="tag">${esc(x)}</span>`).join('')}${t.heat==='有具体剧名'?'<span class="tag prod">爆款验证</span>':''}</span>
+      </button>`).join('') || '<div class="empty" style="grid-column:1/-1">没有符合的角色</div>';
+    document.querySelectorAll('.role').forEach(b=>b.onclick=()=>{
+      st.idx=+b.dataset.i; if(!st.name) randomize(); draw(); save();
+    });
+    const t = st.idx!=null ? list()[st.idx] : null;
+    $('who').textContent = t ? t.type : '还没选';
+    $('magic').disabled = !t;
+    const s1=1, s2=t?1:0;
+    $('sxSteps').innerHTML=[['选频道',s1],['选主角',s2],['一键产出',0]].map(([l,d],i)=>`<span class="${d?'done':(i===(t?2:1)?'on':'')}"><i>${d?'✓':i+1}</i>${l}</span>`).join('');
+  }
+  document.querySelectorAll('#gseg button').forEach(b=>b.onclick=()=>{ if(st.g===b.dataset.g) return; st.g=b.dataset.g; st.idx=null; st.name=''; st.title=''; $('sxName').value=''; $('sxTitle').value=''; draw(); save(); });
+  $('sxq').oninput=e=>{st.q=e.target.value;draw();save()};
+  $('sxName').oninput=e=>{const old=st.name; st.name=e.target.value; if(old&&st.title.includes(old)){st.title=st.title.split(old).join(st.name||old); $('sxTitle').value=st.title} save()};
+  $('sxTitle').oninput=e=>{st.title=e.target.value;save()};
+  $('dice').onclick=()=>{randomize();save()};
+  $('magic').onclick=()=>{
+    const t=list()[st.idx]; if(!t) return;
+    if(!st.name.trim()) randomize();
+    const s={id:'s'+Date.now().toString(36), g:st.g, role:t, name:st.name.trim(), title:(st.title.trim()||pick(SX_TITLES[st.g]).replace('{n}',st.name.trim())), idea:''};
+    s.outline=sxOutline(t,s.name,s.g);
+    sxSaveWork(s); store('sxPick',null);
+    location.hash='#/script/s/'+s.id+'?new=1';
+  };
+  draw();
+}
+
+function viewScriptResult(id, fresh){
+  const w=(store('works')||[]).find(x=>x.id===id);
+  const v=document.getElementById('view');
+  if(!w) { v.innerHTML='<div class="empty">找不到这部剧本，可能已在别的浏览器里。</div>'; return; }
+  const s=w.sx, t=s.role, prompt=sxPrompt(s);
+  const colors=['#731dfb','#3fb6ff','#ffd23f','#3ddc97','#ff5d6c','#ffffff'];
+  v.innerHTML=`
+    <section class="done-hero">
+      ${fresh?`<div class="confetti">${Array.from({length:60},(_,i)=>`<i style="left:${Math.random()*100}%;background:${colors[i%6]};animation-delay:${Math.random()*.6}s"></i>`).join('')}</div>`:''}
+      <span class="badge">${ico('check').replace('<svg','<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"')}${fresh?'剧本大纲完成！':'我的剧本'}</span>
+      <h1>《${esc(s.title)}》</h1>
+      <div class="stats"><span><b>10</b>集</span><span><b>~10</b>分钟总片长</span><span><b>~4,000</b>字</span><span><b>1</b>位主角</span></div>
+    </section>
+    <div class="res-grid">
+      <aside class="hero-card">
+        <div class="av" style="background:linear-gradient(160deg,${SX_COLORS[DATA.roles[s.g].findIndex(x=>x.type===t.type)%10]||'#4a5d78'},#1a1a1d)">${ico(s.g==='male'?'user':'female')}</div>
+        <h3>${esc(s.name)}</h3><div style="color:var(--text-3);font-size:13px">${s.g==='male'?'男频':'女频'} · ${esc(t.type)}</div>
+        <div class="kv"><span>表面</span><span>${esc(t.surface)}</span><span>内心</span><span>${esc(t.hidden)}</span><span>金手指</span><span>${esc(t.gold)}</span><span>关系</span><span>${esc(t.rel)}</span><span>要点</span><span>${esc(t.note)}</span></div>
+        <div class="tags" style="margin-top:12px">${t.genres.split('、').map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div>
+      </aside>
+      <div>
+        <div class="eps">${s.outline.map(([h,b],i)=>`<div class="ep" style="animation-delay:${fresh?i*.07:0}s"><div class="h"><b>EP${String(i+1).padStart(2,'0')}</b><span>${esc(h)}</span></div><p>${esc(b)}</p></div>`).join('')}</div>
+        <div class="next">
+          <h4>下一步：把大纲写成完整台词</h4>
+          <p>复制下面这段提示词，贴给 AI（例如 Claude），就能拿到 10 集、每集约 1 分钟的完整剧本。</p>
+          <div class="row">
+            <button class="magic" id="cpPrompt" style="height:44px">${ico('copy')}复制剧本提示词</button>
+            <button class="btn-o" id="seePrompt">查看提示词</button>
+            <a class="btn-o" href="#/script" style="text-decoration:none">再来一部</a>
+            <button class="btn-o" id="toPro">到 PRO 版细修</button>
+            <button class="btn-o" id="delWork" style="margin-left:auto">删除</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('cpPrompt').onclick=e=>copyText(prompt,e.currentTarget);
+  document.getElementById('seePrompt').onclick=()=>showModal(`《${s.title}》10 集剧本提示词`, prompt, `${s.title}-10集剧本提示词.txt`);
+  document.getElementById('toPro').onclick=()=>{ store('pro',true); location.hash='#/script/w/'+w.id; };
+  document.getElementById('delWork').onclick=()=>{ if(!confirm('删除这部剧本？')) return; store('works',(store('works')||[]).filter(x=>x.id!==w.id)); location.hash='#/script'; };
+}
+
 /* ---------- nav: top bar + icon rail + collapsible panel ---------- */
+const isPro = () => store('pro') !== false;
 const chapterOf = folder => folder ? NAV.find(n => folder===n.key || folder.startsWith(n.key+'/')) : null;
 function drawNav(route){
   const cur = route.folder || '';
@@ -1056,7 +1323,7 @@ function drawNav(route){
   // 二级面板：当前章节的子类与条目；不在章节里时列出全部章节
   const title = ch ? ch.label : '目录';
   const pill = `${esc(title)} ${ico('panel')}`;
-  let h = `<button class="pill" id="psClose" title="收起">${pill}</button>`;
+  let h = `<div class="ps-row"><span class="pro-slot"></span><button class="pill" id="psClose" title="收起">${pill}</button></div>`;
   if(ch){
     const groups = ch.subs || [[ch.key, '']];
     for(const [k,l] of groups){
@@ -1071,6 +1338,11 @@ function drawNav(route){
   const ps = document.getElementById('pside'); ps.innerHTML = h;
   document.getElementById('psOpen').innerHTML = pill;
   document.getElementById('psClose').onclick = () => setPanel(false);
+  // PRO 开关：开 = 专业版（现有完整流程），关 = 标准版（简化流程）
+  document.querySelectorAll('.pro-slot').forEach(s => {
+    s.innerHTML = `<button class="pro ${isPro()?'on':''}" title="${isPro()?'专业版：完整流程':'标准版：简单几步出剧本'}"><b>PRO</b><span class="sw ${isPro()?'on':''}"></span>${isPro()?'':'<em>标准版</em>'}</button>`;
+    s.firstChild.onclick = () => { store('pro', !isPro()); toast(isPro()?'已切换到 PRO 专业版':'已切换到标准版'); dispatchEvent(new HashChangeEvent('hashchange')); };
+  });
   const on = ps.querySelector('a.on'); if(on) on.scrollIntoView({block:'nearest'});
 }
 function setPanel(open){
@@ -1251,6 +1523,7 @@ function parse(){
   if(h.startsWith('e/')) {const e=byId[h.slice(2)];return {view:'entry',id:h.slice(2),folder:e&&e.folder}}
   if(h.startsWith('f/')) return {view:'list',folder:h.slice(2)};
   if(h==='assembler'||h==='changelog'||h==='sources') return {view:h};
+  if(h.startsWith('script/s/')) {const [id,q]=h.slice(9).split('?');return {view:'tool',tool:'script',sub:'result',sid:id,fresh:q==='new=1'}}
   if(h==='script/new') return {view:'tool',tool:'script',sub:'new'};
   if(h.startsWith('script/w/')) return {view:'tool',tool:'script',sub:'new',wid:h.slice(9)};
   if(h.startsWith('assets/')) {const [fn,q]=h.slice(7).split('?i=');return {view:'tool',tool:'assets',fn,idx:q==null?null:+q}}
@@ -1264,7 +1537,11 @@ function route(){
   if(r.view==='entry') viewEntry(r.id);
   else if(r.view==='assembler') viewAssembler();
   else if(r.view==='tool' && r.tool==='assets') r.fn ? viewAssetEditor(r.fn, r.idx) : viewAssets();
-  else if(r.view==='tool' && r.tool==='script') r.sub ? viewScriptNew(r.wid) : viewScriptHome();
+  else if(r.view==='tool' && r.tool==='script'){
+    if(r.sub==='result') viewScriptResult(r.sid, r.fresh);
+    else if(!isPro()) viewScriptSimple();
+    else r.sub ? viewScriptNew(r.wid) : viewScriptHome();
+  }
   else if(r.view==='tool') viewTool(r.tool);
   else if(r.view==='changelog') viewDoc('更新记录', DATA.changelog);
   else if(r.view==='sources') viewDoc('来源与许可', DATA.sources);
