@@ -29,9 +29,11 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 ::selection{background:var(--brand);color:#fff}
 /* ---------- top bar ---------- */
 .topbar{position:sticky;top:0;z-index:6;height:60px;display:flex;align-items:center;gap:14px;padding:0 18px 0 22px;background:rgba(13,13,13,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-.tb-logo{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:44px;margin-right:12px;flex:none;text-decoration:none}
-.tb-logo svg{width:24px;height:24px}
-.tb-name{font-size:15px;font-weight:500;letter-spacing:.04em;color:#e9e9ee;white-space:nowrap;line-height:1}
+.tb-logo{display:flex;align-items:center;gap:8px;height:48px;padding:0 14px 0 8px;margin-right:4px;border-radius:12px;flex:none;text-decoration:none}
+.tb-logo:hover{background:rgba(255,255,255,.06)}
+.tb-logo.on{background:#2a2a2e}
+.tb-logo svg{width:32px;height:32px}
+.tb-name{font-size:15px;font-weight:600;color:#fff;white-space:nowrap}
 .tb-seg{display:flex;gap:4px;padding:4px;border-radius:14px;background:#141416;border:1px solid var(--line)}
 .tb-seg a{display:flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:10px;text-decoration:none;color:var(--text-2);font-size:15px;font-weight:500;white-space:nowrap}
 .tb-seg a:hover{color:#fff}
@@ -450,10 +452,11 @@ a.pill{text-decoration:none}
 }
 @media (max-width:760px){
   .topbar{padding:0 12px;gap:10px;height:56px}
-  .tb-logo{margin-right:0;width:34px}
+  .tb-logo{flex-direction:column;justify-content:center;gap:1px;height:auto;padding:0;margin-right:0;width:34px}
+  .tb-logo:hover,.tb-logo.on{background:none}
   .tb-logo svg{width:24px;height:24px}
   .tb-stat{display:none}
-  .tb-name{font-size:13px}
+  .tb-name{font-size:12px;line-height:1}
   .tb-pro .pro{height:34px;padding:0 6px;gap:4px;font-size:11px}
   .tb-pro .pro .sw{display:none}
   .tb-pro .pro:not(.on){opacity:.6}
@@ -1442,9 +1445,9 @@ const FUNCS = [
   {k:'script', icon:'script', label:'剧本', href:'#/script'},
   {k:'assets', icon:'assets', label:'资产库', href:'#/assets'},
   {k:'storyboard', icon:'play', label:'分镜', href:'#/storyboard'},
-  {k:'prompts', icon:'grid', label:'提示词', href:'#/'},
+  {k:'prompts', icon:'grid', label:'提示词', href:'#/prompts'},
 ];
-const funcOf = r => r.view==='tool' ? r.tool : 'prompts';
+const funcOf = r => r.view==='tool' ? r.tool : r.view==='start' ? 'script' : 'prompts';
 function drawNav(route){
   const cur = route.folder || '';
   const ch = chapterOf(cur);
@@ -1452,7 +1455,7 @@ function drawNav(route){
   const hash = location.hash || '#/';
 
   document.getElementById('tbSeg').innerHTML = FUNCS.map(f =>
-    `<a href="${f.href}" class="${fn===f.k?'on':''}">${ico(f.icon)}${f.label}</a>`).join('');
+    `<a href="${f.href}" class="${fn===f.k&&route.view!=='start'?'on':''}">${ico(f.icon)}${f.label}</a>`).join('');
 
   // 目录面板：四大功能各自一套
   const A = (href, label, o={}) => `<a class="${o.cls||''} ${o.on ?? hash===href ? 'on':''}" href="${href}">${o.icon?ico(o.icon):''}<span>${esc(label)}${o.d?`<span class="d">${esc(o.d)}</span>`:''}</span>${o.n!=null?`<span class="n">${o.n}</span>`:''}</a>`;
@@ -1465,12 +1468,12 @@ function drawNav(route){
 
   if(fn==='script'){
     const works = store('works')||[];
-    if(isPro()){
+    if(isPro() && route.view!=='start'){
       h += T('PRO 专业版') + A('#/script','我的作品',{cls:'head fn',icon:'script',n:works.length}) + A('#/script/new','新增作品',{cls:'head fn',icon:'plus',on:route.sub==='new'&&!route.wid,d:'策划文件 → 骨架 → 规格 → 补充设定 → 确认'});
       if(works.length) h += T('作品') + works.map(w=>A(w.kind==='simple'?'#/script/s/'+w.id:'#/script/w/'+w.id, '《'+(w.title||'未命名')+'》',{on:route.wid===w.id||route.sid===w.id})).join('');
     } else {
       const mine = works.filter(w=>w.kind==='simple');
-      h += T('标准版') + A('#/script','人物即剧本',{cls:'head fn',icon:'sparkle',on:!route.sub,d:'选主角，一键产出 10 集'});
+      h += T('标准版') + A(route.view==='start'?'#/':'#/script','人物即剧本',{cls:'head fn',icon:'sparkle',on:!route.sub,d:'选主角，一键产出 10 集'});
       if(mine.length) h += T('我的剧本') + mine.map(w=>A('#/script/s/'+w.id,'《'+w.title+'》',{on:route.sid===w.id,d:w.sx.name+' · '+w.sx.role.type})).join('');
     }
     h += PICK + NAV.slice(0,3).map(n=>A('#/f/'+n.key,n.label,{cls:'fn',icon:n.icon,n:inFolder(n.key).length})).join('');
@@ -1486,7 +1489,7 @@ function drawNav(route){
     h += PICK + v.subs.map(([k,l])=>A('#/f/'+k,l,{cls:'fn',icon:'film',n:inFolder(k).length})).join('');
     h += A('#/f/archive/04-storyboard','分镜（10/30 实测后基本不用）',{cls:'fn',icon:'box',n:inFolder('archive/04-storyboard').length});
   } else {
-    h += A('#/','全部提示词',{cls:'head fn',icon:'grid',on:route.view==='home',n:ENTRIES.length});
+    h += A('#/prompts','全部提示词',{cls:'head fn',icon:'grid',on:route.view==='home',n:ENTRIES.length});
     h += T('按流程');
     for(const n of NAV){
       h += A('#/f/'+n.key, n.label, {cls:'head fn', icon:n.icon, on:cur===n.key&&route.view==='list', n:inFolder(n.key).length});
@@ -1629,7 +1632,7 @@ function viewEntry(id){
   const prev=sib[i-1], next=sib[i+1];
   const prompt=firstCode(e.body);
   v.innerHTML=`<article class="detail">
-    <div class="crumb"><a href="#/">全部</a>›<a href="#/f/${e.folder}">${esc(GROUP_LABEL[e.folder]||e.folder)}</a>›<span>${e.id}</span></div>
+    <div class="crumb"><a href="#/prompts">全部</a>›<a href="#/f/${e.folder}">${esc(GROUP_LABEL[e.folder]||e.folder)}</a>›<span>${e.id}</span></div>
     <h1>${e.id}　${esc(e.title)}</h1>
     <div class="tags">${tagsHtml(e,true)}</div>
     <div class="row" style="margin-bottom:20px">
@@ -1647,7 +1650,7 @@ function viewEntry(id){
 
 function viewDoc(title, md){
   const v=document.getElementById('view');
-  v.innerHTML=`<article class="detail"><div class="crumb"><a href="#/">全部</a>›<span>${title}</span></div><h1>${title}</h1><div class="md" id="md"></div></article>`;
+  v.innerHTML=`<article class="detail"><div class="crumb"><a href="#/prompts">全部</a>›<span>${title}</span></div><h1>${title}</h1><div class="md" id="md"></div></article>`;
   document.getElementById('md').appendChild(renderMd(md.replace(/^# .*\n/,'')));
 }
 
@@ -1723,13 +1726,16 @@ function parse(){
   if(h.startsWith('script/w/')) return {view:'tool',tool:'script',sub:'new',wid:h.slice(9)};
   if(h.startsWith('assets/')) {const [fn,q]=h.slice(7).split('?i=');return {view:'tool',tool:'assets',fn,idx:q==null?null:+q}}
   if(TOOLS[h]) return {view:'tool',tool:h};
-  return {view:'home'};
+  if(h==='prompts') return {view:'home'};
+  return {view:'start'};
 }
 function route(){
   const r=parse(); drawNav(r);
   // 手机上每次换页都收起面板；电脑上沿用上次的展开/收起状态
   document.body.classList.toggle('ps-off', matchMedia('(max-width:760px)').matches || store('panel')===false);
-  if(r.view==='entry') viewEntry(r.id);
+  document.querySelector('.tb-logo').classList.toggle('on', r.view==='start');
+  if(r.view==='start') viewScriptSimple();
+  else if(r.view==='entry') viewEntry(r.id);
   else if(r.view==='assembler') viewAssembler();
   else if(r.view==='tool' && r.tool==='assets') r.fn ? viewAssetEditor(r.fn, r.idx) : viewAssets();
   else if(r.view==='tool' && r.tool==='script'){
