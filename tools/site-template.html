@@ -63,7 +63,8 @@ body.ps-off .ps-float{display:flex}
 .pro.on{color:#fff}
 .pro.on b{background:linear-gradient(90deg,#b98bff,#3fb6ff);-webkit-background-clip:text;background-clip:text;color:transparent}
 .pro em{font-style:normal;font-weight:500;font-size:12px;color:var(--text-3)}
-.ps-title{font-size:12px;letter-spacing:.06em;color:var(--text-3);padding:18px 10px 6px}
+.ps-title{display:flex;align-items:center;gap:6px;font-size:12px;letter-spacing:.06em;color:var(--text-3);padding:18px 10px 6px}
+.ps-title svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .pside a{display:flex;gap:10px;align-items:baseline;padding:7px 10px;border-radius:9px;text-decoration:none;color:var(--text-2);font-size:13.5px;line-height:1.45}
 .pside a:hover{background:rgba(255,255,255,.05);color:#fff}
 .pside a.on{background:#232326;color:#fff}
@@ -418,7 +419,7 @@ a.pill{text-decoration:none}
 .minework{margin-top:40px}
 .seedbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:860px;margin:-10px auto 22px;padding:12px 14px;border-radius:16px;background:var(--brand-soft);border:1px solid rgba(139,69,255,.35);font-size:14px}
 .seedbar>span{display:inline-flex;align-items:center;gap:6px;color:#fff;font-weight:600}
-.seedbar>span svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
+.seedbar>span .sn{width:22px;height:22px}
 .seedbar .btn-o .sn{width:22px;height:22px}
 .seedbar .btn-o.done{border-color:rgba(139,69,255,.6)}
 .seedbar .x{margin-left:auto;width:30px;height:30px;border-radius:9px;color:var(--text-2);font-size:18px}
@@ -609,7 +610,7 @@ function viewTool(k){
   document.getElementById('view').innerHTML=`<section class="soon">
     <div class="big">${ico(t.icon)}</div>
     <h1>${t.label}</h1>
-    <p>${esc(t.desc)}<br>天玑的这个功能还在开发中，先用下面的相关提示词。</p>
+    <p>${esc(t.desc)}<br>天玑的这个功能还在开发中，先用下面的精选提示词。</p>
     <div class="row" style="justify-content:center">
       ${t.links.map(([f,l])=>`<a class="btn-dark" href="#/f/${f}">${esc(l)}</a>`).join('')}
       ${k==='storyboard'?`<a class="btn-white" href="#/assembler">${ico('wand')}6.0 组装器</a>`:''}
@@ -679,7 +680,7 @@ function viewAssets(){
   const seed = store('assetSeed');
   document.getElementById('view').innerHTML = `
     <h1 class="as-title">选择起点，建立天玑资产</h1>
-    ${seed?`<div class="seedbar"><span>${ico('script')}从《${esc(seed.title)}》生成：</span>${seed.items.map((x,k)=>`<button class="btn-o ${x.done?'done':''}" data-seed="${k}">${sn(k+1,x.done?'done':'')}${esc(x.label)}设定板</button>`).join('')}<button class="x" id="seedX" title="关闭">×</button></div>`:''}
+    ${seed?`<div class="seedbar"><span>${sn('','done')}从《${esc(seed.title)}》导入完成</span>${seed.items.map((x,k)=>`<button class="btn-o ${x.done?'done':''}" data-seed="${k}">${sn(k+1,x.done?'done':'')}${esc(x.label)}设定板</button>`).join('')}<button class="x" id="seedX" title="关闭">×</button></div>`:''}
     <div class="as-cards">${ASSET_MENUS.map((m,mi)=>`
       <div class="mcard ${mi?'r':''}"><h3>${m.title}</h3>
         ${m.items.map(i=>`<a class="mi" href="#/assets/${i.id}" style="text-decoration:none">${ico(i.icon)}${i.label}
@@ -1442,7 +1443,8 @@ function drawNav(route){
 
   // 目录面板：四大功能各自一套
   const A = (href, label, o={}) => `<a class="${o.cls||''} ${o.on ?? hash===href ? 'on':''}" href="${href}">${o.icon?ico(o.icon):''}<span>${esc(label)}${o.d?`<span class="d">${esc(o.d)}</span>`:''}</span>${o.n!=null?`<span class="n">${o.n}</span>`:''}</a>`;
-  const T = t => `<div class="ps-title">${esc(t)}</div>`;
+  const T = (t, icon) => `<div class="ps-title">${icon?ico(icon):''}${esc(t)}</div>`;
+  const PICK = `<div class="ps-hr"></div>` + T('精选提示词','grid');
   const F = FUNCS.find(f=>f.k===fn);
   const title = fn==='prompts' ? (ch ? ch.label : '目录') : F.label+'目录';
   const pill = `${esc(title)} ${ico('panel')}`;
@@ -1458,18 +1460,18 @@ function drawNav(route){
       h += T('标准版') + A('#/script','人物即剧本',{cls:'head fn',icon:'sparkle',on:!route.sub,d:'选主角，一键产出 10 集'});
       if(mine.length) h += T('我的剧本') + mine.map(w=>A('#/script/s/'+w.id,'《'+w.title+'》',{on:route.sid===w.id,d:w.sx.name+' · '+w.sx.role.type})).join('');
     }
-    h += `<div class="ps-hr"></div>` + T('相关提示词') + NAV.slice(0,3).map(n=>A('#/f/'+n.key,n.label,{cls:'fn',icon:n.icon,n:inFolder(n.key).length})).join('');
+    h += PICK + NAV.slice(0,3).map(n=>A('#/f/'+n.key,n.label,{cls:'fn',icon:n.icon,n:inFolder(n.key).length})).join('');
   } else if(fn==='assets'){
     const mine = store('assets')||[];
     h += A('#/assets','资产首页',{cls:'head fn',icon:'assets',on:!route.fn});
     for(const m of ASSET_MENUS) h += T(m.title) + m.items.map(i=>A('#/assets/'+i.id,i.label,{cls:'fn',icon:i.icon,on:route.fn===i.id&&route.idx==null})).join('');
     if(mine.length) h += T('我的资产') + mine.map((x,k)=>A(`#/assets/${x.fn}?i=${k}`,x.name||'未命名',{cls:'fn',icon:FN[x.fn]?.menu.key==='scene'?'mount':'user',on:route.fn===x.fn&&route.idx===k,d:FN[x.fn]?.label||''})).join('');
-    h += `<div class="ps-hr"></div>` + T('相关提示词') + A('#/f/06-video/styles','画风块',{cls:'fn',icon:'film'}) + A('#/f/archive/05-design','角色与场景设定（归档）',{cls:'fn',icon:'box'});
+    h += PICK + A('#/f/06-video/styles','画风块',{cls:'fn',icon:'film'}) + A('#/f/archive/05-design','角色与场景设定（归档）',{cls:'fn',icon:'box'});
   } else if(fn==='storyboard'){
     h += A('#/storyboard','分镜首页',{cls:'head fn',icon:'play'}) + A('#/assembler','6.0 组装器',{cls:'head fn',icon:'wand',d:'把剧本组装成视频提示词'});
     const v = NAV.find(n=>n.key==='06-video');
-    h += T('视频提示词') + v.subs.map(([k,l])=>A('#/f/'+k,l,{cls:'fn',icon:'film',n:inFolder(k).length})).join('');
-    h += T('归档') + A('#/f/archive/04-storyboard','分镜（10/30 实测后基本不用）',{cls:'fn',icon:'box',n:inFolder('archive/04-storyboard').length});
+    h += PICK + v.subs.map(([k,l])=>A('#/f/'+k,l,{cls:'fn',icon:'film',n:inFolder(k).length})).join('');
+    h += A('#/f/archive/04-storyboard','分镜（10/30 实测后基本不用）',{cls:'fn',icon:'box',n:inFolder('archive/04-storyboard').length});
   } else {
     h += A('#/','全部提示词',{cls:'head fn',icon:'grid',on:route.view==='home',n:ENTRIES.length});
     h += T('按流程');
