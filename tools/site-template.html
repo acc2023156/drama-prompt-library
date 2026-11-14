@@ -47,7 +47,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 /* ---------- shell: rail + collapsible panel + main ---------- */
 .shell{display:flex;min-height:calc(100vh - 60px)}
 
-.pside{position:sticky;top:60px;height:calc(100vh - 60px);width:264px;flex:none;overflow:auto;scrollbar-width:thin;border-right:1px solid var(--line);background:#111113;padding:16px 12px 24px;transition:width .2s,padding .2s}
+.pside{position:sticky;top:60px;height:calc(100vh - 60px);width:264px;flex:none;overflow:auto;scrollbar-width:none;border-right:1px solid var(--line);background:#111113;padding:16px 12px 24px;transition:width .2s,padding .2s}
 body.ps-off .pside{width:0;padding:0;border-right:0;overflow:hidden}
 .pill{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 14px 0 16px;border-radius:12px;background:#1d1d20;border:1px solid var(--line);color:#e9e9ee;font-size:15px;white-space:nowrap}
 .pill:hover{background:#26262a}
@@ -70,6 +70,7 @@ body.ps-off .ps-float{display:flex}
 .pside a .i{flex:none;min-width:30px;font:600 12px Inter,monospace;color:var(--text-3)}
 .pside a .n{margin-left:auto;font-size:11px;color:var(--text-3)}
 .pside a.head{color:#fff;font-weight:600;font-size:14px}
+.pside::-webkit-scrollbar{display:none}
 .pside a.fn{align-items:center}
 .pside a svg{flex:none;width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;align-self:center}
 .pside a.sub{padding-left:37px}
@@ -280,7 +281,11 @@ a.pill{text-decoration:none}
 .wz{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start}
 .step{border-radius:22px;border:1px solid var(--line);background:rgba(21,21,23,.92);padding:20px 22px;margin-bottom:16px}
 .step h3{display:flex;align-items:center;gap:10px;margin:0 0 14px;font-size:17px}
-.step h3 b{width:28px;height:28px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:14px}
+.step h3 .sn{width:28px;height:28px;font-size:14px}
+/* 四大功能共用的步骤数字：紫底数字 = 步骤 / 当前，黑底数字 = 未完成，紫底打勾 = 完成 */
+.sn{flex:none;width:24px;height:24px;border-radius:50%;display:inline-grid;place-items:center;background:#2a2a2e;color:var(--text-2);font:700 12px/1 Inter,var(--font);font-style:normal}
+.sn.on,.sn.done{background:var(--brand);color:#fff}
+.sn svg{width:62%;height:62%;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
 .step h3 em,.req{font-style:normal;font-size:12px;color:#ff8a9a;font-weight:500}
 .step h3 small{font-weight:400;color:var(--text-3);font-size:13px}
 .tabs2{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
@@ -330,8 +335,6 @@ a.pill{text-decoration:none}
 .kv span:nth-child(odd){color:var(--text-3)}
 .prog{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
 .prog li{display:flex;gap:10px;font-size:14px}
-.prog .n{flex:none;width:24px;height:24px;border-radius:50%;background:#2a2a2e;color:var(--text-2);display:grid;place-items:center;font-size:12px;font-weight:700}
-.prog .ok .n{background:var(--brand);color:#fff}
 .prog small{display:block;color:var(--text-3);font-size:12px;margin-top:2px}
 .works{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
 .modal{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:grid;place-items:center;padding:16px}
@@ -348,10 +351,9 @@ a.pill{text-decoration:none}
 .sx-hero p{margin:10px 0 0;color:var(--text-2);font-size:15px}
 .sx-steps{display:flex;justify-content:center;gap:8px;margin:22px 0 0;flex-wrap:wrap}
 .sx-steps span{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px 0 6px;border-radius:999px;background:#18181b;border:1px solid var(--line);color:var(--text-3);font-size:13px}
-.sx-steps span i{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:#2a2a2e;font-style:normal;font-weight:700;font-size:12px}
-.sx-steps span.on{color:#fff;border-color:rgba(139,69,255,.6)}
-.sx-steps span.on i{background:var(--brand)}
-.sx-steps span.done i{background:var(--green);color:#052}
+.sx-steps .sn{width:22px;height:22px}
+.sx-steps span.on,.sx-steps span.done{color:#fff}
+.sx-steps span.on{border-color:rgba(139,69,255,.6)}
 .locks{display:flex;justify-content:center;gap:8px;margin-top:14px;flex-wrap:wrap}
 .locks span{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-2);padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.05)}
 .locks svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
@@ -416,7 +418,9 @@ a.pill{text-decoration:none}
 .minework{margin-top:40px}
 .seedbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:860px;margin:-10px auto 22px;padding:12px 14px;border-radius:16px;background:var(--brand-soft);border:1px solid rgba(139,69,255,.35);font-size:14px}
 .seedbar>span{display:inline-flex;align-items:center;gap:6px;color:#fff;font-weight:600}
-.seedbar svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
+.seedbar>span svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
+.seedbar .btn-o .sn{width:22px;height:22px}
+.seedbar .btn-o.done{border-color:rgba(139,69,255,.6)}
 .seedbar .x{margin-left:auto;width:30px;height:30px;border-radius:9px;color:var(--text-2);font-size:18px}
 .seedbar .x:hover{background:rgba(255,255,255,.08);color:#fff}
 .rtabs{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
@@ -536,6 +540,8 @@ const ICONS = {
   panel:'<rect x="3.5" y="4.5" width="17" height="15" rx="3.5"/><path d="M9.5 4.5v15"/>',
 };
 const ico = n => `<svg viewBox="0 0 24 24">${ICONS[n]}</svg>`;
+// 步骤数字：state = 'done'（紫底打勾）| 'on'（紫底数字）| ''（黑底数字）
+const sn = (n, state='') => `<i class="sn ${state}">${state==='done'?ico('check'):n}</i>`;
 
 const NAV = [
   {key:'01-outline', icon:'bulb', label:'立项与大纲'},
@@ -673,7 +679,7 @@ function viewAssets(){
   const seed = store('assetSeed');
   document.getElementById('view').innerHTML = `
     <h1 class="as-title">选择起点，建立天玑资产</h1>
-    ${seed?`<div class="seedbar"><span>${ico('script')}从《${esc(seed.title)}》生成：</span>${seed.items.map((x,k)=>`<button class="btn-o" data-seed="${k}">${ico(FN[x.fn].menu.key==='scene'?'mount':'user')}${esc(x.label)}设定板</button>`).join('')}<button class="x" id="seedX" title="关闭">×</button></div>`:''}
+    ${seed?`<div class="seedbar"><span>${ico('script')}从《${esc(seed.title)}》生成：</span>${seed.items.map((x,k)=>`<button class="btn-o ${x.done?'done':''}" data-seed="${k}">${sn(k+1,x.done?'done':'')}${esc(x.label)}设定板</button>`).join('')}<button class="x" id="seedX" title="关闭">×</button></div>`:''}
     <div class="as-cards">${ASSET_MENUS.map((m,mi)=>`
       <div class="mcard ${mi?'r':''}"><h3>${m.title}</h3>
         ${m.items.map(i=>`<a class="mi" href="#/assets/${i.id}" style="text-decoration:none">${ico(i.icon)}${i.label}
@@ -691,7 +697,7 @@ function viewAssets(){
         </div>`).join('')}</div>`
       : `<div class="empty" style="padding:30px 0">还没有资产。点上面任一功能，填好后按“保存到我的资产”。</div>`}
     </section>`;
-  document.querySelectorAll('[data-seed]').forEach(b=>b.onclick=()=>{ const x=seed.items[b.dataset.seed]; store('assetPick',x); location.hash='#/assets/'+x.fn; });
+  document.querySelectorAll('[data-seed]').forEach(b=>b.onclick=()=>{ const x=seed.items[b.dataset.seed]; store('assetPick',{...x,k:+b.dataset.seed,wid:seed.wid}); location.hash='#/assets/'+x.fn; });
   if(seed) document.getElementById('seedX').onclick=()=>{ store('assetSeed',null); viewAssets(); };
   document.querySelectorAll('[data-cp]').forEach(b=>b.onclick=e=>copyText(mine[b.dataset.cp].prompt,e.currentTarget));
   document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
@@ -706,7 +712,8 @@ function viewAssetEditor(fnId, idx){
   const styles=styleList();
   const st = saved ? {...saved.state} : {name:'', profile:'', extra:'', style:'无', ratio:'16:9', res:'2K', opts:[...(f.optDefault||[])]};
   const pk = !saved && store('assetPick');
-  if(pk && pk.fn===fnId){ st.name=pk.name; st.profile=pk.profile; store('assetPick',null); }
+  const fromSeed = pk && pk.fn===fnId ? pk : null;
+  if(fromSeed){ st.name=pk.name; st.profile=pk.profile; store('assetPick',null); }
   st.imgs = [];
   const needProfile = /\{profile\}/.test(f.tpl);
   const v=document.getElementById('view');
@@ -808,6 +815,8 @@ function viewAssetEditor(fnId, idx){
     const item={fn:f.id,name:st.name,prompt:$('prompt').value,state:keep,time:Date.now()};
     if(saved) list[idx]=item; else list.unshift(item);
     store('assets',list); toast(saved?'已更新资产':'已保存到我的资产');
+    const sd=store('assetSeed');
+    if(fromSeed && sd && sd.wid===fromSeed.wid && sd.items[fromSeed.k]){ sd.items[fromSeed.k].done=true; store('assetSeed',sd); }
   };
   addEventListener('resize',drawWires);
   refresh();
@@ -967,13 +976,13 @@ function viewScriptNew(workId){
   <div class="wz-head"><div class="crumb"><a href="#/script">天玑</a>／<a href="#/script">剧本</a>／<span>${w?'编辑作品':'新增作品'}</span></div>
     <h1>${w?'编辑作品':'新增作品'}</h1><p>由上往下填，最后在第 5 步确认并建立。右边是作品预览，只看不用填。</p></div>
   <div class="wz"><div>
-    <section class="step"><h3><b>1</b>策划文件<em>必填</em></h3>
+    <section class="step"><h3>${sn(1,"on")}策划文件<em>必填</em></h3>
       <div class="tabs2" id="tabs">${Object.entries(MODE).map(([k,m])=>`<button data-m="${k}">${m.tab}</button>`).join('')}</div>
       <div id="s1"></div>
       ${works.length?`<details class="drafts"><summary>最近的作品（${works.length} 份，点「载入」接着用）</summary>${works.slice(0,5).map(x=>`<div class="d"><a class="btn-o" style="height:30px" href="#/script/w/${x.id}">载入</a><b>《${esc(x.title||'未命名')}》</b><span class="sp">${esc(MODE[x.W.mode].tab)}・${new Date(x.time).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span></div>`).join('')}</details>`:''}
     </section>
 
-    <section class="step"><h3><b>2</b>骨架</h3>
+    <section class="step"><h3>${sn(2,"on")}骨架</h3>
       <label class="fl">作品名称</label><input class="in" data-f="title" placeholder="默认用策划文件的剧名" value="${esc(W.title)}">
       <div class="g3" style="margin-top:12px">
         ${[['aud','受众'],['pair','配对'],['genre','类型']].map(([k,l])=>`<div><label class="fl">${l}</label><select class="sel" data-f="${k}">${WZ_OPT[k].map(o=>`<option ${o===W[k]?'selected':''}>${o}</option>`).join('')}</select></div>`).join('')}
@@ -988,7 +997,7 @@ function viewScriptNew(workId){
       <p class="hint">用语和字形分开：例如繁体字配中国用语也可以。</p>
     </section>
 
-    <section class="step"><h3><b>3</b>第一季规格</h3>
+    <section class="step"><h3>${sn(3,"on")}第一季规格</h3>
       <div class="g2">
         <div><label class="fl">第一季集数 <span class="req">必填</span></label><div class="chips">${WZ_OPT.eps.map(n=>chip('eps',n,n+' 集')).join('')}${chip('eps','自定义')}</div>
           <input class="in" type="number" min="1" data-f="epsCustom" placeholder="集数" value="${esc(W.epsCustom)}" style="margin-top:8px;display:${W.eps==='自定义'?'block':'none'}"></div>
@@ -1002,11 +1011,11 @@ function viewScriptNew(workId){
       <p class="hint">天玑只负责产生提示词，复制后贴到这里选的 AI 去写。</p>
     </section>
 
-    <section class="step"><h3><b>4</b>补充设定<small>（选填，会一起交给写作模型）</small></h3>
+    <section class="step"><h3>${sn(4,"on")}补充设定<small>（选填，会一起交给写作模型）</small></h3>
       ${SUPP.map(([k,l,ph,big])=>`<label class="fl">${l}${big?' <span class="req">影响最大</span>':''}</label><textarea class="ta" data-f="${k}" placeholder="${ph}">${esc(W[k])}</textarea>`).join('')}
     </section>
 
-    <section class="step"><h3><b>5</b>确认与建立</h3>
+    <section class="step"><h3>${sn(5,"on")}确认与建立</h3>
       <div class="score"><span style="color:var(--text-2);font-size:13px">辨识度</span><b id="score"></b><div class="bar"><i id="scoreBar"></i></div></div>
       <p class="hint" id="scoreHint"></p>
       <label class="cb"><input type="checkbox" data-f="adult" ${W.adult?'checked':''}><div><b>所有角色均已年满 18 岁</b></div></label>
@@ -1083,7 +1092,8 @@ function viewScriptNew(workId){
     const P=[['策划文件',...s1],['骨架',W.pitch.trim()?1:0,W.pitch.trim()?'卖点已填':'还没填一句话卖点'],
       ['第一季规格',eps&&mins?1:0,`${eps} 集 × ${mins} 分钟`],['补充设定',filled?1:0,`${filled} / 5 项（选填）`],
       ['确认与建立',s5.length?0:1,s5.length?s5.join('、'):'可以建立']];
-    $('prog').innerHTML=P.map(([l,ok,s],i)=>`<li class="${ok?'ok':''}"><span class="n">${ok?'✓':i+1}</span><div>${l}<small>${esc(s)}</small></div></li>`).join('');
+    $('prog').innerHTML=P.map(([l,ok,s],i)=>`<li class="${ok?'ok':''}">${sn(i+1,ok?'done':'')}<div>${l}<small>${esc(s)}</small></div></li>`).join('');
+    document.querySelectorAll('.step h3 .sn').forEach((b,i)=>b.outerHTML=sn(i+1,P[i]&&P[i][1]?'done':'on'));
     if(!W.id){ const {dup,...keep}=W; store('scriptDraft',keep); }
   }
   // 事件
@@ -1324,7 +1334,7 @@ function viewScriptSimple(){
     $('who').textContent = t ? t.type : '还没选';
     $('magic').disabled = !t;
     const s1=1, s2=t?1:0;
-    $('sxSteps').innerHTML=[['选频道',s1],['选主角',s2],['一键产出',0]].map(([l,d],i)=>`<span class="${d?'done':(i===(t?2:1)?'on':'')}"><i>${d?'✓':i+1}</i>${l}</span>`).join('');
+    $('sxSteps').innerHTML=[['选频道',s1],['选主角',s2],['一键产出',0]].map(([l,d],i)=>{const c=d?'done':(i===(t?2:1)?'on':''); return `<span class="${c}">${sn(i+1,c)}${l}</span>`}).join('');
   }
   document.querySelectorAll('#gseg button').forEach(b=>b.onclick=()=>{ if(st.g===b.dataset.g) return; st.g=b.dataset.g; st.idx=null; st.name=''; st.title=''; $('sxName').value=''; $('sxTitle').value=''; draw(); save(); });
   $('sxq').oninput=e=>{st.q=e.target.value;draw();save()};
