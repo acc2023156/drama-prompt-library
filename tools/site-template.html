@@ -1580,7 +1580,7 @@ function viewPartner(){
     <section class="pt-hero">
       ${partnerBanner().replace('<a class="pt-banner" href="#/partner"','<div class="pt-banner big"').replace(/<span class="pt-go">[\s\S]*?<\/span>\s*<\/a>$/,'</div>')}
       <div class="pt-cta"><a class="magic" href="#/" style="text-decoration:none">${ico('sparkle')}现在开始创作</a><a class="btn-o" href="#pt-join" id="ptJoin" style="text-decoration:none">报名与评审</a></div>
-      <p class="pt-note">本页为天玑计划说明，奖励金额与报名表以正式公告为准。</p>
+      <p class="pt-note">本页为天玑计划说明，报名表以正式公告为准。</p>
     </section>
 
     <section class="pt-sec"><h2>${sn(1,'on')}谁可以参加</h2>
@@ -1605,7 +1605,7 @@ function viewPartner(){
 
     <section class="pt-sec"><h2>${sn(4,'on')}伙伴激励</h2>
       <div class="pt-prize">
-        ${[['一等奖','1 部'],['二等奖','10 部'],['三等奖','20 部']].map(([a,b],i)=>`<div class="pz ${i?'':'top'}"><small>${a}</small><b>${b}</b><span>保底收益 + 天玑创作额度<br><em>金额待公布</em></span></div>`).join('')}
+        ${[['一等奖','1 部','10'],['二等奖','10 部','5'],['三等奖','20 部','1']].map(([a,b,m],i)=>`<div class="pz ${i?'':'top'}"><small>${a} · ${b}</small><b>${m} 万</b><span>保底收益 ${m} 万元<br><em>+ ${m} 万天玑创作额度</em></span></div>`).join('')}
       </div>
       <p class="pt-mute">终选从入围的 100 部作品中评出。保底收益以补差额方式发放：作品在计划期间的分成收入不足保底金额时补足，已超过则按实际分成。</p>
       <div class="pt-cards three">
