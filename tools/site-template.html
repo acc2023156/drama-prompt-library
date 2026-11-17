@@ -564,11 +564,19 @@ a.pt-banner:hover{transform:translateY(-2px)}
 .seedbar .btn-o.done{border-color:rgba(139,69,255,.6)}
 .seedbar .x{margin-left:auto;width:30px;height:30px;border-radius:9px;color:var(--text-2);font-size:18px}
 .seedbar .x:hover{background:rgba(255,255,255,.08);color:#fff}
-.rtabs{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.rtabs{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:nowrap;container-type:inline-size}
+.rtabs .act .btn-o svg,.rtabs>.btn-o svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
+@container (max-width:720px){.rtabs .act .lbl{display:none}.rtabs .act .btn-o{width:44px;height:44px;padding:0;justify-content:center}}
+@container (max-width:520px){.rtabs>.btn-o .lbl{display:none}.rtabs>.btn-o{width:44px;padding:0;justify-content:center}}
+.rtabs>.btn-o,.rtabs .act .btn-o{flex:none}
+@media (max-width:760px){.rtabs{flex-wrap:wrap}.rtabs #rtab{width:100%}.rtabs>.btn-o{width:44px;padding:0;justify-content:center}.rtabs>.btn-o .lbl,.rtabs .act .lbl{display:none}.rtabs .act .btn-o{width:44px;padding:0;justify-content:center}}
+.res-back{margin:24px 0 -24px;position:relative;z-index:2}
+.res-back .pill{text-decoration:none}
 .rtabs .gseg{margin:0}
 .rtabs>.btn-o{height:44px}
 .rtabs>.btn-o svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
-.rtabs .act{margin-left:auto;display:flex;gap:8px}
+.rtabs .act{margin-left:auto;display:flex;gap:8px;flex:none}
+.rtabs .gseg{flex:none;width:auto}
 .scr{display:grid;gap:12px}
 .scr .ep pre{margin:0;white-space:pre-wrap;word-break:break-word;font:14px/1.85 "Noto Sans SC",var(--font);color:var(--text-2)}
 .scr .ep pre .d{color:#fff}
@@ -1744,6 +1752,7 @@ function viewScriptResult(id, fresh){
   const s=w.sx, t=s.role, prompt=sxPrompt(s);
   const colors=['#731dfb','#3fb6ff','#ffd23f','#3ddc97','#ff5d6c','#ffffff'];
   v.innerHTML=`
+    <div class="res-back"><a class="pill" href="${w.kind==='simple'&&!isPro()?'#/':'#/script'}" id="resBack">${ico('back')}返回</a></div>
     <section class="done-hero">
       ${fresh?`<div class="confetti">${Array.from({length:60},(_,i)=>`<i style="left:${Math.random()*100}%;background:${colors[i%6]};animation-delay:${Math.random()*.6}s"></i>`).join('')}</div>`:''}
       <span class="badge">${ico('check').replace('<svg','<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"')}${fresh?'剧本大纲完成！':'我的剧本'}</span>
@@ -1760,8 +1769,8 @@ function viewScriptResult(id, fresh){
       <div>
         <div class="rtabs">
           <div class="gseg" id="rtab"><button data-t="outline">分集大纲</button><button data-t="script">完整台词</button></div>
-          <button class="btn-o" id="redo">${ico('dice')}重写</button><button class="btn-o" id="seePrompt">${ico('sparkle')}AI 精写提示词</button>
-          <div class="act" id="scAct"><button class="btn-o" id="scCopy">${ico('copy')}复制全部</button><button class="btn-o" id="scDl">${ico('dl')}下载 .txt</button></div>
+          <button class="btn-o" id="redo">${ico('dice')}<span class="lbl">重写</span></button><button class="btn-o" id="seePrompt">${ico('sparkle')}<span class="lbl">AI 精写提示词</span></button>
+          <div class="act" id="scAct"><button class="btn-o" id="scCopy" title="复制全部">${ico('copy')}<span class="lbl">复制全部</span></button><button class="btn-o" id="scDl" title="下载 .txt">${ico('dl')}<span class="lbl">下载 .txt</span></button></div>
         </div>
         <div id="rbody"></div>
         <div class="next">
@@ -1780,7 +1789,7 @@ function viewScriptResult(id, fresh){
   let tab=s.seed?'script':'outline', anim=fresh;
   function draw(){
     document.querySelectorAll('#rtab button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
-    $('scAct').style.display = tab==='script'?'flex':'none';
+    $('scAct').style.visibility = tab==='script'?'visible':'hidden';
     const d=i=>`animation-delay:${anim?i*.07:0}s`;
     $('rbody').innerHTML = tab==='outline'
       ? `<div class="eps">${s.outline.map(([h,b],i)=>`<div class="ep" style="${d(i)}"><div class="h"><b>EP${String(i+1).padStart(2,'0')}</b><span>${esc(h)}</span></div><p>${esc(b)}</p></div>`).join('')}</div>`
