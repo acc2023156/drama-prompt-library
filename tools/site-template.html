@@ -279,6 +279,59 @@ a.pill{text-decoration:none}
 
 /* ---------- 剧本：新增作品五步 ---------- */
 .wz-head{margin:30px 0 22px}
+.chat{max-width:980px;margin:0 auto}
+.conn{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.cn{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 16px;border-radius:999px;background:#1d1d20;border:1px solid transparent;color:var(--text-2);font:600 14px Inter,var(--font)}
+.cn svg{width:20px;height:20px}
+.cn:hover{color:#fff}
+.cn.on{background:#26262a;border-color:var(--line-2);color:#fff}
+.cbox{border-radius:26px;border:1px solid var(--line-2);background:#1a1a1c;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.ctabs{display:flex;background:#232326;border-radius:26px 26px 0 0;overflow:hidden}
+.ctabs button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:58px;color:var(--text-2);font-size:15px;white-space:nowrap}
+.ctabs button:hover{color:#fff}
+.ctabs button.on{background:#1a1a1c;color:#fff;border-radius:22px 22px 0 0}
+.ctabs svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.cbody{padding:22px 26px 6px}
+.cdrop{display:flex;flex-direction:column;align-items:center;gap:18px;padding:30px 16px 34px;border:1.5px dashed rgba(255,255,255,.16);border-radius:18px}
+.cdrop.over{border-color:var(--brand-2);background:var(--brand-soft)}
+.cards3{position:relative;width:120px;height:90px}
+.cards3 i{position:absolute;width:52px;height:72px;border-radius:6px;background:#3a3a3e;border:1px solid rgba(255,255,255,.12);top:10px;left:18px;transform:rotate(-8deg)}
+.cards3 i+i{left:52px;top:4px;transform:rotate(4deg);background:#4a4a4f;display:grid;place-items:start center;padding-top:6px}
+.cards3 i b{font-size:9px;color:#ddd;font-style:normal}
+.cards3 em{position:absolute;right:2px;top:-4px;width:30px;height:30px;border-radius:50%;background:#4a4a4f;color:#fff;font:400 22px/30px Inter;text-align:center;font-style:normal;border:1px solid rgba(255,255,255,.15)}
+.cdrop .note{display:inline-flex;align-items:center;gap:4px;color:var(--text-3);font-size:14px}
+.cdrop .tip{display:inline-flex}
+.cdrop .tip svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;cursor:help}
+.crow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+.cdrop .crow{margin:0}
+.cpill{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 18px;border-radius:12px;background:#2c2c30;color:#fff;font-weight:600;font-size:14px;cursor:pointer;text-decoration:none}
+.cpill:hover{background:#36363b}
+.cpill svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
+.cta{display:block;width:100%;min-height:150px;resize:vertical;border-radius:14px;border:1px solid var(--line-2);background:#141416;color:#fff;padding:14px 16px;font:14.5px/1.7 var(--font)}
+.cta:focus{outline:none;border-color:rgba(139,69,255,.6)}
+.cnt{font-size:12.5px;color:var(--text-3)}
+.cnt.bad{color:#ff8a9a}
+.cdesc{margin:0 0 12px;color:var(--text-2);font-size:14px;line-height:1.75}
+.cdesc b{color:#fff}
+.crecent{margin-top:14px;color:var(--text-3);font-size:13.5px}
+.crecent summary{cursor:pointer}
+.crecent .ri2{display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap}
+.crecent .ri2 .cpill{height:32px;padding:0 12px;font-size:13px}
+.crecent .ri2 b{color:#fff}
+.cfoot{display:flex;align-items:center;gap:6px;padding:12px 18px 16px}
+.cbtn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 12px;border-radius:10px;color:#fff;font-size:15px}
+.cbtn:hover{background:rgba(255,255,255,.06)}
+.cbtn svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.7}
+.cpop-w{position:relative}
+.cpop{position:absolute;left:0;bottom:calc(100% + 8px);z-index:20;display:none;flex-direction:column;min-width:190px;max-height:300px;overflow:auto;padding:6px;border-radius:14px;background:#1d1d20;border:1px solid var(--line-2);box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.cpop.open{display:flex}
+.cpop button{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;color:var(--text-2);font-size:13.5px;text-align:left}
+.cpop button:hover,.cpop button.on{background:#2a2a2e;color:#fff}
+.cpop i{flex:none;width:22px;height:22px;border-radius:6px}
+.cpop i.rb{width:auto;height:18px;border:1.5px solid currentColor;border-radius:3px}
+.csend{margin-left:auto;width:48px;height:48px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center}
+.csend:disabled{background:#3a3a3e;color:#8a8a90;cursor:not-allowed}
+.csend svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .wz-head .crumb{margin-bottom:6px}
 .wz-head h1{margin:0;font-family:"Noto Sans SC",var(--font);font-weight:900;font-size:clamp(24px,3vw,32px)}
 .wz-head p{margin:6px 0 0;color:var(--text-2)}
@@ -431,7 +484,7 @@ a.pill{text-decoration:none}
 .fhit .ft svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .fhit b{font-size:15px}
 .fhit .fd{font-size:12.5px;color:var(--text-3);line-height:1.5}
-@media (max-width:760px){.fhits{grid-template-columns:1fr}}
+@media (max-width:760px){.fhits{grid-template-columns:1fr}.ctabs button{height:50px;font-size:13px;gap:5px}.ctabs svg{width:16px;height:16px}.cbody{padding:16px 14px 4px}.cn{height:36px;padding:0 12px;font-size:13px;gap:6px}.cn svg{width:17px;height:17px}.cfoot{padding:10px 12px 12px}.cbtn{font-size:14px}}
 .seedbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:860px;margin:-10px auto 22px;padding:12px 14px;border-radius:16px;background:var(--brand-soft);border:1px solid rgba(139,69,255,.35);font-size:14px}
 .seedbar>span{display:inline-flex;align-items:center;gap:6px;color:#fff;font-weight:600}
 .seedbar>span .sn{width:22px;height:22px}
@@ -548,6 +601,14 @@ const ICONS = {
   mount:'<path d="m3 19 6-9 4 6 3-4 5 7H3Z"/><circle cx="16.5" cy="6.5" r="1.8"/>',
   img:'<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>',
   text:'<path d="M5 6h14M12 6v13M9 19h6"/>',
+  upload:'<path d="M12 16V4m0 0-5 5m5-5 5 5M4 20h16"/>',
+  quill:'<path d="M20 4c-6 0-11 4-13 11l-2 5M7 15h6c3 0 5-2 6-5"/>',
+  novel:'<path d="M4 5a2 2 0 0 1 2-2h5v16H6a2 2 0 0 0-2 2V5Z"/><path d="M20 5a2 2 0 0 0-2-2h-5v16h5a2 2 0 0 1 2 2V5Z"/>',
+  palette:'<circle cx="12" cy="8" r="4.2"/><circle cx="8" cy="15" r="4.2"/><circle cx="16" cy="15" r="4.2"/>',
+  ratio:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M4 12h6a2 2 0 0 1 2 2v6"/>',
+  arrowUp:'<path d="M12 19V5m0 0-6 6m6-6 6 6"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>',
+  globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3Z"/>',
   palette:'<path d="M12 3a9 9 0 1 0 0 18c1.2 0 1.6-.8 1.6-1.6 0-1.2-1-1.6-1-2.6 0-.9.8-1.6 1.7-1.6H17a4 4 0 0 0 4-4C21 6.6 17 3 12 3Z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7" r="1"/>',
   ratio:'<rect x="3" y="6" width="18" height="12" rx="2.5"/>',
   arrowUp:'<path d="M12 19V5M6 11l6-6 6 6"/>',
@@ -854,7 +915,7 @@ const WZ_OPT = {
   genre:['都市','霸总','职场','古装','玄幻','重生穿越','能力系统'],
   hooks:['身分反转','被偏爱','打脸','追妻','先婚后爱','破镜重圆','逆袭'],
   eps:[10,20,30,60,80], mins:[1,2,3,5],
-  ai:[['Claude','Claude（剧情、台词主写）'],['云端模型','其他云端模型'],['公司模型','公司内部模型']],
+  ai:[['Claude','Claude（剧情、台词主写）'],['ChatGPT','ChatGPT'],['Grok','Grok'],['Qwen','Qwen 通义千问'],['云端模型','其他云端模型'],['公司模型','公司内部模型']],
 };
 const SUPP = [['core','核心设定与规则','请描述核心设定与限制⋯',true],['diff','与参考作品的差异','和相似作品最不一样的地方'],
   ['hero','主角','身分、年龄、弱点'],['rival','对手','动机与手段'],['world','场景与世界观','故事发生在哪里']];
@@ -892,6 +953,8 @@ function wzSettings(W){
     `核心爽点：${W.hooks.join('、')||'（未选）'}`,
     `台词用语：${W.lang}；剧本字形：${W.glyph}`,
     `第一季规格：共 ${eps} 集，每集约 ${mins} 分钟、约 ${nfmt(per)} 字（每分钟约 ${W.wpm} 字），合计约 ${nfmt(per*eps)} 字。`];
+  if(W.style&&W.style!=='无') s.push(`画面风格：${W.style}`);
+  if(W.ratio) s.push(`画面比例：${W.ratio}`);
   if(W.sequel) s.push('预留续季空间：最后一集留下 2–3 条可延续的线，不把伏笔收完。');
   s.push('所有角色均已年满 18 岁。');
   const sup=SUPP.filter(([k])=>W[k].trim()).map(([k,l])=>`${l}：${W[k].trim()}`);
@@ -974,7 +1037,9 @@ function showModal(title, text, fname){
 function viewScriptHome(){
   const works=store('works')||[];
   document.getElementById('view').innerHTML=`
-    <div class="wz-head"><div class="crumb"><span>天玑</span>／<span>剧本</span></div>
+    <div class="wz-head"><div class="crumb"><span>天玑</span>／<span>剧本</span></div></div>
+    ${chatHtml()}
+    <div class="wz-head" style="margin-top:34px">
       <div class="row" style="justify-content:space-between"><h1>剧本</h1><a class="btn-white" href="#/script/new">${ico('plus')}新增作品</a></div>
       <p>新增作品分 5 步：策划文件 → 骨架 → 第一季规格 → 补充设定 → 确认与建立。</p></div>
     ${works.length?`<div class="works">${works.map((w,k)=>`<div class="acard">
@@ -986,6 +1051,130 @@ function viewScriptHome(){
     :`<div class="empty">还没有作品。点右上角「新增作品」开始。<br><span style="font-size:12px">作品只保存在这台电脑的浏览器里。</span></div>`}`;
   document.querySelectorAll('[data-cp]').forEach(b=>b.onclick=e=>copyText(wzPrompt(works[b.dataset.cp].W),e.currentTarget));
   document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ if(!confirm('删除这个作品？')) return; works.splice(+b.dataset.del,1); store('works',works); viewScriptHome(); });
+  bindChat();
+}
+
+/* ---------- 剧本 PRO：对话框（连接器 + 上传剧本 / 剧本创作 / 汇入小说） ---------- */
+const CONN = [
+  {v:'Claude', l:'Claude', svg:'<svg viewBox="0 0 24 24"><path d="M12 2.5v7M12 14.5v7M2.5 12h7M14.5 12h7M5.3 5.3l5 5M13.7 13.7l5 5M5.3 18.7l5-5M13.7 10.3l5-5" stroke="#e07a4f" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg>'},
+  {v:'ChatGPT', l:'ChatGPT', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3.2 19.6 7.6v8.8L12 20.8 4.4 16.4V7.6Z"/><path d="M12 3.2v8.8l7.6 4.4M12 12l-7.6 4.4"/></svg>'},
+  {v:'Grok', l:'Grok', svg:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#fff"/><circle cx="14.5" cy="9.5" r="2.2" fill="#111"/></svg>'},
+  {v:'Qwen', l:'Qwen', svg:'<svg viewBox="0 0 24 24"><path d="M12 2.5 15 9l6.5 1.2-4.8 4.5 1.3 6.8L12 18.2 6 21.5l1.3-6.8-4.8-4.5L9 9Z" fill="#6c5ce7"/></svg>'},
+  {v:'云端模型', l:'Other', svg:`<svg viewBox="0 0 24 24" fill="none" stroke="#cfcfd6" stroke-width="1.7">${ICONS.globe}</svg>`},
+];
+const CTABS = [
+  {m:'paste', icon:'upload', l:'上传剧本'},
+  {m:'auto',  icon:'quill',  l:'剧本创作'},
+  {m:'novel', icon:'novel',  l:'汇入小说'},
+];
+const RATIOS = ['9:16','16:9','3:4','1:1'];
+function chatState(){ return Object.assign({tab:'paste', doc:'', pitch:'', novel:'', editing:false, style:'无', ratio:'9:16', ai:'Claude'}, store('chat')||{}); }
+function chatHtml(){
+  return `<section class="chat" id="chat">
+    <div class="conn" id="conn"></div>
+    <div class="cbox">
+      <div class="ctabs" id="ctabs"></div>
+      <div class="cbody" id="cbody"></div>
+      <div class="cfoot">
+        <div class="cpop-w"><button class="cbtn" id="cStyle">${ico('palette')}<span>风格</span></button><div class="cpop" id="cStylePop"></div></div>
+        <div class="cpop-w"><button class="cbtn" id="cRatio">${ico('ratio')}<span>比例</span></button><div class="cpop" id="cRatioPop"></div></div>
+        <button class="csend" id="cSend" title="带入新增作品">${ico('arrowUp')}</button>
+      </div>
+    </div>
+  </section>`;
+}
+async function readAnyFile(file){
+  const name=file.name.toLowerCase(), buf=await file.arrayBuffer();
+  const loadJs=src=>new Promise((ok,bad)=>{ if(document.querySelector(`script[src="${src}"]`)) return ok(); const s=document.createElement('script'); s.src=src; s.onload=ok; s.onerror=()=>bad(new Error('载入失败')); document.head.appendChild(s); });
+  if(name.endsWith('.docx')){
+    await loadJs('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js');
+    return (await mammoth.extractRawText({arrayBuffer:buf})).value;
+  }
+  if(name.endsWith('.pdf')){
+    await loadJs('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const pdf=await pdfjsLib.getDocument({data:buf}).promise; const out=[];
+    for(let i=1;i<=pdf.numPages;i++){ const c=await (await pdf.getPage(i)).getTextContent(); out.push(c.items.map(x=>x.str+(x.hasEOL?'\n':'')).join('')); }
+    return out.join('\n');
+  }
+  // txt / md：依序试 UTF-8、GB18030、Big5
+  for(const enc of ['utf-8','gb18030','big5']){ try{ return new TextDecoder(enc,{fatal:true}).decode(buf).replace(/^﻿/,''); }catch(e){} }
+  return new TextDecoder('utf-8').decode(buf);
+}
+function bindChat(){
+  const C=chatState(), $=id=>document.getElementById(id);
+  const save=()=>store('chat',C);
+  const autos=()=>(store('works')||[]).filter(w=>w.kind!=='simple' && w.W && w.W.mode==='auto');
+  const ok=()=> C.tab==='paste' ? C.doc.trim().length>0 : C.tab==='auto' ? C.pitch.trim().length>0 : C.novel.trim().length>=2000;
+  const fileBtn=(id,label)=>`<label class="cpill">${ico('upload')}${label}<input type="file" id="${id}" hidden accept=".docx,.pdf,.txt,.md"></label>`;
+  const cntText=(k)=>{ const n=k==='doc'?C.doc.length:C.novel.trim().length; return nfmt(n)+' 字'+(k==='novel'&&n&&n<2000?' · 至少 2,000 字':k==='novel'&&n>400000?' · 超过 400,000 字':''); };
+  function recent(){
+    const a=autos(); if(!a.length) return '';
+    return `<details class="crecent"><summary>最近自动产生的策划文件（${a.length} 份，点「载入」接着用）</summary>
+      ${a.slice(0,5).map(w=>`<div class="ri2"><a class="cpill" href="#/script/w/${w.id}">载入</a><b>《${esc(w.title||'未命名')}》</b><span>${wzEps(w.W)} 集 · ${new Date(w.time).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span></div>`).join('')}</details>`;
+  }
+  function drawConn(){
+    $('conn').innerHTML=CONN.map(c=>`<button class="cn ${C.ai===c.v?'on':''}" data-v="${c.v}">${c.svg}${c.l}</button>`).join('');
+    $('conn').querySelectorAll('.cn').forEach(b=>b.onclick=()=>{C.ai=b.dataset.v; save(); drawConn();});
+  }
+  function drawBody(){
+    $('ctabs').innerHTML=CTABS.map(t=>`<button class="${C.tab===t.m?'on':''}" data-m="${t.m}">${ico(t.icon)}${t.l}</button>`).join('');
+    $('ctabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{C.tab=b.dataset.m; save(); drawBody();});
+    let h='';
+    if(C.tab==='paste'){
+      h = C.editing||C.doc ? `<textarea class="cta" id="cDoc" placeholder="把完整策划文件（作品资料卡、故事大纲、角色设计、分集大纲、分场大纲）贴在这里">${esc(C.doc)}</textarea>
+          <div class="crow">${fileBtn('cFile','或汇入文件（Word／PDF／txt／md）')}<span class="cnt">${cntText('doc')}</span>${C.doc?'<button class="cpill" id="cClr">清空</button>':''}</div>`
+        : `<div class="cdrop" id="cDrop">
+            <span class="cards3"><i></i><i><b>剧本</b></i><em>+</em></span>
+            <span class="crow" style="justify-content:center">${fileBtn('cFile','上传剧本')}<button class="cpill" id="cPaste">粘贴文本</button></span>
+            <span class="note">请确认剧本拥有合法版权，格式要求<span class="tip" title="Word（.docx）、PDF、.txt、.md；txt 用 UTF-8、GB18030、Big5 都读得了。也可以直接把文件拖进来。">${ico('info')}</span></span>
+          </div>`;
+    } else if(C.tab==='auto'){
+      h = `<p class="cdesc">用新增作品里「骨架」「第一季规格」「补充设定」填的内容，由 AI 写出完整策划文件（资料卡、故事大纲、角色、分集大纲、前 3 集分场大纲），格式跟剧本库一样。先在下面说说你的故事，按右下角箭头带进去接着填。</p>
+        <textarea class="cta" id="cPitch" style="min-height:96px" placeholder="一句话说说你的故事，如：被退婚的假千金，靠读心系统在豪门翻盘">${esc(C.pitch)}</textarea>`;
+    } else {
+      const n=C.novel.trim().length;
+      h = `<p class="cdesc">贴上小说全文，或选文件：Word（.docx）、PDF、.txt、.md（txt 用 UTF-8、GB18030、Big5 都读得了）。会改编成策划文件：<b>人名、地名、店名照原著</b>，每一集标出「对应原著」的章节。字数 2,000–400,000 字。</p>
+        <textarea class="cta" id="cNovel" placeholder="把小说全文贴在这里">${esc(C.novel)}</textarea>
+        <div class="crow">${fileBtn('cFile','或选文件（Word／PDF／txt／md）')}<span class="cnt ${n&&(n<2000||n>400000)?'bad':''}">${cntText('novel')}</span></div>
+        <p class="cdesc" style="margin:10px 0 0">集数、每集分钟数在第 3 步设定；片名在第 2 步（可以空着，会用原书名或依内容取）。</p>`;
+    }
+    $('cbody').innerHTML = h + recent();
+    $('cSend').disabled = !ok();
+    const bindTa=(id,k)=>{ const t=$(id); if(!t) return; t.oninput=()=>{ C[k]=t.value; save(); $('cSend').disabled=!ok();
+      const c=$('cbody').querySelector('.cnt'); if(c&&k!=='pitch'){ c.textContent=cntText(k); const n=C.novel.trim().length; c.classList.toggle('bad',k==='novel'&&n>0&&(n<2000||n>400000)); } }; };
+    bindTa('cDoc','doc'); bindTa('cPitch','pitch'); bindTa('cNovel','novel');
+    if($('cPaste')) $('cPaste').onclick=()=>{ C.editing=true; drawBody(); $('cDoc').focus(); };
+    if($('cClr')) $('cClr').onclick=()=>{ C.doc=''; C.editing=false; save(); drawBody(); };
+    const load=async f=>{ if(!f) return; toast('正在读取 '+f.name);
+      try{ const t=(await readAnyFile(f)).trim(); if(!t) throw new Error('没有读到文字');
+        if(C.tab==='novel') C.novel=t; else { C.tab='paste'; C.doc=t; C.editing=true; }
+        save(); drawBody(); toast(`已读取 ${nfmt(t.length)} 字`);
+      }catch(err){ toast('读取失败：'+err.message); } };
+    if($('cFile')) $('cFile').onchange=e=>load(e.target.files[0]);
+    const d=$('cDrop'); if(d){ d.ondragover=e=>{e.preventDefault(); d.classList.add('over')}; d.ondragleave=()=>d.classList.remove('over'); d.ondrop=e=>{e.preventDefault(); d.classList.remove('over'); load(e.dataTransfer.files[0]);}; }
+  }
+  const closePops=()=>document.querySelectorAll('.cpop').forEach(p=>p.classList.remove('open'));
+  function drawPops(){
+    $('cStyle').querySelector('span').textContent = C.style&&C.style!=='无' ? C.style : '风格';
+    $('cRatio').querySelector('span').textContent = C.ratio || '比例';
+    $('cStylePop').innerHTML = styleList().map(x=>`<button class="${C.style===x.n?'on':''}" data-v="${esc(x.n)}"><i style="background:${x.g}"></i>${esc(x.n)}</button>`).join('');
+    $('cRatioPop').innerHTML = RATIOS.map(r=>{const [a,b]=r.split(':').map(Number);return `<button class="${C.ratio===r?'on':''}" data-v="${r}"><i class="rb" style="aspect-ratio:${a}/${b}"></i>${r}</button>`}).join('');
+    $('cStylePop').querySelectorAll('button').forEach(b=>b.onclick=()=>{C.style=b.dataset.v; save(); closePops(); drawPops();});
+    $('cRatioPop').querySelectorAll('button').forEach(b=>b.onclick=()=>{C.ratio=b.dataset.v; save(); closePops(); drawPops();});
+  }
+  $('cStyle').onclick=e=>{e.stopPropagation(); const o=$('cStylePop').classList.contains('open'); closePops(); if(!o) $('cStylePop').classList.add('open');};
+  $('cRatio').onclick=e=>{e.stopPropagation(); const o=$('cRatioPop').classList.contains('open'); closePops(); if(!o) $('cRatioPop').classList.add('open');};
+  document.addEventListener('click', closePops);
+  $('cSend').onclick=()=>{
+    if(!ok()) return;
+    const d=Object.assign({}, store('scriptDraft')||{}, {mode:C.tab, ai:C.ai, style:C.style, ratio:C.ratio});
+    if(C.tab==='paste') d.doc=C.doc; else if(C.tab==='auto') d.pitch=C.pitch.trim(); else d.novel=C.novel;
+    store('scriptDraft', d);
+    toast('已带入新增作品');
+    location.hash='#/script/new';
+  };
+  drawConn(); drawBody(); drawPops();
 }
 
 function viewScriptNew(workId){
