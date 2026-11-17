@@ -566,6 +566,8 @@ a.pt-banner:hover{transform:translateY(-2px)}
 .seedbar .x:hover{background:rgba(255,255,255,.08);color:#fff}
 .rtabs{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
 .rtabs .gseg{margin:0}
+.rtabs>.btn-o{height:44px}
+.rtabs>.btn-o svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
 .rtabs .act{margin-left:auto;display:flex;gap:8px}
 .scr{display:grid;gap:12px}
 .scr .ep pre{margin:0;white-space:pre-wrap;word-break:break-word;font:14px/1.85 "Noto Sans SC",var(--font);color:var(--text-2)}
@@ -1758,6 +1760,7 @@ function viewScriptResult(id, fresh){
       <div>
         <div class="rtabs">
           <div class="gseg" id="rtab"><button data-t="outline">分集大纲</button><button data-t="script">完整台词</button></div>
+          <button class="btn-o" id="redo">${ico('dice')}重写</button><button class="btn-o" id="seePrompt">${ico('sparkle')}AI 精写提示词</button>
           <div class="act" id="scAct"><button class="btn-o" id="scCopy">${ico('copy')}复制全部</button><button class="btn-o" id="scDl">${ico('dl')}下载 .txt</button></div>
         </div>
         <div id="rbody"></div>
@@ -1791,6 +1794,8 @@ function viewScriptResult(id, fresh){
   $('toScript').onclick=()=>{ if(!s.seed) setSeed(); tab='script'; anim=true; draw(); $('rbody').scrollIntoView({behavior:'smooth',block:'start'}); };
   $('scCopy').onclick=e=>copyText(sxScriptText(s),e.currentTarget);
   $('scDl').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([sxScriptText(s)],{type:'text/plain;charset=utf-8'}));a.download=`${s.title}-10集完整台词.txt`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+  $('redo').onclick=()=>{ setSeed(); tab='script'; anim=true; draw(); toast('已重写一版台词'); };
+  $('seePrompt').onclick=()=>showModal(`《${s.title}》10 集剧本提示词`, prompt, `${s.title}-10集剧本提示词.txt`);
   draw();
   document.getElementById('toPro').onclick=()=>{ store('pro',true); location.hash='#/script/w/'+w.id; };
   document.getElementById('delWork').onclick=()=>{ if(!confirm('删除这部剧本？')) return; store('works',(store('works')||[]).filter(x=>x.id!==w.id)); location.hash='#/script'; };
