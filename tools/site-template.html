@@ -471,8 +471,9 @@ a.pt-banner:hover{transform:translateY(-2px)}
 .pt-table .r span{color:var(--text-2);line-height:1.7}
 .pt-end{margin-top:50px;padding:34px 20px;border-radius:24px;text-align:center;background:linear-gradient(160deg,#1e1838,#121214);border:1px solid var(--line)}
 .pt-end h2{margin:0 0 18px;font-family:"Noto Sans SC",var(--font);font-weight:900;font-size:clamp(22px,3vw,30px)}
-.pt-entry{border-color:rgba(139,69,255,.55)}
-.pt-entry svg{width:15px;height:15px;stroke:#b896ff;fill:none;stroke-width:1.8}
+.next .row .pt-entry{background:linear-gradient(100deg,#e6f1fb,#b9d4ea);border:0;color:#0f3550;font-weight:700;box-shadow:0 0 0 1px rgba(185,212,234,.5),0 6px 22px rgba(120,170,220,.35)}
+.next .row .pt-entry:hover{filter:brightness(1.05);box-shadow:0 0 0 1px rgba(185,212,234,.8),0 8px 28px rgba(120,170,220,.5)}
+.pt-entry svg{width:15px;height:15px;stroke:#0f3550;fill:none;stroke-width:1.9}
 .sx-hero h1{margin:0;font-family:"Noto Sans SC",var(--font);font-weight:900;font-size:clamp(30px,4.4vw,46px);
   background:linear-gradient(90deg,#aeb4be,#fff 50%,#aeb4be);-webkit-background-clip:text;background-clip:text;color:transparent}
 .sx-hero p{margin:10px 0 0;color:var(--text-2);font-size:15px}
@@ -544,7 +545,7 @@ a.pt-banner:hover{transform:translateY(-2px)}
 .ep p{margin:0;font-size:13.5px;color:var(--text-2);line-height:1.7}
 @keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .next{margin-top:18px;padding:16px 18px;border-radius:18px;background:var(--brand-soft);border:1px solid rgba(139,69,255,.35)}
-.next h4{margin:0 0 6px;font-size:15px}
+.next h4{margin:0 0 14px;font-size:15px}
 .next p{margin:0 0 12px;color:var(--text-2);font-size:13.5px}
 .minework{margin-top:40px}
 .fhits{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
@@ -1762,11 +1763,8 @@ function viewScriptResult(id, fresh){
         <div id="rbody"></div>
         <div class="next">
           <h4 id="nxH"></h4>
-          <p id="nxP"></p>
           <div class="row">
             <button class="magic" id="toScript" style="height:44px">${ico('script')}完整台词</button>
-            <button class="btn-o" id="redo">${ico('dice')}重写</button>
-            <button class="btn-o" id="seePrompt">AI 精写提示词</button>
             <a class="btn-o" href="#/script" style="text-decoration:none">再来一部</a>
             <button class="btn-o" id="toPro">到 PRO 版细修</button>
             <a class="btn-o pt-entry" href="#/partner" style="text-decoration:none">${ico('sparkle')}AI短剧伙伴计划</a>
@@ -1786,19 +1784,14 @@ function viewScriptResult(id, fresh){
       : `<div class="scr">${sxScript(s).map((x,i)=>`<div class="ep" style="${d(i)}"><div class="h"><b>EP${String(i+1).padStart(2,'0')}</b><span>${esc(s.outline[i][0])}</span></div><pre>${sxHL(x.split('\n').slice(1).join('\n').trim())}</pre></div>`).join('')}</div>`;
     anim=false;
     $('nxH').textContent = tab==='script' ? '10 集完整台词已生成' : '下一步：把大纲写成完整台词';
-    $('nxP').textContent = tab==='script'
-      ? '不满意就点「重写」换一版台词；想要更精细的成稿，用「AI 精写提示词」贴给 AI（例如 Claude）。'
-      : '点「完整台词」，马上得到 10 集、每集约 1 分钟的台词初稿。';
     $('toScript').style.display = tab==='script'?'none':'';
   }
   const setSeed=()=>{ s.seed=Math.floor(Math.random()*1e9)+1; sxSaveWork(s); };
   document.querySelectorAll('#rtab button').forEach(b=>b.onclick=()=>{ tab=b.dataset.t; if(tab==='script'&&!s.seed) setSeed(); draw(); });
   $('toScript').onclick=()=>{ if(!s.seed) setSeed(); tab='script'; anim=true; draw(); $('rbody').scrollIntoView({behavior:'smooth',block:'start'}); };
-  $('redo').onclick=()=>{ setSeed(); tab='script'; anim=true; draw(); toast('已重写一版台词'); };
   $('scCopy').onclick=e=>copyText(sxScriptText(s),e.currentTarget);
   $('scDl').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([sxScriptText(s)],{type:'text/plain;charset=utf-8'}));a.download=`${s.title}-10集完整台词.txt`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
   draw();
-  $('seePrompt').onclick=()=>showModal(`《${s.title}》10 集剧本提示词`, prompt, `${s.title}-10集剧本提示词.txt`);
   document.getElementById('toPro').onclick=()=>{ store('pro',true); location.hash='#/script/w/'+w.id; };
   document.getElementById('delWork').onclick=()=>{ if(!confirm('删除这部剧本？')) return; store('works',(store('works')||[]).filter(x=>x.id!==w.id)); location.hash='#/script'; };
 }
