@@ -411,8 +411,13 @@ a.pill{text-decoration:none}
 
 /* ---------- 标准版：人物即剧本 ---------- */
 .sx-hero{text-align:center;margin:44px 0 26px}
-.sx-top{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:28px;align-items:center}
-.sx-top .sx-hero{margin:30px 0 22px}
+.sx-top{position:relative}
+.sx-top .pt-banner{position:absolute;right:0;top:34px;width:360px;transform-origin:top right;z-index:2;animation:ptfloat 4.5s ease-in-out infinite alternate}
+.sx-top .pt-banner:hover{animation-play-state:paused;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+@keyframes ptfloat{from{transform:scale(.62) rotate(10deg) translateY(0)}to{transform:scale(.62) rotate(13deg) translateY(-10px)}}
+@media (prefers-reduced-motion:reduce){.sx-top .pt-banner{animation:none;transform:scale(.62) rotate(11deg)}}
+.pt-mini{display:none;align-items:center;gap:6px;margin:-8px auto 18px;width:max-content;max-width:100%;padding:8px 14px;border-radius:999px;background:linear-gradient(90deg,#dbeaf6,#bcd5ea);color:#0f3550;font-size:13px;font-weight:700;text-decoration:none}
+.pt-mini svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8}
 .pt-banner{position:relative;display:block;height:220px;border-radius:22px;overflow:hidden;text-decoration:none;color:#0f3550;
   background:linear-gradient(160deg,#eaf3fb 0%,#cfe3f2 55%,#b9d4ea 100%);box-shadow:0 18px 50px rgba(0,0,0,.35);transition:transform .2s}
 a.pt-banner:hover{transform:translateY(-2px)}
@@ -549,7 +554,7 @@ a.pt-banner:hover{transform:translateY(-2px)}
 .fhit .ft svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .fhit b{font-size:15px}
 .fhit .fd{font-size:12.5px;color:var(--text-3);line-height:1.5}
-@media (max-width:1100px){.sx-top{grid-template-columns:1fr;gap:0}.sx-top .pt-banner{margin-bottom:10px}}
+@media (max-width:1299px){.sx-top .pt-banner{display:none}.pt-mini{display:flex}}
 @media (max-width:760px){.pt-cards,.pt-cards.three,.pt-prize,.pt-flow{grid-template-columns:1fr}.pt-table .r{grid-template-columns:1fr;gap:4px}.pt-banner.big{height:240px}.pt-banner.big .pt-logo{width:100px;height:100px;right:16px}.pt-banner.big .pt-txt{left:20px;bottom:22px}.fhits{grid-template-columns:1fr}.ctabs button{height:50px;font-size:13px;gap:5px}.ctabs svg{width:16px;height:16px}.cbody{padding:16px 14px 4px}.cn{height:36px;padding:0 12px;font-size:13px;gap:6px}.cn svg{width:17px;height:17px}.cfoot{padding:10px 12px 12px}.cbtn{font-size:14px}}
 .seedbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:860px;margin:-10px auto 22px;padding:12px 14px;border-radius:16px;background:var(--brand-soft);border:1px solid rgba(139,69,255,.35);font-size:14px}
 .seedbar>span{display:inline-flex;align-items:center;gap:6px;color:#fff;font-weight:600}
@@ -1182,10 +1187,7 @@ function bindChat(){
   }
   let waking=false;
   function drawStat(){
-    const st=[['Claude','Claude Code'],['GPT','Codex']];
-    $('cstat').innerHTML=`<div class="cs-row">${st.map(([a,b])=>`<span class="cs off" title="${b}">○ ${a} 连接器：未连线</span>`).join('')}
-      <a class="cs-btn" href="jubenconnector://start" id="cWake">${waking?'启动中⋯':'启动连接器'}</a></div>
-      <div class="cs-hint">${waking?'启动中⋯约 10 秒。连接器开好后，就能让 Claude 与 GPT 双模型一起写。':'浏览器会问要不要打开，按「打开」。没反应：Mac 请双击连接器资料夹里的「启动连接器.command」；Windows 请双击「启动连接器.bat」。'}</div>`;
+    $('cstat').innerHTML=`<div class="cs-row"><a class="cs-btn" href="jubenconnector://start" id="cWake">${waking?'启动中⋯':'启动连接器'}</a><span class="cs off">○ 连接器：未连线</span></div>`;
     $('cWake').onclick=()=>{ waking=true; drawStat(); setTimeout(()=>{waking=false; drawStat();},10000); };
   }
   function drawConn(){
@@ -1665,6 +1667,7 @@ function viewScriptSimple(){
     </section>
     ${partnerBanner()}
     </div>
+    <a class="pt-mini" href="#/partner">${ico('sparkle')}天玑 AI短剧伙伴计划 · 让你的故事被全世界看见 →</a>
     <div class="sx-bar">
       <div class="gseg" id="gseg"><button data-g="male">男频</button><button data-g="female">女频</button></div>
       <label class="search2">${ico('search')}<input id="sxq" placeholder="搜角色、金手指、流派，如“系统”“真假千金”" value="${esc(st.q)}"></label>
