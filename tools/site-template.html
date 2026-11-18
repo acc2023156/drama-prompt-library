@@ -336,6 +336,7 @@ a.pill{text-decoration:none}
 .cpop button{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;color:var(--text-2);font-size:13.5px;text-align:left}
 .cpop button:hover,.cpop button.on{background:#2a2a2e;color:#fff}
 .cpop i{flex:none;width:22px;height:22px;border-radius:6px}
+.cbtn i.rb{display:inline-block;flex:none;border:1.6px solid currentColor;border-radius:3px;margin:0 1px}
 .cpop i.rb{width:auto;height:18px;border:1.5px solid currentColor;border-radius:3px}
 .csend{margin-left:auto;width:48px;height:48px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center}
 .csend:disabled{background:#3a3a3e;color:#8a8a90;cursor:not-allowed}
@@ -351,6 +352,13 @@ a.pill{text-decoration:none}
 .sn{flex:none;width:24px;height:24px;border-radius:50%;display:inline-grid;place-items:center;background:#2a2a2e;color:var(--text-2);font:700 12px/1 Inter,var(--font);font-style:normal}
 .sn.on,.sn.done{background:var(--brand);color:#fff}
 .sn svg{width:62%;height:62%;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.step h3 em.ok{color:#b896ff;font-weight:600}
+.cheer{color:#b896ff!important;font-weight:600}
+.story{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:16px 18px;border-radius:14px;border:1px solid rgba(139,69,255,.45);background:rgba(139,69,255,.08);text-align:left;color:#fff;font-size:16px;line-height:1.6}
+.story b.ph{color:var(--text-3);font-weight:400}
+.story span{display:inline-flex;align-items:center;gap:6px;flex:none;color:#b896ff;font-size:13px}
+.story svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8}
+#pvTitle.soft{color:var(--text-3)}
 .step h3 em,.req{font-style:normal;font-size:12px;color:#ff8a9a;font-weight:500}
 .step h3 small{font-weight:400;color:var(--text-3);font-size:13px}
 .tabs2{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
@@ -1049,9 +1057,9 @@ const WZ_OPT = {
 const SUPP = [['core','核心设定与规则','请描述核心设定与限制⋯',true],['diff','与参考作品的差异','和相似作品最不一样的地方'],
   ['hero','主角','身分、年龄、弱点'],['rival','对手','动机与手段'],['world','场景与世界观','故事发生在哪里']];
 const MODE = {
-  paste:{tab:'贴上策划文件', btn:'资产库生成', sub:'产生影片内的生动角色与故事场景'},
-  auto: {tab:'依设定自动产生', btn:'资产库生成', sub:'产生影片内的生动角色与故事场景'},
-  novel:{tab:'汇入小说', btn:'资产库生成', sub:'产生影片内的生动角色与故事场景'},
+  auto: {tab:'氛围写作', step:'你的故事', btn:'资产库生成', sub:'产生影片内的生动角色与故事场景'},
+  paste:{tab:'上传剧本', step:'上传剧本', btn:'资产库生成', sub:'产生影片内的生动角色与故事场景'},
+  novel:{tab:'汇入小说', step:'汇入小说', btn:'资产库生成', sub:'产生影片内的生动角色与故事场景'},
 };
 const wzEps = W => W.eps==='自定义' ? (+W.epsCustom||0) : W.eps;
 const wzMins = W => W.mins==='自定义' ? (+W.minsCustom||0) : W.mins;
@@ -1067,11 +1075,11 @@ function wzTitle(W){
 }
 function wzNeeds(W){
   const n=[];
-  if(W.mode==='paste' && !W.doc.trim()) n.push('在第 1 步贴上策划文件');
-  if(W.mode==='novel' && (W.novel.length<2000||W.novel.length>400000)) n.push('在第 1 步贴上或选好小说（2,000–400,000 字）');
-  if(W.mode==='auto' && !W.pitch.trim()) n.push('在第 2 步填一句话卖点');
-  if(!wzEps(W)||!wzMins(W)) n.push('在第 3 步填好集数和每集时长');
-  if(!W.adult) n.push('勾选上面的「所有角色均已年满 18 岁」');
+  if(W.mode==='paste' && !W.doc.trim()) n.push('贴上你的剧本');
+  if(W.mode==='novel' && (W.novel.length<2000||W.novel.length>400000)) n.push('放进小说（2,000–400,000 字）');
+  if(W.mode==='auto' && !W.pitch.trim()) n.push('说一句你的故事');
+  if(!wzEps(W)||!wzMins(W)) n.push('选好集数和每集时长');
+  if(!W.adult) n.push('勾选「所有角色均已年满 18 岁」');
   return n;
 }
 function wzSettings(W){
@@ -1207,7 +1215,7 @@ function chatHtml(){
       <div class="cbody" id="cbody"></div>
       <div class="cfoot">
         <div class="cpop-w"><button class="cbtn" id="cStyle">${ico('palette')}<span>风格</span></button><div class="cpop" id="cStylePop"></div></div>
-        <div class="cpop-w"><button class="cbtn" id="cRatio">${ico('ratio')}<span>比例</span></button><div class="cpop" id="cRatioPop"></div></div>
+        <div class="cpop-w"><button class="cbtn" id="cRatio"><i class="rb"></i><span>比例</span></button><div class="cpop" id="cRatioPop"></div></div>
         <button class="csend" id="cSend" title="带入新增作品">${ico('arrowUp')}</button>
       </div>
     </div>
@@ -1290,6 +1298,8 @@ function bindChat(){
   function drawPops(){
     $('cStyle').querySelector('span').textContent = C.style&&C.style!=='无' ? C.style : '风格';
     $('cRatio').querySelector('span').textContent = C.ratio || '比例';
+    { const [a,b]=(C.ratio||'9:16').split(':').map(Number), k=18/Math.max(a,b), ic=$('cRatio').querySelector('.rb');
+      ic.style.width=Math.round(a*k)+'px'; ic.style.height=Math.round(b*k)+'px'; }
     $('cStylePop').innerHTML = styleList().map(x=>`<button class="${C.style===x.n?'on':''}" data-v="${esc(x.n)}"><i style="background:${x.g}"></i>${esc(x.n)}</button>`).join('');
     $('cRatioPop').innerHTML = RATIOS.map(r=>{const [a,b]=r.split(':').map(Number);return `<button class="${C.ratio===r?'on':''}" data-v="${r}"><i class="rb" style="aspect-ratio:${a}/${b}"></i>${r}</button>`}).join('');
     $('cStylePop').querySelectorAll('button').forEach(b=>b.onclick=()=>{C.style=b.dataset.v; save(); closePops(); drawPops();});
@@ -1318,16 +1328,16 @@ function viewScriptNew(workId){
   const chip=(k,val,label)=>`<span class="ck ${(Array.isArray(W[k])?W[k].includes(val):W[k]===val)?'on':''}" data-k="${k}" data-v="${esc(String(val))}">${esc(label??val)}</span>`;
   v.innerHTML=`
   <div class="wz-head"><div class="crumb"><a href="#/script">天玑</a>／<a href="#/script">剧本</a>／<span>${w?'编辑作品':'新增作品'}</span></div>
-    <h1>${w?'编辑作品':'新增作品'}</h1><p>由上往下填，最后在第 5 步确认并建立。右边是作品预览，只看不用填。</p></div>
+    <h1>${w?'编辑作品':'新增作品'}</h1><p class="cheer" id="cheer"></p></div>
   <div class="wz"><div>
-    <section class="step"><h3>${sn(1,"on")}策划文件<em>必填</em></h3>
+    <section class="step"><h3>${sn(1,"on")}<span id="s1T">${MODE[W.mode].step}</span><em class="ok" id="s1Tag"></em></h3>
       <div class="tabs2" id="tabs">${Object.entries(MODE).map(([k,m])=>`<button data-m="${k}">${m.tab}</button>`).join('')}</div>
       <div id="s1"></div>
       ${works.length?`<details class="drafts"><summary>最近的作品（${works.length} 份，点「载入」接着用）</summary>${works.slice(0,5).map(x=>`<div class="d"><a class="btn-o" style="height:30px" href="#/script/w/${x.id}">载入</a><b>《${esc(x.title||'未命名')}》</b><span class="sp">${esc(MODE[x.W.mode].tab)}・${new Date(x.time).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span></div>`).join('')}</details>`:''}
     </section>
 
     <section class="step"><h3>${sn(2,"on")}骨架</h3>
-      <label class="fl">作品名称</label><input class="in" data-f="title" placeholder="默认用策划文件的剧名" value="${esc(W.title)}">
+      <label class="fl">作品名称</label><input class="in" data-f="title" placeholder="留空，AI 帮你取" value="${esc(W.title)}">
       <div class="g3" style="margin-top:12px">
         ${[['aud','受众'],['pair','配对'],['genre','类型']].map(([k,l])=>`<div><label class="fl">${l}</label><select class="sel" data-f="${k}">${WZ_OPT[k].map(o=>`<option ${o===W[k]?'selected':''}>${o}</option>`).join('')}</select></div>`).join('')}
       </div>
@@ -1364,8 +1374,7 @@ function viewScriptNew(workId){
       <p class="hint" id="scoreHint"></p>
       <label class="cb"><input type="checkbox" data-f="adult" ${W.adult?'checked':''}><div><b>所有角色均已年满 18 岁</b></div></label>
       <label class="fl" style="margin-top:16px">撞题比对</label>
-      <button class="btn-o" id="dupBtn">跟我的作品比对撞题</button>
-      <div class="dup" id="dupRes">比对作品名、卖点和核心设定</div>
+      <div class="dup" id="dupRes"></div>
       <button class="bigbtn" id="go"></button>
       <p class="hint" id="goSub"></p>
     </section>
@@ -1381,18 +1390,18 @@ function viewScriptNew(workId){
     document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.m===W.mode));
     const file = k => `<label class="btn-o">${ico('dl').replace('M12 4v12m0 0-5-5m5 5 5-5','M12 20V8m0 0-5 5m5-5 5 5')}或汇入文件（txt／md）<input type="file" accept=".txt,.md,text/plain,text/markdown" hidden data-file="${k}"></label>`;
     $('s1').innerHTML = W.mode==='paste' ? `
-      <textarea class="ta" data-f="doc" rows="8" placeholder="把完整策划文件（作品资料卡、故事大纲、角色设计、分集大纲、分场大纲）贴在这里">${esc(W.doc)}</textarea>
+      <textarea class="ta" data-f="doc" rows="8" placeholder="把剧本或策划文件贴在这里">${esc(W.doc)}</textarea>
       <div class="row" style="margin-top:10px"><button class="btn-o" id="readDoc">读取这份文件</button>${file('doc')}</div>
       <p class="hint" id="docInfo"></p>`
     : W.mode==='auto' ? `
-      <p class="desc">用下面「骨架」「第一季规格」「补充设定」填的内容，产生一段提示词，交给 AI 写出完整策划文件（资料卡、故事大纲、角色、分集大纲、前 3 集分场大纲）；写完会先自查合规红线；第 5 步比对撞题后，相近的作品会写进提示词请它避开。</p>
-      <p class="desc">填完下面第 2–4 步后，到最下面第 5 步比对撞题、按「<b>产生策划文件</b>」。</p>`
+      <button class="story" id="story">${W.pitch.trim()?`<b>「${esc(W.pitch.trim())}」</b><span>${ico('pen')}改一改</span>`:`<b class="ph">说一句你的故事，例如：被退婚的假千金，靠读心系统在豪门翻盘</b><span>${ico('pen')}去写</span>`}</button>`
     : `
-      <p class="desc">贴上小说全文，或选文件（.txt、.md）。产生的提示词会请 AI 先切章、逐章摘要，再改编成策划文件：<b>人名、地名、店名照原著</b>，每一集标出「对应原著」的章节。字数 2,000–400,000 字。</p>
-      <textarea class="ta" data-f="novel" rows="8" placeholder="把小说全文贴在这里">${esc(W.novel)}</textarea>
+      <textarea class="ta" data-f="novel" rows="8" placeholder="把小说全文贴在这里（2,000–400,000 字）">${esc(W.novel)}</textarea>
       <div class="row" style="margin-top:10px">${file('novel')}<span class="hint" id="novelInfo" style="margin:0"></span></div>
-      <p class="hint">集数、每集分钟数在第 3 步设定；片名在第 2 步（可以空着，会用原书名或依内容取）。</p>`;
+`;
     bind($('s1'));
+    if($('story')) $('story').onclick=()=>{ const el=document.querySelector('[data-f="pitch"]'); el.scrollIntoView({behavior:'smooth',block:'center'}); setTimeout(()=>el.focus(),350); };
+    $('s1T').textContent=MODE[W.mode].step;
     $('s1').querySelectorAll('[data-file]').forEach(inp=>inp.onchange=()=>{
       const f=inp.files[0]; if(!f) return;
       if(f.size>4e6){toast('文件太大');return}
@@ -1414,28 +1423,33 @@ function viewScriptNew(workId){
     });
   }
   function update(){
+    W.dup=wzDupCheck(W); drawDup();
     const eps=wzEps(W), mins=wzMins(W), per=mins*W.wpm, sc=wzScore(W), needs=wzNeeds(W);
     $('sum').innerHTML = eps&&mins ? `每集约 <b>${nfmt(per)}</b> 字・${eps} 集合计约 <b>${nfmt(per*eps)}</b> 字・总片长约 <b>${nfmt(Math.round(eps*mins))}</b> 分钟` : '请填好集数和每集时长';
     $('score').textContent=`${sc} / 10`; $('scoreBar').style.width=sc*10+'%';
     const miss=[['core','核心设定与规则'],['rival','对手的动机'],['diff','与参考作品的差异']].filter(([k])=>!W[k].trim()).map(([,l],i)=>'①②③'[i]+' '+l);
-    $('scoreHint').textContent = miss.length ? `还可以在第 4 步补（选填，填了会一起交给写作模型；不填不会自动产生）：${miss.join('　')}` : '补充设定已经很完整。';
+    $('scoreHint').textContent = !miss.length ? '设定很完整，这部会很有记忆点 ✦' : sc>=5 ? `辨识度不错，可以开写了。想更出彩，再补「${miss[0].slice(2)}」` : `再补一句「${miss[0].slice(2)}」，故事会更有记忆点（跳过也行）`;
     $('go').textContent = MODE[W.mode].btn; $('go').disabled = needs.length>0;
-    $('goSub').textContent = needs.length ? '需要：'+needs.join('、') : MODE[W.mode].sub;
+    $('goSub').textContent = needs.length ? '就差：'+needs.join('、') : MODE[W.mode].sub;
     if($('novelInfo')) $('novelInfo').textContent = W.novel ? `约 ${nfmt(W.novel.length)} 字${W.novel.length<2000?'（太短）':W.novel.length>400000?'（太长）':''}` : '';
     // 预览
     const t=wzTitle(W);
-    $('pvTitle').textContent=`《${t||'（未命名）'}》`;
+    $('pvTitle').textContent=t?`《${t}》`:'《AI 帮你取剧名》';
+    $('pvTitle').classList.toggle('soft',!t);
     $('pvTags').innerHTML=[W.aud,W.pair,W.genre].map(x=>`<span class="tag">${esc(x)}</span>`).join('');
     $('pvKv').innerHTML=`<span>卖点</span><span>${esc(W.pitch||'—')}</span><span>规格</span><span>${eps} 集・每集 ${mins} 分钟・约 ${nfmt(per)} 字</span><span>主写</span><span>${esc(W.ai)}</span><span>用语</span><span>${esc(W.lang)}</span>`;
     // 进度
     const filled=SUPP.filter(([k])=>W[k].trim()).length;
     const s1 = W.mode==='paste' ? (W.doc.trim()?[1,`已贴上，约 ${nfmt(W.doc.length)} 字`]:[0,'还没选'])
-      : W.mode==='auto' ? [0,'第 5 步按「产生策划文件」']
-      : (W.novel.length>=2000&&W.novel.length<=400000?[1,`小说约 ${nfmt(W.novel.length)} 字`]:[0,'第 5 步按「依小说产生策划文件」']);
-    const s5=[!W.adult&&'未勾 18 岁', !W.dup&&'未比对撞题'].filter(Boolean);
-    const P=[['策划文件',...s1],['骨架',W.pitch.trim()?1:0,W.pitch.trim()?'卖点已填':'还没填一句话卖点'],
-      ['第一季规格',eps&&mins?1:0,`${eps} 集 × ${mins} 分钟`],['补充设定',filled?1:0,`${filled} / 5 项（选填）`],
-      ['确认与建立',s5.length?0:1,s5.length?s5.join('、'):'可以建立']];
+      : W.mode==='auto' ? (W.pitch.trim()?[1,'故事已带入']:[0,'说一句就好'])
+      : (W.novel.length>=2000&&W.novel.length<=400000?[1,`小说约 ${nfmt(W.novel.length)} 字`]:[0,'放进小说就好']);
+    if(W.mode==='paste' && !W.doc.trim()) s1[1]='贴上就好';
+    const P=[[MODE[W.mode].step,...s1],['骨架',W.pitch.trim()?1:0,W.pitch.trim()?'卖点已填':'一句话卖点'],
+      ['第一季规格',eps&&mins?1:0,`${eps} 集 × ${mins} 分钟`],['补充设定',filled?1:0,filled?`已补 ${filled} 项`:'选填，跳过也行'],
+      ['确认与建立',W.adult?1:0,W.adult?'可以开写了':'勾一下就好']];
+    const done=P.filter(x=>x[1]).length;
+    $('cheer').textContent = !needs.length ? '全部就绪，按最底下的按钮就开写' : done>=3 ? `已完成 ${done} / 5，快好了` : `已完成 ${done} / 5，一步一步来`;
+    $('s1Tag').textContent = s1[0] ? '✓ 已就绪' : '';
     $('prog').innerHTML=P.map(([l,ok,s],i)=>`<li class="${ok?'ok':''}">${sn(i+1,ok?'done':'')}<div>${l}<small>${esc(s)}</small></div></li>`).join('');
     document.querySelectorAll('.step h3 .sn').forEach((b,i)=>b.outerHTML=sn(i+1,P[i]&&P[i][1]?'done':'on'));
     if(!W.id){ const {dup,...keep}=W; store('scriptDraft',keep); }
@@ -1454,14 +1468,11 @@ function viewScriptNew(workId){
     const {main,sup}=wzSettings(W);
     showModal('「AI 帮我想」卖点提示词', `请为下面这部短剧想 5 个一句话卖点，每个不超过 25 字，要有人物关系和反差，能让观众一眼想点开。逐条列出，并各用一句话说明爽点在哪里。\n\n${main}${sup?'\n'+sup:''}${W.doc.trim()?'\n\n【策划文件摘录】\n'+W.doc.trim().slice(0,3000):''}${W.novel.trim()?'\n\n【小说开头】\n'+W.novel.trim().slice(0,3000):''}`, '卖点提示词.txt');
   };
-  $('dupBtn').onclick=()=>{
-    W.dup=wzDupCheck(W); const r=$('dupRes');
-    r.className='dup'+(W.dup.hits.length?' warn':'');
-    r.innerHTML = W.dup.n===0 ? '已比对：这台电脑还没有其他作品，没有撞题。'
-      : W.dup.hits.length ? `发现 ${W.dup.hits.length} 部相近作品，产生提示词时会请 AI 避开：<br>${W.dup.hits.map(h=>`《${esc(h.title)}》相似度 ${Math.round(h.sim*100)}%`).join('<br>')}`
-      : `已比对 ${W.dup.n} 部作品，没有发现撞题。`;
-    update();
-  };
+  function drawDup(){
+    const r=$('dupRes'); r.className='dup'+(W.dup.hits.length?' warn':'');
+    r.innerHTML = W.dup.hits.length ? `有 ${W.dup.hits.length} 部相近作品，写的时候会自动避开：<br>${W.dup.hits.map(h=>`《${esc(h.title)}》相似度 ${Math.round(h.sim*100)}%`).join('<br>')}`
+      : W.dup.n===0 ? '✓ 没有撞题' : `✓ 已自动比对 ${W.dup.n} 部作品，没有撞题`;
+  }
   $('go').onclick=()=>{
     const title=wzTitle(W)||'未命名';
     const list=store('works')||[]; const {dup,...keep}=W;
