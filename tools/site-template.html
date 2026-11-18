@@ -416,6 +416,14 @@ a.pill{text-decoration:none}
 .sx-top .pt-banner:hover{animation-play-state:paused;box-shadow:0 24px 60px rgba(0,0,0,.5)}
 @keyframes ptfloat{from{transform:scale(.62) rotate(10deg) translateY(0)}to{transform:scale(.62) rotate(13deg) translateY(-10px)}}
 @media (prefers-reduced-motion:reduce){.sx-top .pt-banner{animation:none;transform:scale(.62) rotate(11deg)}}
+.h1w{position:relative;display:inline-block}
+.pt-tag{position:absolute;left:calc(100% - 6px);top:-14px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;padding:4px 9px;border-radius:7px;background:linear-gradient(90deg,#dbeaf6,#bcd5ea);color:#0f3550;font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:0;text-decoration:none;-webkit-text-fill-color:#0f3550;box-shadow:0 6px 16px rgba(0,0,0,.35);transform-origin:left center;animation:pttag 3.2s ease-in-out infinite alternate}
+.pt-tag svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.8}
+.pt-tag:hover{animation-play-state:paused;filter:brightness(1.06)}
+@keyframes pttag{from{transform:rotate(10deg)}to{transform:rotate(14deg) translateY(-3px)}}
+@media (prefers-reduced-motion:reduce){.pt-tag{animation:none;transform:rotate(12deg)}}
+@media (min-width:1300px){.pt-tag{display:none}}
+@media (max-width:520px){.pt-tag{left:auto;right:-14px;top:-38px;font-size:11px;padding:3px 7px}}
 .pt-mini{display:none;align-items:center;gap:6px;margin:-8px auto 18px;width:max-content;max-width:100%;padding:8px 14px;border-radius:999px;background:linear-gradient(90deg,#dbeaf6,#bcd5ea);color:#0f3550;font-size:13px;font-weight:700;text-decoration:none}
 .pt-mini svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8}
 .pt-banner{position:relative;display:block;height:220px;border-radius:22px;overflow:hidden;text-decoration:none;color:#0f3550;
@@ -518,7 +526,7 @@ a.pt-banner:hover{transform:translateY(-2px)}
 .magic:disabled,.magic.idle{background:#2a2a2e;box-shadow:none;color:var(--text-3);cursor:not-allowed}
 .magic.idle{cursor:pointer}
 .roles{scroll-margin-top:90px}
-.modeseg{position:relative;display:flex;width:min(560px,100%);margin:6px auto 30px;padding:4px;border-radius:999px;background:#3a3a3c;border:1px solid rgba(255,255,255,.08)}
+.modeseg{position:relative;display:flex;width:min(560px,100%);margin:22px auto 0;padding:4px;border-radius:999px;background:#3a3a3c;border:1px solid rgba(255,255,255,.08)}
 .modeseg button{flex:1;height:56px;border-radius:999px;font-size:18px;color:#f2f2f2;transition:color .2s}
 .modeseg button.on{color:#151515;font-weight:600;background:radial-gradient(60px 30px at 30% 50%,rgba(255,190,160,.75),transparent 70%),radial-gradient(70px 30px at 72% 50%,rgba(120,220,255,.75),transparent 70%),#fafafa;box-shadow:0 4px 18px rgba(0,0,0,.35)}
 .lib{padding-bottom:40px}
@@ -538,7 +546,7 @@ a.pt-banner:hover{transform:translateY(-2px)}
 .lt .sub{font-size:12.5px;color:#b896ff;line-height:1.5}
 .art{display:grid;place-items:center;width:100%;aspect-ratio:1;border-radius:12px;background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.18),transparent 55%),linear-gradient(160deg,var(--c),#17171a)}
 .art svg{width:42%;height:42%;stroke:#fff;fill:none;stroke-width:1.4;opacity:.92}
-.lt .soon{display:inline-block;margin-left:4px;padding:1px 8px;border-radius:999px;background:#2a2a2e;color:var(--text-3);font-size:12px;font-weight:400}
+.lt .wipb{display:inline-block;margin-left:4px;padding:1px 8px;border-radius:999px;background:#2a2a2e;color:var(--text-3);font-size:12px;font-weight:400}
 .lt.wip .art{filter:saturate(.55)}
 .lt.ph{cursor:default}.lt.ph:hover{transform:none;border-color:var(--line)}
 .lt.ph .lab b{color:var(--text-2)}.lt.ph .sub{color:var(--text-3)}
@@ -592,7 +600,7 @@ a.pt-banner:hover{transform:translateY(-2px)}
 .fhit .ft svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .fhit b{font-size:15px}
 .fhit .fd{font-size:12.5px;color:var(--text-3);line-height:1.5}
-@media (max-width:1299px){.sx-top .pt-banner{display:none}.pt-mini{display:flex}}
+@media (max-width:1299px){.sx-top .pt-banner{display:none}}
 @media (max-width:760px){.pt-cards,.pt-cards.three,.pt-prize,.pt-flow{grid-template-columns:1fr}.pt-table .r{grid-template-columns:1fr;gap:4px}.pt-banner.big{height:240px}.pt-banner.big .pt-logo{width:100px;height:100px;right:16px}.pt-banner.big .pt-txt{left:20px;bottom:22px}.fhits{grid-template-columns:1fr}.ctabs button{height:50px;font-size:13px;gap:5px}.ctabs svg{width:16px;height:16px}.cbody{padding:16px 14px 4px}.cn{height:36px;padding:0 12px;font-size:13px;gap:6px}.cn svg{width:17px;height:17px}.cfoot{padding:10px 12px 12px}.cbtn{font-size:14px}}
 .seedbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:860px;margin:-10px auto 22px;padding:12px 14px;border-radius:16px;background:var(--brand-soft);border:1px solid rgba(139,69,255,.35);font-size:14px}
 .seedbar>span{display:inline-flex;align-items:center;gap:6px;color:#fff;font-weight:600}
@@ -1710,15 +1718,16 @@ function viewScriptSimple(){
   v.innerHTML=`
     <div class="sx-top">
     <section class="sx-hero">
-      <h1>人物即剧本</h1>
+      <h1><span class="h1w">人物即剧本<a class="pt-tag" href="#/partner">${ico('sparkle')}AI短剧伙伴计划</a></span></h1>
+      <div class="modeseg" id="modeSeg"><button data-m="lib">角色库</button><button data-m="create">创作平台</button></div>
+      <div id="heroCreate">
       <p>选一个主角，一键产出 10 集短剧剧本</p>
       <div class="sx-steps" id="sxSteps"></div>
       <div class="locks"><span>${ico('lock')}10 集</span><span>${ico('lock')}每集 1 分钟</span><span>${ico('lock')}简体中文</span><span>${ico('lock')}一季完结</span></div>
+      </div>
     </section>
     ${partnerBanner()}
     </div>
-    <a class="pt-mini" href="#/partner">${ico('sparkle')}天玑 AI短剧伙伴计划 · 让你的故事被全世界看见 →</a>
-    <div class="modeseg" id="modeSeg"><button data-m="lib">角色库</button><button data-m="create">创作平台</button></div>
     <section class="lib" id="mLib"></section>
     <div id="mCreate">
     <div class="sx-bar">
@@ -1798,6 +1807,7 @@ function viewScriptSimple(){
     document.querySelectorAll('#modeSeg button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
     $('mLib').style.display = m==='lib' ? '' : 'none';
     $('mCreate').style.display = m==='create' ? '' : 'none';
+    $('heroCreate').style.display = m==='create' ? '' : 'none';
     if(m==='lib') drawLib();
   }
   function go(n){ Object.assign(nav,n); store('libNav',nav); drawLib(); }
@@ -1812,7 +1822,7 @@ function viewScriptSimple(){
         <button class="lt" data-g="${g}"><span class="mosaic">${DATA.roles[g].slice(0,4).map((_,i)=>art(g,i)).join('')}</span>
           <span class="lab"><b>${G2[g]}</b> ${DATA.roles[g].length} 位</span></button>`).join('')}${['cloth','hair'].map(g=>`
         <button class="lt wip" data-w="${g}"><span class="art" style="--c:${WIP[g].c}">${ico(WIP[g].ic)}</span>
-          <span class="lab"><b>${G2[g]}</b> <span class="soon">整理中</span></span></button>`).join('')}</div>`;
+          <span class="lab"><b>${G2[g]}</b> <span class="wipb">整理中</span></span></button>`).join('')}</div>`;
     } else if(nav.lv==='wip'){
       const w=WIP[nav.g];
       body = `<p class="lib-tip">${G2[nav.g]}还在整理，先占好位置，之后会一格一格补上</p><div class="lib-grid">${w.items.map(x=>`
@@ -1830,7 +1840,7 @@ function viewScriptSimple(){
         </div></div>`;
     }
     $('mLib').innerHTML = `<div class="lib-card">
-      <div class="lib-head"><h2>角色库（${total} 位）</h2><span>天玑角色模板，选一位就能一键产出 10 集剧本</span></div>
+      <div class="lib-head"><h2>角色库（${total} 位）</h2><span>选一个主角，一键产出 10 集短剧剧本</span></div>
       ${crumbs}${body}
       <a class="lib-studio" href="#/assets/role-new">${ico('plus')}AI 角色工作室（生成原创角色）</a>
     </div>`;
