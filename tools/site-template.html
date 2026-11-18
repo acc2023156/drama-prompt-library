@@ -111,7 +111,6 @@ body.ps-off main .wrap{padding-top:56px}
 .sec-head h2{margin:0;font-family:"Noto Sans SC",var(--font);font-weight:900;font-size:26px}
 .sec-head .meta{color:var(--text-3);font-size:13px}
 .sec-head .sp{flex:1}
-.kymode{margin-left:2px;padding:2px 7px;border-radius:6px;background:#ece6ff;color:#5b2bd6;font-size:11px;font-weight:700}
 .btn-white{height:40px;padding:0 16px;border-radius:10px;background:#fff;color:#111;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:8px}
 .btn-dark{height:40px;padding:0 14px;border-radius:10px;background:var(--panel);border:1px solid var(--line);color:#fff;font-size:13px;display:inline-flex;align-items:center;gap:8px}
 .btn-white svg,.btn-dark svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
@@ -1170,8 +1169,8 @@ function viewScriptHome(){
     <div class="wz-head"><div class="crumb"><span>天玑</span>／<span>剧本</span></div></div>
     ${chatHtml()}
     <div class="wz-head" style="margin-top:34px">
-      <div class="row" style="justify-content:space-between"><h1>剧本</h1><a class="btn-white" href="#/script/new" title="开阳模式：分 5 步填好设定再建立">${ico('plus')}新增作品<span class="kymode">开阳模式</span></a></div>
-      <p>新增作品走开阳模式，分 5 步：策划文件 → 骨架 → 第一季规格 → 补充设定 → 确认与建立。</p></div>
+      <div class="row" style="justify-content:space-between"><h1>剧本</h1><a class="btn-white" href="#/script/new">${ico('plus')}新增作品</a></div>
+</div>
     ${works.length?`<div class="works">${works.map((w,k)=>`<div class="acard">
         <div class="t">${ico('script')}《${esc(w.title||'未命名')}》<span class="tag" style="margin-left:auto">${esc(w.kind==='simple'?'人物即剧本':MODE[w.W.mode].tab)}</span></div>
         <div class="row" style="gap:6px">${[w.W.aud,w.W.pair,w.W.genre].map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
@@ -1246,7 +1245,7 @@ function bindChat(){
   }
   let waking=false;
   function drawStat(){
-    $('cstat').innerHTML=`<div class="cs-row"><a class="cs-btn" href="jubenconnector://start" id="cWake">${waking?'启动中⋯':'启动连接器'}</a><span class="cs off">○ 连接器：未连线</span></div>`;
+    $('cstat').innerHTML=`<div class="cs-row"><a class="cs-btn" href="jubenconnector://start" id="cWake">${waking?'启动中⋯':'启动连接器'}</a></div>`;
     $('cWake').onclick=()=>{ waking=true; drawStat(); setTimeout(()=>{waking=false; drawStat();},10000); };
   }
   function drawConn(){
@@ -1266,8 +1265,7 @@ function bindChat(){
             <span class="note">请确认剧本拥有合法版权，格式要求<span class="tip" title="Word（.docx）、PDF、.txt、.md；txt 用 UTF-8、GB18030、Big5 都读得了。也可以直接把文件拖进来。">${ico('info')}</span></span>
           </div>`;
     } else if(C.tab==='auto'){
-      h = `<p class="cdesc">不用先填表，说一句你的故事就开写。AI 会补齐剧名、角色和设定，写出完整策划文件（资料卡、故事大纲、角色、分集大纲、前 3 集分场大纲）。按右下角箭头开始。</p>
-        <textarea class="cta" id="cPitch" style="min-height:96px" placeholder="一句话说说你的故事，如：被退婚的假千金，靠读心系统在豪门翻盘">${esc(C.pitch)}</textarea>`;
+      h = `<textarea class="cta" id="cPitch" style="min-height:96px" placeholder="一句话说说你的故事，如：被退婚的假千金，靠读心系统在豪门翻盘">${esc(C.pitch)}</textarea>`;
     } else {
       const n=C.novel.trim().length;
       h = `<p class="cdesc">贴上小说全文，或选文件：Word（.docx）、PDF、.txt、.md（txt 用 UTF-8、GB18030、Big5 都读得了）。会改编成策划文件：<b>人名、地名、店名照原著</b>，每一集标出「对应原著」的章节。字数 2,000–400,000 字。</p>
