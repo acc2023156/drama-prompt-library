@@ -352,8 +352,12 @@ a.pill{text-decoration:none}
 .sn{flex:none;width:24px;height:24px;border-radius:50%;display:inline-grid;place-items:center;background:#2a2a2e;color:var(--text-2);font:700 12px/1 Inter,var(--font);font-style:normal}
 .sn.on,.sn.done{background:var(--brand);color:#fff}
 .sn svg{width:62%;height:62%;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
-.wcard{max-width:720px;margin:0 auto 40px;border-radius:22px;border:1px solid rgba(139,69,255,.35);background:linear-gradient(180deg,rgba(139,69,255,.10),#151517 45%);padding:24px 26px}
-.wc-title{display:flex;align-items:center;font-size:26px;font-weight:800;color:#fff}
+#vibeCard .wcard{margin:16px 0 0;max-width:none}
+.wcard{position:relative;max-width:720px;margin:0 auto 40px;border-radius:22px;border:1px solid rgba(139,69,255,.35);background:linear-gradient(180deg,rgba(139,69,255,.10),#151517 45%);padding:24px 26px}
+.wc-x{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:9px;display:grid;place-items:center;color:var(--text-3)}
+.wc-x:hover{background:#26262a;color:#fff}
+.wc-x svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+.wc-title{padding-right:36px;display:flex;align-items:center;font-size:26px;font-weight:800;color:#fff}
 .wc-title input{field-sizing:content;flex:0 1 auto;min-width:5em;max-width:100%;background:transparent;border:0;outline:0;color:#fff;font:inherit;padding:2px 4px}
 .wc-title input::placeholder{color:var(--text-3)}
 .wc-story{display:block;width:100%;margin-top:12px;border:1px solid var(--line-2);border-radius:14px;background:#0f0f11;color:#fff;font:16px/1.7 var(--font);padding:12px 14px;resize:vertical;outline:0}
@@ -774,6 +778,7 @@ const ICONS = {
   lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
   dice:'<rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1" fill="currentColor"/><circle cx="15" cy="15" r="1" fill="currentColor"/><circle cx="15" cy="9" r="1" fill="currentColor"/><circle cx="9" cy="15" r="1" fill="currentColor"/>',
   sparkle:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3ZM19 15l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2Z"/>',
+  x:'<path d="M6 6l12 12M18 6 6 18"/>',
   shirt:'<path d="M8 3 3 6l2 4 2-1v12h10V9l2 1 2-4-5-3a4 4 0 0 1-8 0Z"/>',
   hair:'<circle cx="12" cy="11" r="4.5"/><path d="M7.2 10.5C7.5 5 16.5 5 16.8 10.5c-2-.5-4-1.8-4.8-3.3-1 1.6-2.8 2.8-4.8 3.3ZM7.6 12.5 6 20h3M16.4 12.5 18 20h-3"/>',
   female:'<circle cx="12" cy="8" r="4"/><path d="M6 21c0-4 2.7-7 6-7s6 3 6 7M8 6.5C9 4 15 4 16 6.5"/>',
@@ -1237,9 +1242,10 @@ function chatHtml(){
       <div class="cfoot">
         <div class="cpop-w"><button class="cbtn" id="cStyle">${ico('palette')}<span>风格</span></button><div class="cpop" id="cStylePop"></div></div>
         <div class="cpop-w"><button class="cbtn" id="cRatio"><i class="rb"></i><span>比例</span></button><div class="cpop" id="cRatioPop"></div></div>
-        <button class="csend" id="cSend" title="带入新增作品">${ico('arrowUp')}</button>
+        <button class="csend" id="cSend">${ico('arrowUp')}</button>
       </div>
     </div>
+    <div id="vibeCard"></div>
   </section>`;
 }
 async function readAnyFile(file){
@@ -1301,6 +1307,7 @@ function bindChat(){
         <div class="crow">${fileBtn('cFile','或选文件（Word／PDF／txt／md）')}<span class="cnt ${n&&(n<2000||n>400000)?'bad':''}">${cntText('novel')}</span></div>`;
     }
     $('cbody').innerHTML = h + recent();
+    drawVibe();
     $('cSend').disabled = !ok();
     const bindTa=(id,k)=>{ const t=$(id); if(!t) return; t.oninput=()=>{ C[k]=t.value; save(); $('cSend').disabled=!ok();
       const c=$('cbody').querySelector('.cnt'); if(c&&k!=='pitch'){ c.textContent=cntText(k); const n=C.novel.trim().length; c.classList.toggle('bad',k==='novel'&&n>0&&(n<2000||n>400000)); } }; };
@@ -1329,8 +1336,22 @@ function bindChat(){
   $('cStyle').onclick=e=>{e.stopPropagation(); const o=$('cStylePop').classList.contains('open'); closePops(); if(!o) $('cStylePop').classList.add('open');};
   $('cRatio').onclick=e=>{e.stopPropagation(); const o=$('cRatioPop').classList.contains('open'); closePops(); if(!o) $('cRatioPop').classList.add('open');};
   document.addEventListener('click', closePops);
+  function drawVibe(){
+    const box=$('vibeCard'), W=store('vibeCard');
+    if(C.tab!=='auto' || !W){ box.innerHTML=''; return; }
+    const V=Object.assign({}, WZ_DEF, W);
+    box.innerHTML=wcardHtml(V);
+    bindWcard(box, V, keep=>store('vibeCard',keep), ()=>{ store('vibeCard',null); box.innerHTML=''; });
+  }
   $('cSend').onclick=()=>{
     if(!ok()) return;
+    if(C.tab==='auto'){
+      const pitch=C.pitch.trim(), g=wzGuess(pitch);
+      store('vibeCard', Object.assign({}, WZ_DEF, {mode:'auto', pitch, ai:C.ai, style:C.style, ratio:C.ratio}, g, {hooks:g.hooks}));
+      drawVibe();
+      $('vibeCard').scrollIntoView({behavior:'smooth', block:'start'});
+      return;
+    }
     const d=Object.assign({}, store('scriptDraft')||{}, {mode:C.tab, ai:C.ai, style:C.style, ratio:C.ratio});
     if(C.tab==='paste') d.doc=C.doc; else if(C.tab==='auto') d.pitch=C.pitch.trim(); else d.novel=C.novel;
     store('scriptDraft', d);
@@ -1338,6 +1359,61 @@ function bindChat(){
     location.hash='#/script/new';
   };
   drawStat(); drawConn(); drawBody(); drawPops();
+}
+
+/* 氛围写作起手式：作品卡（一句话 → 先猜好的设定 → 一键开写） */
+function wcardHtml(W){
+  const opt=(k,list)=>`<select data-c="${k}">${(list.includes(W[k])?list:[W[k],...list]).map(o=>`<option ${o===W[k]?'selected':''}>${o}</option>`).join('')}</select>`;
+  const num=(k,list,unit)=>{const cur=+W[k]||list[0]; const L=list.includes(cur)?list:[cur,...list];
+    return `<select data-c="${k}" data-num="1">${L.map(n=>`<option value="${n}" ${n===cur?'selected':''}>${n} ${unit}</option>`).join('')}</select>`;};
+  return `<section class="wcard">
+    <button class="wc-x" data-x title="收起">${ico('x')}</button>
+    <div class="wc-title">《<input data-c="title" placeholder="AI 帮你取剧名" value="${esc(W.title)}">》</div>
+    <textarea class="wc-story" data-c="pitch" rows="2" placeholder="说一句你的故事">${esc(W.pitch)}</textarea>
+    <div class="wc-pills">
+      <label class="psel">${opt('genre',WZ_OPT.genre)}</label>
+      <label class="psel">${opt('aud',WZ_OPT.aud)}</label>
+      <label class="psel">${opt('pair',WZ_OPT.pair)}</label>
+      <label class="psel">${num('eps',WZ_OPT.eps,'集')}</label>
+      <label class="psel">${num('mins',WZ_OPT.mins,'分钟 / 集')}</label>
+      <label class="psel">${ico('pen')}<select data-c="ai">${WZ_OPT.ai.map(([v])=>`<option value="${v}" ${v===W.ai?'selected':''}>${v}</option>`).join('')}</select></label>
+    </div>
+    <div class="chips wc-hooks">${WZ_OPT.hooks.map(h=>`<span class="ck ${W.hooks.includes(h)?'on':''}" data-h="${h}">${h}</span>`).join('')}</div>
+    <details class="wc-more" ${W.core.trim()?'open':''}><summary>${ico('sparkle')}再补一句，故事更出彩</summary>
+      <textarea class="wc-story" data-c="core" rows="2" placeholder="核心设定与规则，例如：读心只能听到对她有恶意的人">${esc(W.core)}</textarea></details>
+    <label class="cb"><input type="checkbox" data-c="adult" ${W.adult?'checked':''}><div><b>所有角色均已年满 18 岁</b></div></label>
+    <div class="dup wc-dup"></div>
+    <button class="bigbtn wc-go">${MODE.auto.btn}</button>
+    <p class="hint wc-sub"></p>
+    <button class="wc-full" data-full>到开阳模式细修</button>
+  </section>`;
+}
+function bindWcard(root, W, save, close){
+  const q=sel=>root.querySelector(sel);
+  const refresh=()=>{
+    W.dup=wzDupCheck(W); const needs=wzNeeds(W);
+    q('.wc-dup').className='dup wc-dup'+(W.dup.hits.length?' warn':'');
+    q('.wc-dup').innerHTML = W.dup.hits.length ? `有 ${W.dup.hits.length} 部相近作品，写的时候会自动避开：${W.dup.hits.map(h=>`《${esc(h.title)}》`).join('、')}`
+      : W.dup.n===0 ? '✓ 没有撞题' : `✓ 已自动比对 ${W.dup.n} 部作品，没有撞题`;
+    q('.wc-go').disabled = needs.length>0;
+    q('.wc-sub').textContent = needs.length ? '就差：'+needs.join('、') : '全部就绪';
+    const {dup,...keep}=W; save(keep);
+  };
+  root.querySelectorAll('[data-c]').forEach(el=>{
+    el.oninput=el.onchange=()=>{
+      const k=el.dataset.c;
+      W[k] = el.type==='checkbox' ? el.checked : el.dataset.num ? +el.value : el.value;
+      if(el.tagName==='TEXTAREA'){ el.style.height='auto'; el.style.height=el.scrollHeight+'px'; }
+      refresh();
+    };
+  });
+  root.querySelectorAll('.ck[data-h]').forEach(c=>c.onclick=()=>{
+    const h=c.dataset.h; W.hooks=W.hooks.includes(h)?W.hooks.filter(x=>x!==h):[...W.hooks,h]; c.classList.toggle('on'); refresh();
+  });
+  q('.wc-go').onclick=()=>{ close(); wzCreate(W); };
+  q('[data-full]').onclick=()=>{ const {dup,guessed,...keep}=W; store('scriptDraft',{...keep,id:undefined}); location.hash='#/script/new'; };
+  q('[data-x]').onclick=close;
+  refresh();
 }
 
 /* 从一句话猜受众、配对、类型、爽点（只在作品卡第一次出现时套用，之后随用户改） */
@@ -1358,42 +1434,15 @@ function viewScriptNew(workId){
   const w = workId ? works.find(x=>x.id===workId) : null;
   const W = Object.assign({}, WZ_DEF, w ? w.W : (store('scriptDraft')||{}));
   W.id = w ? w.id : null; W.dup = null;
-  const card = !w && W.mode==='auto' && !W.full;
-  if(card && W.pitch.trim() && !W.guessed){ const g=wzGuess(W.pitch); Object.assign(W, g, {hooks:g.hooks.length?g.hooks:W.hooks, guessed:true}); }
   const v=document.getElementById('view');
   const chip=(k,val,label)=>`<span class="ck ${(Array.isArray(W[k])?W[k].includes(val):W[k]===val)?'on':''}" data-k="${k}" data-v="${esc(String(val))}">${esc(label??val)}</span>`;
   v.innerHTML=`
   <div class="wz-head"><div class="crumb"><a href="#/script">天玑</a>／<a href="#/script">剧本</a>／<span>${w?'编辑作品':'新增作品'}</span></div>
     <h1>${w?'编辑作品':'新增作品'}</h1><p class="cheer" id="cheer"></p></div>
-  ${card ? (()=>{
-    const opt=(k,list)=>`<select data-c="${k}">${(list.includes(W[k])?list:[W[k],...list]).map(o=>`<option ${o===W[k]?'selected':''}>${o}</option>`).join('')}</select>`;
-    const num=(k,list,unit)=>{const cur=(W[k]==='自定义'?+W[k+'Custom']:+W[k])||list[0]; const L=list.includes(cur)?list:[cur,...list];
-      return `<select data-c="${k}" data-num="1">${L.map(n=>`<option value="${n}" ${n===cur?'selected':''}>${n} ${unit}</option>`).join('')}</select>`;};
-    return `<section class="wcard" id="wcard">
-    <div class="wc-title">《<input data-c="title" placeholder="AI 帮你取剧名" value="${esc(W.title)}">》</div>
-    <textarea class="wc-story" data-c="pitch" rows="2" placeholder="说一句你的故事，例如：被退婚的假千金，靠读心系统在豪门翻盘">${esc(W.pitch)}</textarea>
-    <div class="wc-pills">
-      <label class="psel">${opt('genre',WZ_OPT.genre)}</label>
-      <label class="psel">${opt('aud',WZ_OPT.aud)}</label>
-      <label class="psel">${opt('pair',WZ_OPT.pair)}</label>
-      <label class="psel">${num('eps',WZ_OPT.eps,'集')}</label>
-      <label class="psel">${num('mins',WZ_OPT.mins,'分钟 / 集')}</label>
-      <label class="psel">${ico('pen')}<select data-c="ai">${WZ_OPT.ai.map(([v,l])=>`<option value="${v}" ${v===W.ai?'selected':''}>${v}</option>`).join('')}</select></label>
-    </div>
-    <div class="chips wc-hooks">${WZ_OPT.hooks.map(h=>`<span class="ck ${W.hooks.includes(h)?'on':''}" data-h="${h}">${h}</span>`).join('')}</div>
-    <details class="wc-more" ${W.core.trim()?'open':''}><summary>${ico('sparkle')}再补一句，故事更出彩</summary>
-      <textarea class="wc-story" data-c="core" rows="2" placeholder="核心设定与规则，例如：读心只能听到对她有恶意的人">${esc(W.core)}</textarea></details>
-    <label class="cb"><input type="checkbox" data-c="adult" ${W.adult?'checked':''}><div><b>所有角色均已年满 18 岁</b></div></label>
-    <div class="dup" id="dupRes2"></div>
-    <button class="bigbtn" id="go2"></button>
-    <p class="hint" id="goSub2"></p>
-    <button class="wc-full" id="toFull">展开完整设定</button>
-  </section>`;})() : ''}
-  <div class="wz" ${card?'style="display:none"':''}><div>
+  <div class="wz"><div>
     <section class="step"><h3>${sn(1,"on")}<span id="s1T">${MODE[W.mode].step}</span><em class="ok" id="s1Tag"></em></h3>
       <div class="tabs2" id="tabs">${Object.entries(MODE).map(([k,m])=>`<button data-m="${k}">${m.tab}</button>`).join('')}</div>
       <div id="s1"></div>
-      ${!w && W.mode==='auto' ? '<button class="wc-full" id="toCard" style="margin:12px 0 0">收成作品卡</button>' : ''}
       ${works.length?`<details class="drafts"><summary>最近的作品（${works.length} 份，点「载入」接着用）</summary>${works.slice(0,5).map(x=>`<div class="d"><a class="btn-o" style="height:30px" href="#/script/w/${x.id}">载入</a><b>《${esc(x.title||'未命名')}》</b><span class="sp">${esc(MODE[x.W.mode].tab)}・${new Date(x.time).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span></div>`).join('')}</details>`:''}
     </section>
 
@@ -1492,7 +1541,6 @@ function viewScriptNew(workId){
     $('scoreHint').textContent = !miss.length ? '设定很完整，这部会很有记忆点 ✦' : sc>=5 ? `辨识度不错，可以开写了。想更出彩，再补「${miss[0].slice(2)}」` : `再补一句「${miss[0].slice(2)}」，故事会更有记忆点（跳过也行）`;
     $('go').textContent = MODE[W.mode].btn; $('go').disabled = needs.length>0;
     $('goSub').textContent = needs.length ? '就差：'+needs.join('、') : MODE[W.mode].sub;
-    if($('go2')){ $('go2').textContent=$('go').textContent; $('go2').disabled=$('go').disabled; $('goSub2').textContent=$('goSub').textContent; }
     if($('novelInfo')) $('novelInfo').textContent = W.novel ? `约 ${nfmt(W.novel.length)} 字${W.novel.length<2000?'（太短）':W.novel.length>400000?'（太长）':''}` : '';
     // 预览
     const t=wzTitle(W);
@@ -1532,16 +1580,20 @@ function viewScriptNew(workId){
   };
   function drawDup(){
     const r=$('dupRes'); r.className='dup'+(W.dup.hits.length?' warn':'');
-    if($('dupRes2')) setTimeout(()=>{ $('dupRes2').className=r.className; $('dupRes2').innerHTML=r.innerHTML; });
     r.innerHTML = W.dup.hits.length ? `有 ${W.dup.hits.length} 部相近作品，写的时候会自动避开：<br>${W.dup.hits.map(h=>`《${esc(h.title)}》相似度 ${Math.round(h.sim*100)}%`).join('<br>')}`
       : W.dup.n===0 ? '✓ 没有撞题' : `✓ 已自动比对 ${W.dup.n} 部作品，没有撞题`;
   }
-  $('go').onclick=()=>{
+  $('go').onclick=()=>{ wzCreate(W); if(!w) store('scriptDraft',null); };
+  drawS1(); update();
+}
+
+/* 建立作品，把主角、对手、场景带到资产库（开阳模式与氛围写作作品卡共用） */
+function wzCreate(W){
     const title=wzTitle(W)||'未命名';
-    const list=store('works')||[]; const {dup,...keep}=W;
+    const list=store('works')||[]; const {dup,guessed,...keep}=W;
     const item={id:W.id||('w'+Date.now().toString(36)), title, W:{...keep,id:undefined}, time:Date.now()};
     const i=list.findIndex(x=>x.id===item.id); if(i>=0) list[i]=item; else list.unshift(item);
-    store('works',list); W.id=item.id; if(!w) store('scriptDraft',null);
+    store('works',list); W.id=item.id;
     // 把作品里的主角、对手、场景带到资产库，点一下就能开始做角色设定板 / 场景设定板
     const core=[W.pitch,W.core].filter(x=>x&&x.trim()).join('；');
     const seed=[
@@ -1552,24 +1604,6 @@ function viewScriptNew(workId){
     store('assetSeed',{wid:item.id, title, items:seed});
     toast('已保存作品，前往资产库');
     location.hash='#/assets';
-  };
-  if(card){
-    $('wcard').querySelectorAll('[data-c]').forEach(el=>{
-      el.oninput=el.onchange=()=>{
-        const k=el.dataset.c;
-        W[k] = el.type==='checkbox' ? el.checked : el.dataset.num ? +el.value : el.value;
-        if(k==='pitch'){ el.style.height='auto'; el.style.height=el.scrollHeight+'px'; }
-        update();
-      };
-    });
-    $('wcard').querySelectorAll('.ck[data-h]').forEach(c=>c.onclick=()=>{
-      const h=c.dataset.h; W.hooks=W.hooks.includes(h)?W.hooks.filter(x=>x!==h):[...W.hooks,h]; c.classList.toggle('on'); update();
-    });
-    $('go2').onclick=()=>$('go').onclick();
-    $('toFull').onclick=()=>{ W.full=true; update(); viewScriptNew(); scrollTo(0,0); };
-  }
-  if($('toCard')) $('toCard').onclick=()=>{ W.full=false; update(); viewScriptNew(); scrollTo(0,0); };
-  drawS1(); update();
 }
 
 /* ---------- 标准版：人物即剧本（选频道 → 选主角 → 一键产出 10 集） ---------- */
