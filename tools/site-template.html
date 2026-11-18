@@ -377,6 +377,19 @@ a.pill{text-decoration:none}
 .psel select option{background:#1b1b1e;color:#fff}
 .psel:hover{border-color:rgba(139,69,255,.6)}
 .wc-hooks{margin-top:12px}
+.wc-idea{margin-top:16px;padding:14px;border-radius:16px;background:rgba(139,69,255,.08);border:1px dashed rgba(139,69,255,.4)}
+.wc-idea-h{display:flex;align-items:center;gap:7px;color:#cdb6ff;font-weight:600;font-size:15px}
+.wc-idea-h svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
+.wc-seeds{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.wc-seed{height:30px;padding:0 12px;border-radius:999px;background:#26262a;color:var(--text-2);font-size:13px}
+.wc-seed:hover{background:#2f2a3a;color:#fff}
+.wc-say{position:relative}
+.wc-say .wc-story{margin-top:10px;padding-right:52px;min-height:70px}
+.wc-mic{position:absolute;right:10px;bottom:10px;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:#2c2c30;color:#fff}
+.wc-mic svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8}
+.wc-mic.on{background:var(--brand);animation:micpulse 1.2s ease-in-out infinite}
+@keyframes micpulse{50%{box-shadow:0 0 0 8px rgba(139,69,255,.25)}}
+.wc-note{margin:10px 0 0;text-align:center;color:var(--text-3);font-size:12.5px}
 .wc-more{margin-top:14px}
 .wc-more summary{display:inline-flex;align-items:center;gap:6px;color:#b896ff;font-size:14px;cursor:pointer;list-style:none}
 .wc-more summary::-webkit-details-marker{display:none}
@@ -789,6 +802,7 @@ const ICONS = {
   dice:'<rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1" fill="currentColor"/><circle cx="15" cy="15" r="1" fill="currentColor"/><circle cx="15" cy="9" r="1" fill="currentColor"/><circle cx="9" cy="15" r="1" fill="currentColor"/>',
   sparkle:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3ZM19 15l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2Z"/>',
   chev:'<path d="m6 9 6 6 6-6"/>',
+  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
   x:'<path d="M6 6l12 12M18 6 6 18"/>',
   shirt:'<path d="M8 3 3 6l2 4 2-1v12h10V9l2 1 2-4-5-3a4 4 0 0 1-8 0Z"/>',
   hair:'<circle cx="12" cy="11" r="4.5"/><path d="M7.2 10.5C7.5 5 16.5 5 16.8 10.5c-2-.5-4-1.8-4.8-3.3-1 1.6-2.8 2.8-4.8 3.3ZM7.6 12.5 6 20h3M16.4 12.5 18 20h-3"/>',
@@ -1387,6 +1401,8 @@ function wcardOpts(){
     ai:{items:WZ_OPT.ai.map(([v])=>({v,l:v})), lead:()=>ico('pen')},
   };
 }
+const WC_SEEDS=['主角的秘密是','最大的反转是','金手指是','对手是','结局想要'];
+const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
 function wcardHtml(W){
   const O=wcardOpts();
   const dd=k=>{const o=O[k], cur=o.items.find(x=>String(x.v)===String(W[k]));
@@ -1399,26 +1415,38 @@ function wcardHtml(W){
     <textarea class="wc-story" data-c="pitch" rows="2" placeholder="说一句你的故事">${esc(W.pitch)}</textarea>
     <div class="wc-pills">${['style','ratio','genre','aud','pair','eps','mins','ai'].map(dd).join('')}</div>
     <div class="chips wc-hooks">${WZ_OPT.hooks.map(h=>`<span class="ck ${W.hooks.includes(h)?'on':''}" data-h="${h}">${h}</span>`).join('')}</div>
-    <details class="wc-more" ${W.core.trim()?'open':''}><summary>${ico('sparkle')}再补一句，故事更出彩</summary>
-      <textarea class="wc-story" data-c="core" rows="2" placeholder="核心设定与规则，例如：读心只能听到对她有恶意的人">${esc(W.core)}</textarea></details>
-    <label class="cb"><input type="checkbox" data-c="adult" ${W.adult?'checked':''}><div><b>所有角色均已年满 18 岁</b></div></label>
-    <div class="dup wc-dup"></div>
+    <div class="wc-idea">
+      <div class="wc-idea-h">${ico('sparkle')}说说你的点子，AI 帮你补完</div>
+      <div class="wc-seeds">${WC_SEEDS.map(x=>`<button class="wc-seed" data-seed="${x}">${x}…</button>`).join('')}</div>
+      <div class="wc-say"><textarea class="wc-story" data-c="core" rows="2" placeholder="想到什么写什么，没想好也没关系">${esc(W.core)}</textarea>
+        ${SpeechRec?`<button class="wc-mic" data-mic title="用说的">${ico('mic')}</button>`:''}</div>
+    </div>
     <button class="bigbtn wc-go">${ico('sparkle')}${W.id?'更新并继续':'开写'}</button>
-    <p class="hint wc-sub"></p>
-    <button class="wc-full" data-full>细修全部设定</button>
+    <p class="wc-note">开写即表示所有角色均已年满 18 岁</p>
   </div>`;
 }
 function bindWcard(root, W, save, close){
   const q=sel=>root.querySelector(sel), O=wcardOpts();
-  const refresh=()=>{
-    W.dup=wzDupCheck(W); const needs=wzNeeds(W);
-    q('.wc-dup').className='dup wc-dup'+(W.dup.hits.length?' warn':'');
-    q('.wc-dup').innerHTML = W.dup.hits.length ? `有 ${W.dup.hits.length} 部相近作品，写的时候会自动避开：${W.dup.hits.map(h=>`《${esc(h.title)}》`).join('、')}`
-      : W.dup.n===0 ? '✓ 没有撞题' : `✓ 已自动比对 ${W.dup.n} 部作品，没有撞题`;
-    q('.wc-go').disabled = needs.length>0;
-    q('.wc-sub').textContent = needs.length ? '就差：'+needs.join('、') : '全部就绪';
-    const {dup,...keep}=W; save(keep);
-  };
+  W.adult=true; W.dup=null;
+  const refresh=()=>{ q('.wc-go').disabled = !W.pitch.trim(); const {dup,...keep}=W; save(keep); };
+  const core=q('[data-c=core]');
+  const grow=el=>{ el.style.height='auto'; el.style.height=el.scrollHeight+'px'; };
+  root.querySelectorAll('[data-seed]').forEach(b=>b.onclick=()=>{
+    const t=core.value.replace(/\s+$/,''); core.value=(t?t+'\n':'')+b.dataset.seed; W.core=core.value; grow(core); refresh();
+    core.focus(); core.setSelectionRange(core.value.length, core.value.length);
+  });
+  requestAnimationFrame(()=>root.querySelectorAll('textarea.wc-story').forEach(grow));
+  const mic=q('[data-mic]');
+  if(mic){ let rec=null;
+    mic.onclick=()=>{
+      if(rec){ rec.stop(); return; }
+      rec=new SpeechRec(); rec.lang='zh-CN'; rec.interimResults=true; rec.continuous=true;
+      const base=core.value.replace(/\s+$/,''); mic.classList.add('on');
+      rec.onresult=e=>{ let t=''; for(const r of e.results) t+=r[0].transcript; core.value=(base?base+'\n':'')+t; W.core=core.value; grow(core); refresh(); };
+      rec.onend=rec.onerror=()=>{ rec=null; mic.classList.remove('on'); };
+      try{ rec.start(); }catch(err){ rec=null; mic.classList.remove('on'); toast('这个浏览器不支持语音输入'); }
+    };
+  }
   root.querySelectorAll('[data-c]').forEach(el=>{
     el.oninput=el.onchange=()=>{
       const k=el.dataset.c;
@@ -1443,7 +1471,6 @@ function bindWcard(root, W, save, close){
     const h=c.dataset.h; W.hooks=W.hooks.includes(h)?W.hooks.filter(x=>x!==h):[...W.hooks,h]; c.classList.toggle('on'); refresh();
   });
   q('.wc-go').onclick=()=>{ wzCreate(W); const {dup,...keep}=W; save(keep); };
-  q('[data-full]').onclick=()=>{ const {dup,guessed,...keep}=W; store('scriptDraft',{...keep,id:undefined}); location.hash='#/script/new'; };
   q('[data-x]').onclick=close;
   refresh();
 }
