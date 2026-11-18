@@ -389,6 +389,13 @@ a.pill{text-decoration:none}
 .wc-mic svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8}
 .wc-mic.on{background:var(--brand);animation:micpulse 1.2s ease-in-out infinite}
 @keyframes micpulse{50%{box-shadow:0 0 0 8px rgba(139,69,255,.25)}}
+.vs{max-width:760px;margin:0 auto 60px;display:flex;flex-direction:column;gap:16px}
+.vs-step{border-radius:20px;border:1px solid var(--line);background:#151517;padding:20px 22px}
+.vs-step h3{display:flex;align-items:center;gap:10px;margin:0 0 14px;font-size:17px}
+.vs-step .bigbtn{margin-top:0}
+.vs-sub{margin-top:10px;gap:8px}
+.vs-cnt{margin-top:8px;color:#b896ff;font-size:13px;min-height:18px}
+.vs-next{height:44px}
 .wc-note{margin:10px 0 0;text-align:center;color:var(--text-3);font-size:12.5px}
 .wc-more{margin-top:14px}
 .wc-more summary{display:inline-flex;align-items:center;gap:6px;color:#b896ff;font-size:14px;cursor:pointer;list-style:none}
@@ -1413,7 +1420,7 @@ function wcardHtml(W){
     <button class="wc-x" data-x title="回到输入">${ico('x')}</button>
     <div class="wc-title">《<input data-c="title" placeholder="AI 帮你取剧名" value="${esc(W.title)}">》</div>
     <textarea class="wc-story" data-c="pitch" rows="2" placeholder="说一句你的故事">${esc(W.pitch)}</textarea>
-    <div class="wc-pills">${['style','ratio','genre','aud','pair','eps','mins','ai'].map(dd).join('')}</div>
+    <div class="wc-pills">${['style','ratio','aud','pair','eps','mins','ai'].map(dd).join('')}</div>
     <div class="chips wc-hooks">${WZ_OPT.hooks.map(h=>`<span class="ck ${W.hooks.includes(h)?'on':''}" data-h="${h}">${h}</span>`).join('')}</div>
     <div class="wc-idea">
       <div class="wc-idea-h">${ico('sparkle')}说说你的点子，AI 帮你补完</div>
@@ -1421,7 +1428,7 @@ function wcardHtml(W){
       <div class="wc-say"><textarea class="wc-story" data-c="core" rows="2" placeholder="想到什么写什么，没想好也没关系">${esc(W.core)}</textarea>
         ${SpeechRec?`<button class="wc-mic" data-mic title="用说的">${ico('mic')}</button>`:''}</div>
     </div>
-    <button class="bigbtn wc-go">${ico('sparkle')}${W.id?'更新并继续':'开写'}</button>
+    <button class="bigbtn wc-go">${ico('sparkle')}${W.id?'继续写':'开写'}</button>
     <p class="wc-note">开写即表示所有角色均已年满 18 岁</p>
   </div>`;
 }
@@ -1470,7 +1477,7 @@ function bindWcard(root, W, save, close){
   root.querySelectorAll('.ck[data-h]').forEach(c=>c.onclick=()=>{
     const h=c.dataset.h; W.hooks=W.hooks.includes(h)?W.hooks.filter(x=>x!==h):[...W.hooks,h]; c.classList.toggle('on'); refresh();
   });
-  q('.wc-go').onclick=()=>{ wzCreate(W); const {dup,...keep}=W; save(keep); };
+  q('.wc-go').onclick=()=>{ const it=wzSaveWork(W,'vibe'); const {dup,...keep}=W; save(keep); location.hash='#/script/v/'+it.id; };
   q('[data-x]').onclick=close;
   refresh();
 }
@@ -1647,13 +1654,22 @@ function viewScriptNew(workId){
 }
 
 /* 建立作品，依配对把男主 / 女主、对手、场景带到资产库（新增作品与氛围写作作品卡共用） */
-function wzCreate(W){
+function wzSaveWork(W, kind){
     const p=(W.pitch||'').trim().replace(/[，。！？,.!?].*$/,'');
     const title=wzTitle(W)||(p?p.slice(0,14):'未命名');
     const list=store('works')||[]; const {dup,guessed,...keep}=W;
-    const item={id:W.id||('w'+Date.now().toString(36)), title, W:{...keep,id:undefined}, time:Date.now()};
+    const old=list.find(x=>x.id===W.id);
+    const item={...(old||{}), id:W.id||('w'+Date.now().toString(36)), title, W:{...keep,id:undefined}, time:Date.now()};
+    if(kind) item.kind=kind;
     const i=list.findIndex(x=>x.id===item.id); if(i>=0) list[i]=item; else list.unshift(item);
-    store('works',list); W.id=item.id;
+    store('works',list); W.id=item.id; return item;
+}
+function wzCreate(W){
+    const item=wzSaveWork(W), title=item.title;
+    wzSeedAssets(W, item);
+}
+function wzSeedAssets(W, item){
+    const title=item.title;
     // 把作品里的主角、对手、场景带到资产库，点一下就能开始做角色设定板 / 场景设定板
     const core=[W.pitch,W.core].filter(x=>x&&x.trim()).join('；');
     const pair=W.pair||'男女';
@@ -2050,6 +2066,44 @@ function viewScriptSimple(){
   setMode(mode);
 }
 
+/* 氛围写作：开写之后先出剧本，资产库是下一步 */
+const AI_SITES={Claude:'https://claude.ai/new', ChatGPT:'https://chatgpt.com/', Grok:'https://grok.com/', Qwen:'https://chat.qwen.ai/'};
+function viewVibeScript(id){
+  const v=document.getElementById('view'), works=store('works')||[], w=works.find(x=>x.id===id);
+  if(!w){ v.innerHTML='<div class="empty">找不到这部作品，可能已在别的浏览器里。</div>'; return; }
+  const W=Object.assign({}, WZ_DEF, w.W, {id:w.id}), prompt=wzPrompt(W), ai=W.ai||'Claude', site=AI_SITES[ai];
+  const eps=wzEps(W), mins=wzMins(W);
+  v.innerHTML=`
+    <div class="res-back"><a class="pill" href="#/script">${ico('back')}返回</a></div>
+    <section class="done-hero">
+      <span class="badge">${ico('sparkle').replace('<svg','<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"')}开写</span>
+      <h1>《${esc(w.title)}》</h1>
+      <div class="stats"><span><b>${eps}</b>集</span><span><b>${mins}</b>分钟 / 集</span><span>${esc(W.aud)}</span><span>${esc(W.pair)}</span>${W.style&&W.style!=='无'?`<span>${esc(W.style)}</span>`:''}<span>${esc(W.ratio||'9:16')}</span></div>
+    </section>
+    <div class="vs">
+      <section class="vs-step"><h3>${sn(1,'on')}交给 ${esc(ai)} 写</h3>
+        <button class="bigbtn" id="vsGo">${ico('sparkle')}${site?`复制提示词，打开 ${esc(ai)}`:'复制提示词'}</button>
+        <div class="row vs-sub"><button class="btn-o" id="vsSee">${ico('text')}看提示词</button><button class="btn-o" id="vsDl">${ico('dl')}下载 .txt</button></div>
+      </section>
+      <section class="vs-step"><h3 id="vs2h">${sn(2,W.doc.trim()?'done':'')}把写好的剧本贴回来</h3>
+        <textarea class="wc-story" id="vsDoc" rows="6" placeholder="${esc(ai)} 写完后，整份贴在这里">${esc(W.doc)}</textarea>
+        <div class="vs-cnt" id="vsCnt"></div>
+      </section>
+      <section class="vs-step"><h3>${sn(3,'')}做角色与场景</h3>
+        <button class="btn-o vs-next" id="vsAssets">${ico('assets')}去资产库，先配好主角设定板</button>
+      </section>
+    </div>`;
+  const $=id=>document.getElementById(id);
+  const dl=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([prompt],{type:'text/plain;charset=utf-8'}));a.download=`${w.title}-剧本提示词.txt`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+  $('vsGo').onclick=e=>{ copyText(prompt, e.currentTarget); if(site) window.open(site,'_blank','noopener'); toast(site?`已复制，到 ${ai} 贴上就开写`:'已复制提示词'); };
+  $('vsSee').onclick=()=>showModal('剧本提示词', prompt, `${w.title}-剧本提示词.txt`);
+  $('vsDl').onclick=dl;
+  const cnt=()=>{ const n=W.doc.trim().length; $('vsCnt').textContent = n ? `已保存 · ${nfmt(n)} 字` : ''; $('vs2h').querySelector('.sn').outerHTML=sn(2,n?'done':''); };
+  $('vsDoc').oninput=()=>{ W.doc=$('vsDoc').value; wzSaveWork(W); cnt(); };
+  $('vsAssets').onclick=()=>{ const it=wzSaveWork(W); wzSeedAssets(W, it); };
+  cnt();
+}
+
 function viewScriptResult(id, fresh){
   const w=(store('works')||[]).find(x=>x.id===id);
   const v=document.getElementById('view');
@@ -2147,7 +2201,7 @@ function drawNav(route){
     const works = store('works')||[];
     if(isPro() && route.view!=='start' && route.view!=='partner'){
       h += T('PRO 专业版') + A('#/script','我的作品',{cls:'head fn',icon:'script',n:works.length}) + A('#/script/new','新增作品',{cls:'head fn',icon:'plus',on:route.sub==='new'&&!route.wid});
-      if(works.length) h += T('作品') + works.map(w=>A(w.kind==='simple'?'#/script/s/'+w.id:'#/script/w/'+w.id, '《'+(w.title||'未命名')+'》',{on:route.wid===w.id||route.sid===w.id})).join('');
+      if(works.length) h += T('作品') + works.map(w=>A(w.kind==='simple'?'#/script/s/'+w.id:w.kind==='vibe'?'#/script/v/'+w.id:'#/script/w/'+w.id, '《'+(w.title||'未命名')+'》',{on:route.wid===w.id||route.sid===w.id})).join('');
     } else {
       const mine = works.filter(w=>w.kind==='simple');
       h += T('标准版') + A(route.view==='start'?'#/':'#/script','人物即剧本',{cls:'head fn',icon:'sparkle',on:!route.sub,d:'选主角，一键产出 10 集'});
@@ -2404,6 +2458,7 @@ function parse(){
   if(h==='assembler'||h==='changelog') return {view:h};
   if(h.startsWith('script/s/')) {const [id,q]=h.slice(9).split('?');return {view:'tool',tool:'script',sub:'result',sid:id,fresh:q==='new=1'}}
   if(h==='script/new') return {view:'tool',tool:'script',sub:'new'};
+  if(h.startsWith('script/v/')) return {view:'tool',tool:'script',sub:'vibe',wid:h.slice(9)};
   if(h.startsWith('script/w/')) return {view:'tool',tool:'script',sub:'new',wid:h.slice(9)};
   if(h.startsWith('assets/')) {const [fn,q]=h.slice(7).split('?i=');return {view:'tool',tool:'assets',fn,idx:q==null?null:+q}}
   if(h==='partner') return {view:'partner'};
@@ -2422,6 +2477,7 @@ function route(){
   else if(r.view==='tool' && r.tool==='assets') r.fn ? viewAssetEditor(r.fn, r.idx) : viewAssets();
   else if(r.view==='tool' && r.tool==='script'){
     if(r.sub==='result') viewScriptResult(r.sid, r.fresh);
+    else if(r.sub==='vibe') viewVibeScript(r.wid);
     else if(!isPro()) viewScriptSimple();
     else r.sub ? viewScriptNew(r.wid) : viewScriptHome();
   }
