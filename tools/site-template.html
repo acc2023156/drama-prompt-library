@@ -1268,10 +1268,8 @@ function bindChat(){
       h = `<textarea class="cta" id="cPitch" style="min-height:96px" placeholder="一句话说说你的故事，如：被退婚的假千金，靠读心系统在豪门翻盘">${esc(C.pitch)}</textarea>`;
     } else {
       const n=C.novel.trim().length;
-      h = `<p class="cdesc">贴上小说全文，或选文件：Word（.docx）、PDF、.txt、.md（txt 用 UTF-8、GB18030、Big5 都读得了）。会改编成策划文件：<b>人名、地名、店名照原著</b>，每一集标出「对应原著」的章节。字数 2,000–400,000 字。</p>
-        <textarea class="cta" id="cNovel" placeholder="把小说全文贴在这里">${esc(C.novel)}</textarea>
-        <div class="crow">${fileBtn('cFile','或选文件（Word／PDF／txt／md）')}<span class="cnt ${n&&(n<2000||n>400000)?'bad':''}">${cntText('novel')}</span></div>
-        <p class="cdesc" style="margin:10px 0 0">集数、每集分钟数在第 3 步设定；片名在第 2 步（可以空着，会用原书名或依内容取）。</p>`;
+      h = `<textarea class="cta" id="cNovel" placeholder="把小说全文贴在这里（2,000–400,000 字）">${esc(C.novel)}</textarea>
+        <div class="crow">${fileBtn('cFile','或选文件（Word／PDF／txt／md）')}<span class="cnt ${n&&(n<2000||n>400000)?'bad':''}">${cntText('novel')}</span></div>`;
     }
     $('cbody').innerHTML = h + recent();
     $('cSend').disabled = !ok();
