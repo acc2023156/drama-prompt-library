@@ -378,7 +378,10 @@ a.pill{text-decoration:none}
 .psel:hover{border-color:rgba(139,69,255,.6)}
 .wc-hooks{margin-top:12px}
 .wc-idea{margin-top:16px;padding:14px;border-radius:16px;background:rgba(139,69,255,.08);border:1px dashed rgba(139,69,255,.4)}
-.wc-idea-h{display:flex;align-items:center;gap:7px;color:#cdb6ff;font-weight:600;font-size:15px}
+.wc-idea-h{display:flex;align-items:center;gap:7px;color:#cdb6ff;font-weight:600;font-size:15px;cursor:pointer;list-style:none}
+.wc-idea-h::-webkit-details-marker{display:none}
+.wc-idea-h svg:last-child{margin-left:auto;transition:transform .2s;stroke:#cdb6ff}
+.wc-idea[open] .wc-idea-h svg:last-child{transform:rotate(180deg)}
 .wc-idea-h svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
 .wc-seeds{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .wc-seed{height:30px;padding:0 12px;border-radius:999px;background:#26262a;color:var(--text-2);font-size:13px}
@@ -389,6 +392,26 @@ a.pill{text-decoration:none}
 .wc-mic svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8}
 .wc-mic.on{background:var(--brand);animation:micpulse 1.2s ease-in-out infinite}
 @keyframes micpulse{50%{box-shadow:0 0 0 8px rgba(139,69,255,.25)}}
+.vt{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 14px}
+.vt-tabs{display:flex;gap:4px;padding:4px;border-radius:14px;background:#141416;border:1px solid var(--line);overflow-x:auto;max-width:100%}
+.vt-tabs button{height:38px;padding:0 16px;border-radius:10px;color:var(--text-2);font-size:14px;white-space:nowrap}
+.vt-tabs button.on{background:var(--brand);color:#fff;font-weight:600}
+.vt-act{display:flex;gap:8px;margin-left:auto}
+.vt-tools{margin-bottom:12px;gap:8px}
+.vtable{border-radius:18px;border:1px solid var(--line);background:#151517;overflow:hidden}
+.vr{display:grid;grid-template-columns:80px minmax(0,1.4fr) 80px 70px minmax(0,1.3fr);gap:10px;align-items:center;padding:12px 18px;border-top:1px solid var(--line);font-size:14px}
+.vr.vb4{grid-template-columns:80px minmax(0,1.6fr) 80px minmax(0,1fr)}
+.vr.vh{border-top:0;color:var(--text-3);font-size:13px}
+.vr .vn{color:#fff;font-weight:600}
+.vr .ok{color:#3ddc97}
+.vr .vb{display:flex;gap:8px;flex-wrap:wrap}
+.vr .vb .btn-o{height:32px;padding:0 12px;font-size:13px}
+.vassets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.va{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:18px;border:1px solid var(--line);background:#151517}
+.va>div{flex:1;min-width:0}.va b{display:block}.va small{color:var(--text-3)}
+.va-ic{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:linear-gradient(160deg,#4a3d78,#1a1a1d)}
+.va-ic svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:1.6}
+@media (max-width:760px){.vr.vh{display:none}.vr{grid-template-columns:56px minmax(0,1fr) 64px;padding:10px 12px}.vr>span:nth-child(3),.vr.vh>span:nth-child(3){display:none}.vr.vb4{grid-template-columns:56px minmax(0,1fr) auto}.vr .vb{grid-column:1/-1}.vr.vb4 .vb{grid-column:auto}.vassets{grid-template-columns:1fr}.vt-act{margin-left:0}}
 .vs{max-width:760px;margin:0 auto 60px;display:flex;flex-direction:column;gap:16px}
 .vs-step{border-radius:20px;border:1px solid var(--line);background:#151517;padding:20px 22px}
 .vs-step h3{display:flex;align-items:center;gap:10px;margin:0 0 14px;font-size:17px}
@@ -1379,7 +1402,7 @@ function bindChat(){
     if(!ok()) return;
     if(C.tab==='auto'){
       const pitch=C.pitch.trim(), g=wzGuess(pitch);
-      store('vibeCard', Object.assign({}, WZ_DEF, {mode:'auto', pitch, ai:C.ai, style:C.style, ratio:C.ratio}, g, {hooks:g.hooks}));
+      store('vibeCard', Object.assign({}, WZ_DEF, {mode:'auto', pitch, ai:C.ai, style:C.style, ratio:C.ratio, mins:1}, g, {hooks:g.hooks}));
       drawBody();
       $('chat').querySelector('.cbox').scrollIntoView({behavior:'smooth', block:'start'});
       return;
@@ -1420,16 +1443,15 @@ function wcardHtml(W){
     <button class="wc-x" data-x title="回到输入">${ico('x')}</button>
     <div class="wc-title">《<input data-c="title" placeholder="AI 帮你取剧名" value="${esc(W.title)}">》</div>
     <textarea class="wc-story" data-c="pitch" rows="2" placeholder="说一句你的故事">${esc(W.pitch)}</textarea>
-    <div class="wc-pills">${['style','ratio','aud','pair','eps','mins','ai'].map(dd).join('')}</div>
+    <div class="wc-pills">${['style','ratio','aud','pair','eps','mins'].map(dd).join('')}</div>
     <div class="chips wc-hooks">${WZ_OPT.hooks.map(h=>`<span class="ck ${W.hooks.includes(h)?'on':''}" data-h="${h}">${h}</span>`).join('')}</div>
-    <div class="wc-idea">
-      <div class="wc-idea-h">${ico('sparkle')}说说你的点子，AI 帮你补完</div>
+    <details class="wc-idea" ${W.core.trim()?'open':''}>
+      <summary class="wc-idea-h">${ico('sparkle')}你的独家点子，让这部与众不同${ico('chev')}</summary>
       <div class="wc-seeds">${WC_SEEDS.map(x=>`<button class="wc-seed" data-seed="${x}">${x}…</button>`).join('')}</div>
       <div class="wc-say"><textarea class="wc-story" data-c="core" rows="2" placeholder="想到什么写什么，没想好也没关系">${esc(W.core)}</textarea>
         ${SpeechRec?`<button class="wc-mic" data-mic title="用说的">${ico('mic')}</button>`:''}</div>
-    </div>
+    </details>
     <button class="bigbtn wc-go">${ico('sparkle')}${W.id?'继续写':'开写'}</button>
-    <p class="wc-note">开写即表示所有角色均已年满 18 岁</p>
   </div>`;
 }
 function bindWcard(root, W, save, close){
@@ -1477,7 +1499,7 @@ function bindWcard(root, W, save, close){
   root.querySelectorAll('.ck[data-h]').forEach(c=>c.onclick=()=>{
     const h=c.dataset.h; W.hooks=W.hooks.includes(h)?W.hooks.filter(x=>x!==h):[...W.hooks,h]; c.classList.toggle('on'); refresh();
   });
-  q('.wc-go').onclick=()=>{ const it=wzSaveWork(W,'vibe'); const {dup,...keep}=W; save(keep); location.hash='#/script/v/'+it.id; };
+  q('.wc-go').onclick=()=>{ W.ai=(store('chat')||{}).ai||W.ai; const it=wzSaveWork(W,'vibe'); const {dup,...keep}=W; save(keep); location.hash='#/script/v/'+it.id; };
   q('[data-x]').onclick=close;
   refresh();
 }
@@ -2066,42 +2088,79 @@ function viewScriptSimple(){
   setMode(mode);
 }
 
-/* 氛围写作：开写之后先出剧本，资产库是下一步 */
+/* 氛围写作：开写 → 依作品卡先出 10 集大纲与剧情对话草稿；角色资产库、分镜图是后面的分页 */
 const AI_SITES={Claude:'https://claude.ai/new', ChatGPT:'https://chatgpt.com/', Grok:'https://grok.com/', Qwen:'https://chat.qwen.ai/'};
-function viewVibeScript(id){
-  const v=document.getElementById('view'), works=store('works')||[], w=works.find(x=>x.id===id);
+const vibeLeads = W => { const p=W.pair||'男女';
+  return p.startsWith('男男') ? ['男主','男主 CP'] : p.startsWith('女女') ? ['女主','女主 CP'] : W.aud==='女性向' ? ['女主','男主'] : ['男主','女主']; };
+function vibeSx(w){
+  const W=Object.assign({}, WZ_DEF, w.W), leads=vibeLeads(W), g=leads[0].startsWith('女')?'female':'male';
+  const pitch=(W.pitch||'').trim();
+  const m=pitch.match(/^([一-龥]{2,3}?)(?:变成|穿成|穿越|重生|成了|是|被|靠|在|的)/);
+  const name = w.vname || (m && m[1]) || pick(SX_NAMES[g]);
+  const t={type:`${W.genre} · ${leads[0]}`, surface:pitch.split(/[，,。]/)[0]||W.genre, hidden:(W.core||'').trim().split('\n')[0]||'一张没人知道的底牌',
+    gold:W.hooks[0]||'身分反转', hook:pitch, rel:`${name}-${(W.rival||'').trim()||'对手'}`, genres:[W.genre,...W.hooks].join('、'), note:(W.core||'').trim()};
+  const g2 = leads[1].startsWith('女')?'female':'male', pool=SX_NAMES[g2].filter(x=>x!==name);
+  const name2 = w.vname2 || pool[(w.seed||1)%pool.length];
+  return {id:w.id, title:w.title, name, name2, g, role:t, seed:w.seed||1, outline:sxOutline(t,name,g), idea:(W.core||'').trim(), leads, W};
+}
+function viewVibeScript(id, tab){
+  const v=document.getElementById('view'), list=store('works')||[], w=list.find(x=>x.id===id);
   if(!w){ v.innerHTML='<div class="empty">找不到这部作品，可能已在别的浏览器里。</div>'; return; }
-  const W=Object.assign({}, WZ_DEF, w.W, {id:w.id}), prompt=wzPrompt(W), ai=W.ai||'Claude', site=AI_SITES[ai];
-  const eps=wzEps(W), mins=wzMins(W);
+  if(!w.vname || !w.seed){ const s0=vibeSx(w); w.vname=s0.name; w.seed=w.seed||Math.floor(Math.random()*1e9)+1; store('works',list); }
+  let s=vibeSx(w), eps=sxScript(s);
+  const W=s.W, ai=W.ai||'Claude', site=AI_SITES[ai];
+  tab = tab || store('vibeTab') || 'outline';
+  const TABS=[['outline','各集大纲'],['script','剧情对话'],['assets','角色资产库'],['board','分镜图']];
   v.innerHTML=`
     <div class="res-back"><a class="pill" href="#/script">${ico('back')}返回</a></div>
     <section class="done-hero">
-      <span class="badge">${ico('sparkle').replace('<svg','<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"')}开写</span>
       <h1>《${esc(w.title)}》</h1>
-      <div class="stats"><span><b>${eps}</b>集</span><span><b>${mins}</b>分钟 / 集</span><span>${esc(W.aud)}</span><span>${esc(W.pair)}</span>${W.style&&W.style!=='无'?`<span>${esc(W.style)}</span>`:''}<span>${esc(W.ratio||'9:16')}</span></div>
+      <div class="stats"><span><b>10</b>集</span><span><b>${wzMins(W)}</b>分钟 / 集</span><span>${esc(W.aud)}</span><span>${esc(W.pair)}</span>${W.style&&W.style!=='无'?`<span>${esc(W.style)}</span>`:''}<span>${esc(W.ratio||'9:16')}</span></div>
     </section>
-    <div class="vs">
-      <section class="vs-step"><h3>${sn(1,'on')}交给 ${esc(ai)} 写</h3>
-        <button class="bigbtn" id="vsGo">${ico('sparkle')}${site?`复制提示词，打开 ${esc(ai)}`:'复制提示词'}</button>
-        <div class="row vs-sub"><button class="btn-o" id="vsSee">${ico('text')}看提示词</button><button class="btn-o" id="vsDl">${ico('dl')}下载 .txt</button></div>
-      </section>
-      <section class="vs-step"><h3 id="vs2h">${sn(2,W.doc.trim()?'done':'')}把写好的剧本贴回来</h3>
-        <textarea class="wc-story" id="vsDoc" rows="6" placeholder="${esc(ai)} 写完后，整份贴在这里">${esc(W.doc)}</textarea>
-        <div class="vs-cnt" id="vsCnt"></div>
-      </section>
-      <section class="vs-step"><h3>${sn(3,'')}做角色与场景</h3>
-        <button class="btn-o vs-next" id="vsAssets">${ico('assets')}去资产库，先配好主角设定板</button>
-      </section>
-    </div>`;
+    <div class="vt">
+      <div class="vt-tabs" id="vtTabs">${TABS.map(([k,l])=>`<button data-t="${k}">${l}</button>`).join('')}</div>
+      <div class="vt-act"><button class="btn-o" id="vtRedo">${ico('dice')}<span class="lbl">重写</span></button><button class="btn-o" id="vtAI">${ico('sparkle')}<span class="lbl">交给 ${esc(ai)} 精写</span></button></div>
+    </div>
+    <div id="vtBody"></div>`;
   const $=id=>document.getElementById(id);
-  const dl=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([prompt],{type:'text/plain;charset=utf-8'}));a.download=`${w.title}-剧本提示词.txt`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
-  $('vsGo').onclick=e=>{ copyText(prompt, e.currentTarget); if(site) window.open(site,'_blank','noopener'); toast(site?`已复制，到 ${ai} 贴上就开写`:'已复制提示词'); };
-  $('vsSee').onclick=()=>showModal('剧本提示词', prompt, `${w.title}-剧本提示词.txt`);
-  $('vsDl').onclick=dl;
-  const cnt=()=>{ const n=W.doc.trim().length; $('vsCnt').textContent = n ? `已保存 · ${nfmt(n)} 字` : ''; $('vs2h').querySelector('.sn').outerHTML=sn(2,n?'done':''); };
-  $('vsDoc').oninput=()=>{ W.doc=$('vsDoc').value; wzSaveWork(W); cnt(); };
-  $('vsAssets').onclick=()=>{ const it=wzSaveWork(W); wzSeedAssets(W, it); };
-  cnt();
+  const epTxt=i=>eps[i].split('\n').slice(1).join('\n').trim();
+  function draw(){
+    store('vibeTab',tab);
+    document.querySelectorAll('#vtTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
+    if(tab==='outline'){
+      $('vtBody').innerHTML=`<div class="vtable"><div class="vr vh"><span>集</span><span>集名</span><span>状态</span><span>字数</span><span>大纲</span></div>
+        ${s.outline.map(([h,b],i)=>`<div class="vr"><span>第 ${i+1} 集</span><span class="vn">${esc(h)}</span><span class="ok">已完成</span><span>${nfmt(epTxt(i).length)}</span>
+          <span class="vb"><button class="btn-o" data-ol="${i}">分集大纲</button><button class="btn-o" data-sc="${i}">剧情对话</button></span></div>`).join('')}</div>`;
+      $('vtBody').querySelectorAll('[data-ol]').forEach(b=>b.onclick=()=>{const i=+b.dataset.ol; showModal(`第 ${i+1} 集｜${s.outline[i][0]}`, s.outline[i][1], `第${i+1}集-分集大纲.txt`);});
+      $('vtBody').querySelectorAll('[data-sc]').forEach(b=>b.onclick=()=>{ tab='script'; draw(); document.getElementById('ep'+b.dataset.sc)?.scrollIntoView({behavior:'smooth',block:'start'}); });
+    } else if(tab==='script'){
+      $('vtBody').innerHTML=`<div class="row vt-tools"><button class="btn-o" id="vtCopy">${ico('copy')}复制全部</button><button class="btn-o" id="vtDl">${ico('dl')}下载 .txt</button></div>
+        <div class="scr">${eps.map((x,i)=>`<div class="ep" id="ep${i}"><div class="h"><b>EP${String(i+1).padStart(2,'0')}</b><span>${esc(s.outline[i][0])}</span></div><pre>${sxHL(epTxt(i))}</pre></div>`).join('')}</div>`;
+      $('vtCopy').onclick=e=>copyText(sxScriptText(s),e.currentTarget);
+      $('vtDl').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([sxScriptText(s)],{type:'text/plain;charset=utf-8'}));a.download=`${w.title}-10集剧情对话.txt`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+    } else if(tab==='assets'){
+      const core=[W.pitch,W.core].filter(x=>x&&x.trim()).join('；');
+      const items=[
+        {fn:'role-board', label:s.leads[0], name:s.name, profile:`${s.leads[0]}${s.name}。${core}`},
+        {fn:'role-board', label:s.leads[1], name:s.name2, profile:`${s.leads[1]}${s.name2}，${s.name}的感情线对象。${core}`},
+        {fn:'role-board', label:'对手', name:'对手', sub:`与${s.name}作对的人`, profile:`与${s.name}作对的人。${core}`},
+        {fn:'scene-board', label:'主要场景', name:'主要场景', sub:W.genre, profile:[W.genre,core].filter(Boolean).join('；')},
+      ];
+      $('vtBody').innerHTML=`<div class="vassets">${items.map((x,k)=>`<div class="va"><span class="va-ic">${ico(x.fn==='scene-board'?'mount':'user')}</span>
+          <div><b>${esc(x.label)}</b><small>${esc(x.sub||x.name)}</small></div><button class="btn-o" data-as="${k}">做设定板</button></div>`).join('')}</div>`;
+      $('vtBody').querySelectorAll('[data-as]').forEach(b=>b.onclick=()=>{
+        const k=+b.dataset.as; store('assetSeed',{wid:w.id, title:w.title, items}); store('assetPick',{...items[k],k,wid:w.id}); location.hash='#/assets/'+items[k].fn; });
+    } else {
+      $('vtBody').innerHTML=`<div class="vtable"><div class="vr vh vb4"><span>集</span><span>集名</span><span>镜头</span><span></span></div>
+        ${s.outline.map(([h],i)=>`<div class="vr vb4"><span>第 ${i+1} 集</span><span class="vn">${esc(h)}</span><span>${(epTxt(i).match(/^## 场次/gm)||[]).length} 场</span>
+          <span class="vb"><button class="btn-o" data-sb="${i}">做分镜</button></span></div>`).join('')}</div>`;
+      $('vtBody').querySelectorAll('[data-sb]').forEach(b=>b.onclick=e=>{ const i=+b.dataset.sb; copyText(eps[i], e.currentTarget); toast(`已复制第 ${i+1} 集，贴进分镜`); location.hash='#/storyboard'; });
+    }
+  }
+  document.querySelectorAll('#vtTabs button').forEach(b=>b.onclick=()=>{ tab=b.dataset.t; draw(); });
+  $('vtRedo').onclick=()=>{ w.seed=Math.floor(Math.random()*1e9)+1; store('works',list); s=vibeSx(w); eps=sxScript(s); draw(); toast('已重写一版'); };
+  $('vtAI').onclick=e=>{ copyText(wzPrompt(W), e.currentTarget); if(site) window.open(site,'_blank','noopener'); toast(site?`已复制，到 ${ai} 贴上就能精写`:'已复制精写提示词'); };
+  draw();
 }
 
 function viewScriptResult(id, fresh){
