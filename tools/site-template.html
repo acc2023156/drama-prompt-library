@@ -518,6 +518,37 @@ a.pt-banner:hover{transform:translateY(-2px)}
 .magic:disabled,.magic.idle{background:#2a2a2e;box-shadow:none;color:var(--text-3);cursor:not-allowed}
 .magic.idle{cursor:pointer}
 .roles{scroll-margin-top:90px}
+.modeseg{position:relative;display:flex;width:min(560px,100%);margin:6px auto 30px;padding:4px;border-radius:999px;background:#3a3a3c;border:1px solid rgba(255,255,255,.08)}
+.modeseg button{flex:1;height:56px;border-radius:999px;font-size:18px;color:#f2f2f2;transition:color .2s}
+.modeseg button.on{color:#151515;font-weight:600;background:radial-gradient(60px 30px at 30% 50%,rgba(255,190,160,.75),transparent 70%),radial-gradient(70px 30px at 72% 50%,rgba(120,220,255,.75),transparent 70%),#fafafa;box-shadow:0 4px 18px rgba(0,0,0,.35)}
+.lib{padding-bottom:40px}
+.lib-card{border-radius:22px;border:1px solid var(--line);background:#151517;padding:22px 24px 24px}
+.lib-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.lib-head h2{margin:0;font-size:20px}
+.lib-head span{color:var(--text-3);font-size:13.5px}
+.lib-tip{margin:8px 0 14px;color:var(--text-3);font-size:14px}
+.lib-crumb{display:flex;align-items:center;gap:12px;margin:12px 0 0;color:#fff;font-weight:600}
+.lib-back{height:32px;padding:0 12px;border-radius:9px;background:#232326;color:var(--text-2);font-size:13px}
+.lib-back:hover{color:#fff}
+.lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
+.lt{display:flex;flex-direction:column;gap:8px;padding:10px 10px 12px;border-radius:16px;border:1px solid var(--line);background:#1b1b1e;text-align:left;color:#fff;transition:border-color .15s,transform .15s}
+.lt:hover{border-color:rgba(139,69,255,.6);transform:translateY(-2px)}
+.lt .lab{font-size:15px;color:var(--text-2)}
+.lt .lab b{color:#fff;margin-right:4px}
+.lt .sub{font-size:12.5px;color:#b896ff;line-height:1.5}
+.art{display:grid;place-items:center;width:100%;aspect-ratio:1;border-radius:12px;background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.18),transparent 55%),linear-gradient(160deg,var(--c),#17171a)}
+.art svg{width:42%;height:42%;stroke:#fff;fill:none;stroke-width:1.4;opacity:.92}
+.mosaic{display:grid;grid-template-columns:1fr 1fr;gap:4px;width:100%;aspect-ratio:1}
+.mosaic .art{border-radius:9px}
+.lib-detail{display:grid;grid-template-columns:220px 1fr;gap:22px;margin-top:16px;align-items:start}
+.lib-detail .art.big{border-radius:18px}
+.ld-main h3{margin:0;font-size:22px}
+.ld-sub{color:var(--text-3);font-size:13px;margin:4px 0 10px}
+.lib-detail .kv{grid-template-columns:64px 1fr;line-height:1.7}
+.lib-studio{display:inline-flex;align-items:center;gap:8px;margin-top:18px;height:42px;padding:0 16px;border-radius:12px;background:var(--brand);color:#fff;font-weight:600;font-size:14px;text-decoration:none}
+.lib-studio:hover{background:var(--brand-2)}
+.lib-studio svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+@media (max-width:760px){.modeseg button{height:48px;font-size:16px}.lib-card{padding:16px}.lib-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.lib-detail{grid-template-columns:1fr}.lib-detail .art.big{width:160px}}
 .roles.flash .role{animation:flash 1s ease 2}
 @keyframes flash{0%,100%{border-color:var(--line)}50%{border-color:var(--brand);box-shadow:0 0 0 3px rgba(139,69,255,.35)}}
 .magic svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
@@ -1679,6 +1710,9 @@ function viewScriptSimple(){
     ${partnerBanner()}
     </div>
     <a class="pt-mini" href="#/partner">${ico('sparkle')}天玑 AI短剧伙伴计划 · 让你的故事被全世界看见 →</a>
+    <div class="modeseg" id="modeSeg"><button data-m="lib">角色库</button><button data-m="create">创作平台</button></div>
+    <section class="lib" id="mLib"></section>
+    <div id="mCreate">
     <div class="sx-bar">
       <div class="gseg" id="gseg"><button data-g="male">男频</button><button data-g="female">女频</button></div>
       <label class="search2">${ico('search')}<input id="sxq" placeholder="搜角色、金手指、流派，如“系统”“真假千金”" value="${esc(st.q)}"></label>
@@ -1692,6 +1726,7 @@ function viewScriptSimple(){
       <input class="in" id="sxTitle" placeholder="剧名" value="${esc(st.title)}">
       <button class="dice" id="dice" title="换一组名字">${ico('dice')}</button>
       <button class="magic" id="magic">${ico('sparkle')}一键产出剧本</button>
+    </div>
     </div>`;
   const $=id=>document.getElementById(id);
   const list=()=>DATA.roles[st.g];
@@ -1742,7 +1777,64 @@ function viewScriptSimple(){
     sxSaveWork(s); store('sxPick',null);
     location.hash='#/script/s/'+s.id+'?new=1';
   };
+
+  /* ---- 角色库 / 创作平台 切换 ---- */
+  let mode = store('homeMode') || 'create';
+  const nav = Object.assign({lv:'root', g:'male', i:0}, store('libNav')||{});
+  const G2 = {male:'男频', female:'女频'};
+  const art = (g,i,big) => `<span class="art ${big?'big':''}" style="--c:${SX_COLORS[i%10]}">${ico(g==='male'?'user':'female')}</span>`;
+  function setMode(m){
+    mode=m; store('homeMode',m);
+    document.querySelectorAll('#modeSeg button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+    $('mLib').style.display = m==='lib' ? '' : 'none';
+    $('mCreate').style.display = m==='create' ? '' : 'none';
+    if(m==='lib') drawLib();
+  }
+  function go(n){ Object.assign(nav,n); store('libNav',nav); drawLib(); }
+  function drawLib(){
+    const total=DATA.roles.male.length+DATA.roles.female.length;
+    const crumbs = nav.lv==='root' ? '' : `<div class="lib-crumb"><button class="lib-back" id="libBack">← 回上一层</button>
+      <span>${G2[nav.g]}${nav.lv==='role'?' › '+esc(DATA.roles[nav.g][nav.i].type):''}</span></div>`;
+    let body='';
+    if(nav.lv==='root'){
+      body = `<p class="lib-tip">点一格进去看</p><div class="lib-grid">${['male','female'].map(g=>`
+        <button class="lt" data-g="${g}"><span class="mosaic">${DATA.roles[g].slice(0,4).map((_,i)=>art(g,i)).join('')}</span>
+          <span class="lab"><b>${G2[g]}</b> ${DATA.roles[g].length} 位</span></button>`).join('')}</div>`;
+    } else if(nav.lv==='g'){
+      body = `<p class="lib-tip">点一格进去看</p><div class="lib-grid">${DATA.roles[nav.g].map((t,i)=>`
+        <button class="lt" data-i="${i}">${art(nav.g,i)}<span class="lab"><b>${esc(t.type)}</b></span><span class="sub">✦ ${esc(t.gold)}</span></button>`).join('')}</div>`;
+    } else {
+      const t=DATA.roles[nav.g][nav.i];
+      body = `<div class="lib-detail">${art(nav.g,nav.i,true)}
+        <div class="ld-main"><h3>${esc(t.type)}</h3><div class="ld-sub">${G2[nav.g]}${t.heat==='有具体剧名'?' · <span class="tag prod">爆款验证</span>':''}</div>
+          <div class="kv"><span>表面</span><span>${esc(t.surface)}</span><span>内心</span><span>${esc(t.hidden)}</span><span>金手指</span><span>${esc(t.gold)}</span><span>开场</span><span>${esc(t.hook)}</span><span>关系</span><span>${esc(t.rel)}</span><span>要点</span><span>${esc(t.note)}</span></div>
+          <div class="tags" style="margin-top:12px">${t.genres.split('、').map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div>
+          <div class="row" style="margin-top:16px"><button class="magic" id="libUse">${ico('sparkle')}用这个角色写剧本</button><button class="btn-o" id="libAsset">${ico('board')}做角色设定板</button></div>
+        </div></div>`;
+    }
+    $('mLib').innerHTML = `<div class="lib-card">
+      <div class="lib-head"><h2>角色库（${total} 位）</h2><span>天玑角色模板，选一位就能一键产出 10 集剧本</span></div>
+      ${crumbs}${body}
+      <a class="lib-studio" href="#/assets/role-new">${ico('plus')}AI 角色工作室（生成原创角色）</a>
+    </div>`;
+    if($('libBack')) $('libBack').onclick=()=>go({lv: nav.lv==='role'?'g':'root'});
+    $('mLib').querySelectorAll('.lt[data-g]').forEach(b=>b.onclick=()=>go({lv:'g', g:b.dataset.g}));
+    $('mLib').querySelectorAll('.lt[data-i]').forEach(b=>b.onclick=()=>go({lv:'role', i:+b.dataset.i}));
+    if($('libUse')) $('libUse').onclick=()=>{
+      if(st.g!==nav.g){ st.g=nav.g; st.name=''; st.title=''; $('sxName').value=''; $('sxTitle').value=''; }
+      st.idx=nav.i; if(!st.name) randomize(); save(); draw(); setMode('create');
+      const r=$('roles').querySelector('.role.on'); if(r) r.scrollIntoView({behavior:'smooth',block:'center'});
+      toast('已选好主角，按「一键产出剧本」');
+    };
+    if($('libAsset')) $('libAsset').onclick=()=>{
+      const t=DATA.roles[nav.g][nav.i];
+      store('assetPick',{fn:'role-board', name:t.type, profile:`${G2[nav.g]}主角。表面：${t.surface}；内心：${t.hidden}；金手指：${t.gold}；关系：${t.rel}`});
+      location.hash='#/assets/role-board';
+    };
+  }
+  document.querySelectorAll('#modeSeg button').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
   draw();
+  setMode(mode);
 }
 
 function viewScriptResult(id, fresh){
