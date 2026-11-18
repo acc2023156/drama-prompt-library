@@ -352,7 +352,12 @@ a.pill{text-decoration:none}
 .sn{flex:none;width:24px;height:24px;border-radius:50%;display:inline-grid;place-items:center;background:#2a2a2e;color:var(--text-2);font:700 12px/1 Inter,var(--font);font-style:normal}
 .sn.on,.sn.done{background:var(--brand);color:#fff}
 .sn svg{width:62%;height:62%;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
-#vibeCard .wcard{margin:16px 0 0;max-width:none}
+.cbox.vibe{border-color:rgba(139,69,255,.35);background:linear-gradient(180deg,rgba(139,69,255,.10),#151517 45%)}
+.cbox.vibe .cbody{padding:22px 26px 24px}
+.cbox.vibe .ctabs button.on{background:#211a2e}
+.cbox.vibe .wcard{position:relative;max-width:none;margin:0;padding:0;border:0;border-radius:0;background:none}
+.cbox.vibe .wc-x{top:-8px;right:-10px}
+.cpop.down{bottom:auto;top:calc(100% + 8px)}
 .wcard{position:relative;max-width:720px;margin:0 auto 40px;border-radius:22px;border:1px solid rgba(139,69,255,.35);background:linear-gradient(180deg,rgba(139,69,255,.10),#151517 45%);padding:24px 26px}
 .wc-x{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:9px;display:grid;place-items:center;color:var(--text-3)}
 .wc-x:hover{background:#26262a;color:#fff}
@@ -363,7 +368,10 @@ a.pill{text-decoration:none}
 .wc-story{display:block;width:100%;margin-top:12px;border:1px solid var(--line-2);border-radius:14px;background:#0f0f11;color:#fff;font:16px/1.7 var(--font);padding:12px 14px;resize:vertical;outline:0}
 .wc-story:focus{border-color:rgba(139,69,255,.6)}
 .wc-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
-.psel{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 6px 0 14px;border-radius:999px;background:#232326;border:1px solid var(--line);color:#fff;cursor:pointer}
+.psel span{font:600 14px var(--font);white-space:nowrap}
+.psel>svg:last-child{width:12px;height:12px;stroke:var(--text-3);stroke-width:2}
+.psel i.rb{display:inline-block;border:1.6px solid currentColor;border-radius:3px}
+.psel{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 12px 0 14px;border-radius:999px;background:#232326;border:1px solid var(--line);color:#fff;cursor:pointer}
 .psel svg{width:14px;height:14px;stroke:#b896ff;fill:none;stroke-width:1.8}
 .psel select{appearance:none;-webkit-appearance:none;background:transparent;border:0;color:#fff;font:600 14px var(--font);outline:0;cursor:pointer;padding:0 8px 0 0}
 .psel select option{background:#1b1b1e;color:#fff}
@@ -421,6 +429,7 @@ a.pill{text-decoration:none}
 .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),#3fb6ff);border-radius:99px;transition:width .2s}
 .dup{margin-top:8px;font-size:13px;color:var(--text-2)}
 .dup.warn{color:var(--amber)}
+.bigbtn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;margin-right:6px;vertical-align:-3px}
 .bigbtn{margin-top:16px;width:100%;height:50px;border-radius:14px;background:var(--brand);color:#fff;font-size:15px;font-weight:700}
 .bigbtn:hover{background:var(--brand-2)}
 .bigbtn:disabled{background:#2a2a2e;color:var(--text-3);cursor:not-allowed}
@@ -778,6 +787,7 @@ const ICONS = {
   lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
   dice:'<rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1" fill="currentColor"/><circle cx="15" cy="15" r="1" fill="currentColor"/><circle cx="15" cy="9" r="1" fill="currentColor"/><circle cx="9" cy="15" r="1" fill="currentColor"/>',
   sparkle:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3ZM19 15l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2Z"/>',
+  chev:'<path d="m6 9 6 6 6-6"/>',
   x:'<path d="M6 6l12 12M18 6 6 18"/>',
   shirt:'<path d="M8 3 3 6l2 4 2-1v12h10V9l2 1 2-4-5-3a4 4 0 0 1-8 0Z"/>',
   hair:'<circle cx="12" cy="11" r="4.5"/><path d="M7.2 10.5C7.5 5 16.5 5 16.8 10.5c-2-.5-4-1.8-4.8-3.3-1 1.6-2.8 2.8-4.8 3.3ZM7.6 12.5 6 20h3M16.4 12.5 18 20h-3"/>',
@@ -1245,7 +1255,6 @@ function chatHtml(){
         <button class="csend" id="cSend">${ico('arrowUp')}</button>
       </div>
     </div>
-    <div id="vibeCard"></div>
   </section>`;
 }
 async function readAnyFile(file){
@@ -1306,8 +1315,16 @@ function bindChat(){
       h = `<textarea class="cta" id="cNovel" placeholder="把小说全文贴在这里（2,000–400,000 字）">${esc(C.novel)}</textarea>
         <div class="crow">${fileBtn('cFile','或选文件（Word／PDF／txt／md）')}<span class="cnt ${n&&(n<2000||n>400000)?'bad':''}">${cntText('novel')}</span></div>`;
     }
+    const V = C.tab==='auto' && store('vibeCard');
+    document.querySelector('#chat .cbox').classList.toggle('vibe', !!V);
+    document.querySelector('#chat .cfoot').style.display = V ? 'none' : '';
+    if(V){
+      const W=Object.assign({}, WZ_DEF, V);
+      $('cbody').innerHTML = wcardHtml(W);
+      bindWcard($('cbody'), W, keep=>store('vibeCard',keep), ()=>{ store('vibeCard',null); drawBody(); });
+      return;
+    }
     $('cbody').innerHTML = h + recent();
-    drawVibe();
     $('cSend').disabled = !ok();
     const bindTa=(id,k)=>{ const t=$(id); if(!t) return; t.oninput=()=>{ C[k]=t.value; save(); $('cSend').disabled=!ok();
       const c=$('cbody').querySelector('.cnt'); if(c&&k!=='pitch'){ c.textContent=cntText(k); const n=C.novel.trim().length; c.classList.toggle('bad',k==='novel'&&n>0&&(n<2000||n>400000)); } }; };
@@ -1336,20 +1353,13 @@ function bindChat(){
   $('cStyle').onclick=e=>{e.stopPropagation(); const o=$('cStylePop').classList.contains('open'); closePops(); if(!o) $('cStylePop').classList.add('open');};
   $('cRatio').onclick=e=>{e.stopPropagation(); const o=$('cRatioPop').classList.contains('open'); closePops(); if(!o) $('cRatioPop').classList.add('open');};
   document.addEventListener('click', closePops);
-  function drawVibe(){
-    const box=$('vibeCard'), W=store('vibeCard');
-    if(C.tab!=='auto' || !W){ box.innerHTML=''; return; }
-    const V=Object.assign({}, WZ_DEF, W);
-    box.innerHTML=wcardHtml(V);
-    bindWcard(box, V, keep=>store('vibeCard',keep), ()=>{ store('vibeCard',null); box.innerHTML=''; });
-  }
   $('cSend').onclick=()=>{
     if(!ok()) return;
     if(C.tab==='auto'){
       const pitch=C.pitch.trim(), g=wzGuess(pitch);
       store('vibeCard', Object.assign({}, WZ_DEF, {mode:'auto', pitch, ai:C.ai, style:C.style, ratio:C.ratio}, g, {hooks:g.hooks}));
-      drawVibe();
-      $('vibeCard').scrollIntoView({behavior:'smooth', block:'start'});
+      drawBody();
+      $('chat').querySelector('.cbox').scrollIntoView({behavior:'smooth', block:'start'});
       return;
     }
     const d=Object.assign({}, store('scriptDraft')||{}, {mode:C.tab, ai:C.ai, style:C.style, ratio:C.ratio});
@@ -1361,35 +1371,44 @@ function bindChat(){
   drawStat(); drawConn(); drawBody(); drawPops();
 }
 
-/* 氛围写作起手式：作品卡（一句话 → 先猜好的设定 → 一键开写） */
+/* 氛围写作起手式：作品卡（一句话 → 先猜好的设定 → 一键开写），直接取代对话框的输入区 */
+const rbIcon=(r,box=18)=>{const [a,b]=(r||'9:16').split(':').map(Number),k=box/Math.max(a,b);return `<i class="rb" style="width:${Math.round(a*k)}px;height:${Math.round(b*k)}px"></i>`;};
+function wcardOpts(){
+  const st=styleList();
+  return {
+    style:{items:st.map(x=>({v:x.n,l:x.n,ic:`<i style="background:${x.g}"></i>`})), lead:v=>ico('palette'), label:v=>v&&v!=='无'?v:'风格'},
+    ratio:{items:RATIOS.map(r=>({v:r,l:r,ic:rbIcon(r)})), lead:v=>rbIcon(v,16), label:v=>v||'9:16'},
+    genre:{items:WZ_OPT.genre.map(v=>({v,l:v}))},
+    aud:{items:WZ_OPT.aud.map(v=>({v,l:v}))},
+    pair:{items:WZ_OPT.pair.map(v=>({v,l:v}))},
+    eps:{num:1, items:WZ_OPT.eps.map(v=>({v,l:v+' 集'}))},
+    mins:{num:1, items:WZ_OPT.mins.map(v=>({v,l:v+' 分钟 / 集'}))},
+    ai:{items:WZ_OPT.ai.map(([v])=>({v,l:v})), lead:()=>ico('pen')},
+  };
+}
 function wcardHtml(W){
-  const opt=(k,list)=>`<select data-c="${k}">${(list.includes(W[k])?list:[W[k],...list]).map(o=>`<option ${o===W[k]?'selected':''}>${o}</option>`).join('')}</select>`;
-  const num=(k,list,unit)=>{const cur=+W[k]||list[0]; const L=list.includes(cur)?list:[cur,...list];
-    return `<select data-c="${k}" data-num="1">${L.map(n=>`<option value="${n}" ${n===cur?'selected':''}>${n} ${unit}</option>`).join('')}</select>`;};
-  return `<section class="wcard">
-    <button class="wc-x" data-x title="收起">${ico('x')}</button>
+  const O=wcardOpts();
+  const dd=k=>{const o=O[k], cur=o.items.find(x=>String(x.v)===String(W[k]));
+    const lab=o.label?o.label(W[k]):(cur?cur.l:W[k]);
+    return `<div class="cpop-w"><button class="psel" data-dd="${k}">${o.lead?o.lead(W[k]):''}<span>${esc(String(lab))}</span>${ico('chev')}</button>
+      <div class="cpop down" data-menu="${k}">${o.items.map(x=>`<button class="${String(x.v)===String(W[k])?'on':''}" data-v="${esc(String(x.v))}">${x.ic||''}${esc(x.l)}</button>`).join('')}</div></div>`;};
+  return `<div class="wcard">
+    <button class="wc-x" data-x title="回到输入">${ico('x')}</button>
     <div class="wc-title">《<input data-c="title" placeholder="AI 帮你取剧名" value="${esc(W.title)}">》</div>
     <textarea class="wc-story" data-c="pitch" rows="2" placeholder="说一句你的故事">${esc(W.pitch)}</textarea>
-    <div class="wc-pills">
-      <label class="psel">${opt('genre',WZ_OPT.genre)}</label>
-      <label class="psel">${opt('aud',WZ_OPT.aud)}</label>
-      <label class="psel">${opt('pair',WZ_OPT.pair)}</label>
-      <label class="psel">${num('eps',WZ_OPT.eps,'集')}</label>
-      <label class="psel">${num('mins',WZ_OPT.mins,'分钟 / 集')}</label>
-      <label class="psel">${ico('pen')}<select data-c="ai">${WZ_OPT.ai.map(([v])=>`<option value="${v}" ${v===W.ai?'selected':''}>${v}</option>`).join('')}</select></label>
-    </div>
+    <div class="wc-pills">${['style','ratio','genre','aud','pair','eps','mins','ai'].map(dd).join('')}</div>
     <div class="chips wc-hooks">${WZ_OPT.hooks.map(h=>`<span class="ck ${W.hooks.includes(h)?'on':''}" data-h="${h}">${h}</span>`).join('')}</div>
     <details class="wc-more" ${W.core.trim()?'open':''}><summary>${ico('sparkle')}再补一句，故事更出彩</summary>
       <textarea class="wc-story" data-c="core" rows="2" placeholder="核心设定与规则，例如：读心只能听到对她有恶意的人">${esc(W.core)}</textarea></details>
     <label class="cb"><input type="checkbox" data-c="adult" ${W.adult?'checked':''}><div><b>所有角色均已年满 18 岁</b></div></label>
     <div class="dup wc-dup"></div>
-    <button class="bigbtn wc-go">${MODE.auto.btn}</button>
+    <button class="bigbtn wc-go">${ico('sparkle')}开写</button>
     <p class="hint wc-sub"></p>
     <button class="wc-full" data-full>到开阳模式细修</button>
-  </section>`;
+  </div>`;
 }
 function bindWcard(root, W, save, close){
-  const q=sel=>root.querySelector(sel);
+  const q=sel=>root.querySelector(sel), O=wcardOpts();
   const refresh=()=>{
     W.dup=wzDupCheck(W); const needs=wzNeeds(W);
     q('.wc-dup').className='dup wc-dup'+(W.dup.hits.length?' warn':'');
@@ -1402,10 +1421,22 @@ function bindWcard(root, W, save, close){
   root.querySelectorAll('[data-c]').forEach(el=>{
     el.oninput=el.onchange=()=>{
       const k=el.dataset.c;
-      W[k] = el.type==='checkbox' ? el.checked : el.dataset.num ? +el.value : el.value;
+      W[k] = el.type==='checkbox' ? el.checked : el.value;
       if(el.tagName==='TEXTAREA'){ el.style.height='auto'; el.style.height=el.scrollHeight+'px'; }
       refresh();
     };
+  });
+  root.querySelectorAll('[data-dd]').forEach(b=>b.onclick=e=>{
+    e.stopPropagation(); const m=b.nextElementSibling, open=m.classList.contains('open');
+    document.querySelectorAll('.cpop').forEach(p=>p.classList.remove('open')); if(!open) m.classList.add('open');
+  });
+  root.querySelectorAll('[data-menu] button').forEach(it=>it.onclick=e=>{
+    e.stopPropagation();
+    const m=it.parentElement, k=m.dataset.menu, o=O[k], v=o.num?+it.dataset.v:it.dataset.v; W[k]=v;
+    m.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===it)); m.classList.remove('open');
+    const b=m.previousElementSibling, cur=o.items.find(x=>String(x.v)===String(v));
+    b.innerHTML=`${o.lead?o.lead(v):''}<span>${esc(String(o.label?o.label(v):cur.l))}</span>${ico('chev')}`;
+    refresh();
   });
   root.querySelectorAll('.ck[data-h]').forEach(c=>c.onclick=()=>{
     const h=c.dataset.h; W.hooks=W.hooks.includes(h)?W.hooks.filter(x=>x!==h):[...W.hooks,h]; c.classList.toggle('on'); refresh();
