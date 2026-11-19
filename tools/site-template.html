@@ -363,7 +363,7 @@ a.pill{text-decoration:none}
 .wc-x:hover{background:#26262a;color:#fff}
 .wc-x svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
 .wc-title{padding-right:36px;display:flex;align-items:center;font-size:26px;font-weight:800;color:#fff}
-.wc-title input{field-sizing:content;flex:0 1 auto;min-width:5em;max-width:100%;background:transparent;border:0;outline:0;color:#fff;font:inherit;padding:2px 4px}
+.wc-title input{field-sizing:content;flex:0 1 auto;min-width:1em;max-width:100%;background:transparent;border:0;outline:0;color:#fff;font:inherit;padding:2px 4px}
 .wc-title input::placeholder{color:var(--text-3)}
 .wc-story{display:block;width:100%;margin-top:12px;border:1px solid var(--line-2);border-radius:14px;background:#0f0f11;color:#fff;font:16px/1.7 var(--font);padding:12px 14px;resize:vertical;outline:0}
 .wc-story:focus{border-color:rgba(139,69,255,.6)}
@@ -483,7 +483,7 @@ a.pill{text-decoration:none}
 .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),#3fb6ff);border-radius:99px;transition:width .2s}
 .dup{margin-top:8px;font-size:13px;color:var(--text-2)}
 .dup.warn{color:var(--amber)}
-.seedbar .btn-o.next{border-color:rgba(139,69,255,.7);color:#fff;box-shadow:0 0 0 3px rgba(139,69,255,.18)}
+.seedbar .btn-o.nx{border-color:rgba(139,69,255,.7);color:#fff;box-shadow:0 0 0 3px rgba(139,69,255,.18)}
 .bigbtn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;margin-right:6px;vertical-align:-3px}
 .bigbtn{margin-top:16px;width:100%;height:50px;border-radius:14px;background:var(--brand);color:#fff;font-size:15px;font-weight:700}
 .bigbtn:hover{background:var(--brand-2)}
@@ -536,7 +536,8 @@ a.pt-banner:hover{transform:translateY(-2px)}
 .pt-txt em{font-style:normal;font-size:14px;color:#235777;font-weight:600}
 .pt-go{position:absolute;right:16px;bottom:14px;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#0f3550;background:rgba(255,255,255,.7);padding:4px 10px;border-radius:999px}
 .pt-go svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.4;transform:rotate(90deg)}
-.pt{max-width:980px;margin:0 auto;padding-bottom:40px}
+.pt{max-width:980px;margin:0 auto;padding-bottom:40px;position:relative}
+.pt-back{display:flex;width:max-content;margin:0 0 -12px auto}
 .pt-hero{margin:30px 0 10px;text-align:center}
 .pt-banner.big{height:300px;text-align:left}
 .pt-banner.big .pt-txt{left:34px;bottom:34px}
@@ -635,6 +636,9 @@ a.pt-banner:hover{transform:translateY(-2px)}
 .lib-crumb{display:flex;align-items:center;gap:12px;margin:12px 0 0;color:#fff;font-weight:600}
 .lib-back{height:32px;padding:0 12px;border-radius:9px;background:#232326;color:var(--text-2);font-size:13px}
 .lib-back:hover{color:#fff}
+.lib-pairs{display:flex;flex-wrap:wrap;gap:14px}
+.lib-pair{display:grid;grid-template-columns:repeat(2,minmax(150px,200px));gap:14px}
+@media (max-width:760px){.lib-pairs{gap:10px}.lib-pair{flex:1 1 100%;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
 .lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
 .lt{display:flex;flex-direction:column;gap:8px;padding:10px 10px 12px;border-radius:16px;border:1px solid var(--line);background:#1b1b1e;text-align:left;color:#fff;transition:border-color .15s,transform .15s}
 .lt:hover{border-color:rgba(139,69,255,.6);transform:translateY(-2px)}
@@ -992,7 +996,7 @@ function viewAssets(){
   const seed = store('assetSeed');
   document.getElementById('view').innerHTML = `
     <h1 class="as-title">选择起点，建立天玑资产</h1>
-    ${seed?`<div class="seedbar"><span>${sn('','done')}从《${esc(seed.title)}》导入完成</span>${(()=>{const nx=seed.items.findIndex(x=>!x.done); return seed.items.map((x,k)=>`<button class="btn-o ${x.done?'done':''} ${k===nx?'next':''}" data-seed="${k}">${sn(k+1,x.done?'done':k===nx?'on':'')}${esc(x.label)}${/[A-Za-z]$/.test(x.label)?' ':''}设定板</button>`).join('');})()}<button class="x" id="seedX" title="关闭">×</button></div>`:''}
+    ${seed?`<div class="seedbar"><span>${sn('','done')}从《${esc(seed.title)}》导入完成</span>${(()=>{const nx=seed.items.findIndex(x=>!x.done); return seed.items.map((x,k)=>`<button class="btn-o ${x.done?'done':''} ${k===nx?'nx':''}" data-seed="${k}">${sn(k+1,x.done?'done':k===nx?'on':'')}${esc(x.label)}${/[A-Za-z]$/.test(x.label)?' ':''}设定板</button>`).join('');})()}<button class="x" id="seedX" title="关闭">×</button></div>`:''}
     <div class="as-cards">${ASSET_MENUS.map((m,mi)=>`
       <div class="mcard ${mi?'r':''}"><h3>${m.title}</h3>
         ${m.items.map(i=>`<a class="mi" href="#/assets/${i.id}" style="text-decoration:none">${ico(i.icon)}${i.label}
@@ -1443,7 +1447,7 @@ function wcardOpts(){
     ratio:{items:RATIOS.map(r=>({v:r,l:r,ic:rbIcon(r)})), lead:v=>rbIcon(v,16), label:v=>v||'9:16'},
     genre:{items:WZ_OPT.genre.map(v=>({v,l:v}))},
     aud:{items:WZ_OPT.aud.map(v=>({v,l:v}))},
-    pair:{items:WZ_OPT.pair.map(v=>({v,l:v}))},
+    pair:{items:WZ_OPT.pair.map(v=>({v,l:v==='男女'?'男女（CP）':v}))},
     eps:{num:1, items:WZ_OPT.eps.map(v=>({v,l:v+' 集'}))},
     mins:{num:1, items:WZ_OPT.mins.map(v=>({v,l:v+' 分钟 / 集'}))},
     ai:{items:WZ_OPT.ai.map(([v])=>({v,l:v})), lead:()=>ico('pen')},
@@ -1920,6 +1924,7 @@ function viewPartner(){
   ];
   document.getElementById('view').innerHTML=`
   <article class="pt">
+    <button class="pill pt-back" id="ptBack" onclick="history.length>1?history.back():location.hash='#/'">${ico('back')}返回</button>
     <section class="pt-hero">
       ${partnerBanner().replace('<a class="pt-banner" href="#/partner"','<div class="pt-banner big"').replace(/<span class="pt-go">[\s\S]*?<\/span>\s*<\/a>$/,'</div>')}
       <div class="pt-cta"><a class="magic" href="#/" style="text-decoration:none">${ico('sparkle')}现在开始创作</a><a class="btn-o" href="#pt-join" id="ptJoin" style="text-decoration:none">报名与评审</a></div>
@@ -2084,11 +2089,11 @@ function viewScriptSimple(){
       <span>${G2[nav.g]}${nav.lv==='role'?' › '+esc(DATA.roles[nav.g][nav.i].type):''}</span></div>`;
     let body='';
     if(nav.lv==='root'){
-      body = `<p class="lib-tip">点一格进去看</p><div class="lib-grid">${['male','female'].map(g=>`
+      body = `<p class="lib-tip">点一格进去看</p><div class="lib-pairs"><div class="lib-pair">${['male','female'].map(g=>`
         <button class="lt" data-g="${g}"><span class="mosaic">${DATA.roles[g].slice(0,4).map((_,i)=>art(g,i)).join('')}</span>
-          <span class="lab"><b>${G2[g]}</b> ${DATA.roles[g].length} 位</span></button>`).join('')}${['cloth','hair'].map(g=>`
+          <span class="lab"><b>${G2[g]}</b> ${DATA.roles[g].length} 位</span></button>`).join('')}</div><div class="lib-pair">${['cloth','hair'].map(g=>`
         <button class="lt wip" data-w="${g}"><span class="art" style="--c:${WIP[g].c}">${ico(WIP[g].ic)}</span>
-          <span class="lab"><b>${G2[g]}</b> <span class="wipb">整理中</span></span></button>`).join('')}</div>`;
+          <span class="lab"><b>${G2[g]}</b> <span class="wipb">整理中</span></span></button>`).join('')}</div></div>`;
     } else if(nav.lv==='wip'){
       const w=WIP[nav.g];
       body = `<p class="lib-tip">${G2[nav.g]}还在整理，先占好位置，之后会一格一格补上</p><div class="lib-grid">${w.items.map(x=>`
@@ -2298,7 +2303,7 @@ function drawNav(route){
   const T = (t, icon) => `<div class="ps-title">${icon?ico(icon):''}${esc(t)}</div>`;
   const PICK = `<div class="ps-hr"></div>` + T('精选提示词','grid');
   const F = FUNCS.find(f=>f.k===fn);
-  const title = fn==='prompts' ? (ch ? ch.label : '目录') : F.label+'目录';
+  const title = fn==='prompts' ? (ch ? ch.label : '目录') : (route.view==='start'||route.view==='partner') ? '目录' : F.label+'目录';
   const pill = `${esc(title)} ${ico('panel')}`;
   let h = `<div class="ps-row"><button class="pill" id="psClose" title="收起">${pill}</button></div>`;
   if(route.vibe){ const V=route.vibe;
