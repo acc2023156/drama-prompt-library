@@ -387,6 +387,17 @@ a.pill{text-decoration:none}
 .wc-seed{height:30px;padding:0 12px;border-radius:999px;background:#26262a;color:var(--text-2);font-size:13px}
 .wc-seed:hover{background:#2f2a3a;color:#fff}
 .wc-say{position:relative}
+.mic-w{position:relative}
+.mic-w .has-mic{padding-right:54px}
+.wc-dice{margin-left:6px;width:34px;height:34px;flex:none;border-radius:10px;display:grid;place-items:center;color:var(--text-2);background:#26262a}
+.wc-dice:hover{color:#fff;background:#2f2a3a}
+.wc-dice svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8}
+.wc-dice:active svg{transform:rotate(90deg);transition:transform .15s}
+.cmic{margin-left:auto;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:#2c2c30;color:#fff}
+.cmic svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8}
+.cmic.on{background:var(--brand);animation:micpulse 1.2s ease-in-out infinite}
+.cmic + .csend{margin-left:8px}
+.cmic[style*="none"] + .csend{margin-left:auto}
 .wc-say .wc-story{margin-top:10px;padding-right:52px;min-height:70px}
 .wc-mic{position:absolute;right:10px;bottom:10px;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:#2c2c30;color:#fff}
 .wc-mic svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8}
@@ -1099,7 +1110,7 @@ function viewAssetEditor(fnId, idx){
       rd.onload=()=>{st.imgs[k]=rd.result; $('drop'+k).innerHTML=`<img src="${rd.result}" alt="">`; $('drop'+k).appendChild(inp); refresh()}; rd.readAsDataURL(file)};
   });
   $('nm').oninput=e=>{st.name=e.target.value;refresh()};
-  if($('pf')) $('pf').oninput=e=>{st.profile=e.target.value;refresh()};
+  if($('pf')){ $('pf').oninput=e=>{st.profile=e.target.value;refresh()}; addMic($('pf')); }
   $('extra').oninput=e=>{st.extra=e.target.value;refresh()};
   $('ratio').onchange=e=>{st.ratio=e.target.value;refresh()};
   $('res').onchange=e=>{st.res=e.target.value;refresh()};
@@ -1297,6 +1308,7 @@ function chatHtml(){
       <div class="cfoot">
         <div class="cpop-w"><button class="cbtn" id="cStyle">${ico('palette')}<span>风格</span></button><div class="cpop" id="cStylePop"></div></div>
         <div class="cpop-w"><button class="cbtn" id="cRatio"><i class="rb"></i><span>比例</span></button><div class="cpop" id="cRatioPop"></div></div>
+        ${SpeechRec?`<button class="cmic" id="cMic" title="用说的">${ico('mic')}</button>`:''}
         <button class="csend" id="cSend">${ico('arrowUp')}</button>
       </div>
     </div>
@@ -1371,6 +1383,7 @@ function bindChat(){
     }
     $('cbody').innerHTML = h;
     $('cSend').disabled = !ok();
+    if($('cMic')){ const ta=$('cbody').querySelector('textarea'); if($('cMic')._rec) $('cMic')._rec.stop(); $('cMic').style.display = ta||C.tab==='paste' ? '' : 'none'; }
     const bindTa=(id,k)=>{ const t=$(id); if(!t) return; t.oninput=()=>{ C[k]=t.value; save(); $('cSend').disabled=!ok();
       const c=$('cbody').querySelector('.cnt'); if(c&&k!=='pitch'){ c.textContent=cntText(k); const n=C.novel.trim().length; c.classList.toggle('bad',k==='novel'&&n>0&&(n<2000||n>400000)); } }; };
     bindTa('cDoc','doc'); bindTa('cPitch','pitch'); bindTa('cNovel','novel');
@@ -1398,6 +1411,11 @@ function bindChat(){
   $('cStyle').onclick=e=>{e.stopPropagation(); const o=$('cStylePop').classList.contains('open'); closePops(); if(!o) $('cStylePop').classList.add('open');};
   $('cRatio').onclick=e=>{e.stopPropagation(); const o=$('cRatioPop').classList.contains('open'); closePops(); if(!o) $('cRatioPop').classList.add('open');};
   document.addEventListener('click', closePops);
+  if($('cMic')) $('cMic').onclick=()=>{
+    let ta=$('cbody').querySelector('textarea');
+    if(!ta && C.tab==='paste'){ C.editing=true; drawBody(); ta=$('cDoc'); }
+    if(ta){ micListen($('cMic'), ta); ta.focus(); }
+  };
   $('cSend').onclick=()=>{
     if(!ok()) return;
     if(C.tab==='auto'){
@@ -1433,6 +1451,38 @@ function wcardOpts(){
 }
 const WC_SEEDS=['主角的秘密是','最大的反转是','金手指是','对手是','结局想要'];
 const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+/* 语音转文字：接在输入框原文后面，边说边出字 */
+function micListen(btn, ta, sep){
+  if(btn._rec){ btn._rec.stop(); return; }
+  if(!SpeechRec||!ta) return;
+  const rec=new SpeechRec(); rec.lang='zh-CN'; rec.interimResults=true; rec.continuous=true;
+  const base=ta.value.replace(/\s+$/,''), join = !base ? '' : sep!=null ? sep : (/[，。！？、,.!?\n]$/.test(base)?'':'，');
+  btn._rec=rec; btn.classList.add('on');
+  rec.onresult=e=>{ let t=''; for(const r of e.results) t+=r[0].transcript; ta.value=base+join+t; ta.dispatchEvent(new Event('input',{bubbles:true})); };
+  rec.onend=rec.onerror=()=>{ btn._rec=null; btn.classList.remove('on'); };
+  try{ rec.start(); }catch(err){ btn._rec=null; btn.classList.remove('on'); toast('这个浏览器不支持语音输入'); }
+}
+function addMic(ta){
+  if(!SpeechRec||!ta||ta.parentElement.classList.contains('mic-w')) return;
+  const w=document.createElement('div'); w.className='mic-w'; ta.before(w); w.append(ta); ta.classList.add('has-mic');
+  const b=document.createElement('button'); b.type='button'; b.className='wc-mic'; b.title='用说的'; b.innerHTML=ico('mic');
+  b.onclick=e=>{ e.preventDefault(); micListen(b, ta); }; w.append(b);
+}
+function wzRollTitle(W, prev){
+  const p=(W.pitch||'').trim();
+  const nm=(p.match(/^([一-龥]{2,3}?)(?:变成|穿成|穿越|重生|成了|是|被|靠|在|的)/)||[])[1];
+  const KW=['千金','嫡女','庶女','王妃','皇后','女帝','公主','郡主','世子','王爷','将军','少帅','总裁','首富','神医','战神','赘婿','影后','保镖','秘书','娇妻','大佬','师尊','掌门','仙尊'];
+  const k=KW.find(x=>p.includes(x));
+  const T=[];
+  if(k) T.push(`${k}归来`,`${k}不好惹`,`重生之${k}`,`这个${k}有点狠`,`${k}的逆袭`,`惊鸿${k}`,`${k}今天也在翻盘`,`锦绣${k}`,`我家${k}是大佬`,`${k}她杀疯了`);
+  if(nm) T.push(`${nm}传`,`${nm}的逆袭`,`${nm}不好惹`,`${nm}，开挂了`);
+  if(k && /古代|穿/.test(p)) T.push(`穿成${k}后`,`${k}穿越记`,`一觉醒来成了${k}`);
+  if(/重生/.test(p)) T.push('重生之后，我不忍了','重来一次，全都还回来');
+  if(/系统|读心|异能|金手指/.test(p)) T.push('开局就有金手指','我能听见你的心声','系统逼我当大佬');
+  if(!T.length) T.push('逆风翻盘','一路开挂','人生重启','命运反转','爽到最后','她杀疯了','惊鸿一瞥','这次换我赢');
+  const pool=T.filter(x=>x!==prev);
+  return pool[Math.floor(Math.random()*pool.length)];
+}
 function wcardHtml(W){
   const O=wcardOpts();
   const dd=k=>{const o=O[k], cur=o.items.find(x=>String(x.v)===String(W[k]));
@@ -1441,7 +1491,7 @@ function wcardHtml(W){
       <div class="cpop down" data-menu="${k}">${o.items.map(x=>`<button class="${String(x.v)===String(W[k])?'on':''}" data-v="${esc(String(x.v))}">${x.ic||''}${esc(x.l)}</button>`).join('')}</div></div>`;};
   return `<div class="wcard">
     <button class="wc-x" data-x title="回到输入">${ico('x')}</button>
-    <div class="wc-title">《<input data-c="title" placeholder="AI 帮你取剧名" value="${esc(W.title)}">》</div>
+    <div class="wc-title">《<input data-c="title" placeholder="AI 帮你取剧名" value="${esc(W.title)}">》<button class="wc-dice" data-dice title="帮我取一个">${ico('dice')}</button></div>
     <textarea class="wc-story" data-c="pitch" rows="2" placeholder="说一句你的故事">${esc(W.pitch)}</textarea>
     <div class="wc-pills">${['style','ratio','aud','pair','eps','mins'].map(dd).join('')}</div>
     <div class="chips wc-hooks">${WZ_OPT.hooks.map(h=>`<span class="ck ${W.hooks.includes(h)?'on':''}" data-h="${h}">${h}</span>`).join('')}</div>
@@ -1466,16 +1516,9 @@ function bindWcard(root, W, save, close){
   });
   requestAnimationFrame(()=>root.querySelectorAll('textarea.wc-story').forEach(grow));
   const mic=q('[data-mic]');
-  if(mic){ let rec=null;
-    mic.onclick=()=>{
-      if(rec){ rec.stop(); return; }
-      rec=new SpeechRec(); rec.lang='zh-CN'; rec.interimResults=true; rec.continuous=true;
-      const base=core.value.replace(/\s+$/,''); mic.classList.add('on');
-      rec.onresult=e=>{ let t=''; for(const r of e.results) t+=r[0].transcript; core.value=(base?base+'\n':'')+t; W.core=core.value; grow(core); refresh(); };
-      rec.onend=rec.onerror=()=>{ rec=null; mic.classList.remove('on'); };
-      try{ rec.start(); }catch(err){ rec=null; mic.classList.remove('on'); toast('这个浏览器不支持语音输入'); }
-    };
-  }
+  if(mic) mic.onclick=e=>{ e.preventDefault(); micListen(mic, core, '\n'); };
+  addMic(q('[data-c=pitch]'));
+  q('[data-dice]').onclick=()=>{ const t=q('[data-c=title]'); t.value=wzRollTitle(W, t.value); t.dispatchEvent(new Event('input',{bubbles:true})); };
   root.querySelectorAll('[data-c]').forEach(el=>{
     el.oninput=el.onchange=()=>{
       const k=el.dataset.c;
@@ -2127,6 +2170,7 @@ function viewVibeScript(id, tab){
   const TAB_FN={outline:'script', script:'script', assets:'assets', board:'storyboard'};
   function draw(){
     store('vibeTab',tab);
+    const want='#/script/v/'+w.id+'/'+tab; if(location.hash!==want) history.replaceState(null,'',want);
     drawNav({view:'tool', tool:TAB_FN[tab], sub:'vibe', wid:w.id, vibe:{id:w.id, title:w.title, tab}});
     document.querySelectorAll('#vtTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
     if(tab==='outline'){
@@ -2257,12 +2301,17 @@ function drawNav(route){
   const title = fn==='prompts' ? (ch ? ch.label : '目录') : F.label+'目录';
   const pill = `${esc(title)} ${ico('panel')}`;
   let h = `<div class="ps-row"><button class="pill" id="psClose" title="收起">${pill}</button></div>`;
+  if(route.vibe){ const V=route.vibe;
+    h += T('当前作品') + A('#/script/v/'+V.id+'/outline','《'+V.title+'》',{cls:'head fn',icon:'script',on:false})
+      + [['outline','各集大纲','text'],['script','剧情对话','pen'],['assets','角色资产库','user'],['board','分镜图','play']]
+        .map(([k,l,ic])=>A('#/script/v/'+V.id+'/'+k,l,{cls:'fn sub',icon:ic,on:V.tab===k})).join('') + `<div class="ps-hr"></div>`;
+  }
 
   if(fn==='script'){
     const works = store('works')||[];
     if(isPro() && route.view!=='start' && route.view!=='partner'){
       h += T('PRO 专业版') + A('#/script','我的作品',{cls:'head fn',icon:'script',n:works.length}) + A('#/script/new','新增作品',{cls:'head fn',icon:'plus',on:route.sub==='new'&&!route.wid});
-      if(works.length) h += T('作品') + works.map(w=>A(w.kind==='simple'?'#/script/s/'+w.id:w.kind==='vibe'?'#/script/v/'+w.id:'#/script/w/'+w.id, '《'+(w.title||'未命名')+'》',{on:route.wid===w.id||route.sid===w.id})).join('');
+      if(works.length) h += T('作品') + works.map(w=>A(w.kind==='simple'?'#/script/s/'+w.id:w.kind==='vibe'?'#/script/v/'+w.id:'#/script/w/'+w.id, '《'+(w.title||'未命名')+'》',{on:!route.vibe&&(route.wid===w.id||route.sid===w.id)})).join('');
     } else {
       const mine = works.filter(w=>w.kind==='simple');
       h += T('标准版') + A(route.view==='start'?'#/':'#/script','人物即剧本',{cls:'head fn',icon:'sparkle',on:!route.sub,d:'选主角，一键产出 10 集'});
@@ -2275,13 +2324,11 @@ function drawNav(route){
     h += PICK + NAV.slice(0,3).map(n=>A('#/f/'+n.key,n.label,{cls:'fn',icon:n.icon,n:inFolder(n.key).length})).join('');
   } else if(fn==='assets'){
     const mine = store('assets')||[];
-    if(route.vibe) h += T('当前作品') + A('#/script/v/'+route.vibe.id,'《'+route.vibe.title+'》',{cls:'head fn',icon:'user',on:true,d:'角色资产库'});
     h += A('#/assets','资产首页',{cls:'head fn',icon:'assets',on:!route.fn&&!route.vibe});
     for(const m of ASSET_MENUS) h += T(m.title) + m.items.map(i=>A('#/assets/'+i.id,i.label,{cls:'fn',icon:i.icon,on:route.fn===i.id&&route.idx==null})).join('');
     if(mine.length) h += T('我的资产') + mine.map((x,k)=>A(`#/assets/${x.fn}?i=${k}`,x.name||'未命名',{cls:'fn',icon:FN[x.fn]?.menu.key==='scene'?'mount':'user',on:route.fn===x.fn&&route.idx===k,d:FN[x.fn]?.label||''})).join('');
     h += PICK + A('#/f/06-video/styles','画风块',{cls:'fn',icon:'film'}) + A('#/f/archive/05-design','角色与场景设定（归档）',{cls:'fn',icon:'box'});
   } else if(fn==='storyboard'){
-    if(route.vibe) h += T('当前作品') + A('#/script/v/'+route.vibe.id,'《'+route.vibe.title+'》',{cls:'head fn',icon:'play',on:true,d:'分镜图'});
     h += A('#/storyboard','分镜首页',{cls:'head fn',icon:'play',on:route.vibe?false:undefined}) + A('#/assembler','6.0 组装器',{cls:'head fn',icon:'wand',d:'把剧本组装成视频提示词'});
     const v = NAV.find(n=>n.key==='06-video');
     h += PICK + v.subs.map(([k,l])=>A('#/f/'+k,l,{cls:'fn',icon:'film',n:inFolder(k).length})).join('');
@@ -2521,7 +2568,7 @@ function parse(){
   if(h==='assembler'||h==='changelog') return {view:h};
   if(h.startsWith('script/s/')) {const [id,q]=h.slice(9).split('?');return {view:'tool',tool:'script',sub:'result',sid:id,fresh:q==='new=1'}}
   if(h==='script/new') return {view:'tool',tool:'script',sub:'new'};
-  if(h.startsWith('script/v/')) return {view:'tool',tool:'script',sub:'vibe',wid:h.slice(9)};
+  if(h.startsWith('script/v/')){ const [wid,vtab]=h.slice(9).split('/'); return {view:'tool',tool:'script',sub:'vibe',wid,vtab}; }
   if(h.startsWith('script/w/')) return {view:'tool',tool:'script',sub:'new',wid:h.slice(9)};
   if(h.startsWith('assets/')) {const [fn,q]=h.slice(7).split('?i=');return {view:'tool',tool:'assets',fn,idx:q==null?null:+q}}
   if(h==='partner') return {view:'partner'};
@@ -2540,7 +2587,7 @@ function route(){
   else if(r.view==='tool' && r.tool==='assets') r.fn ? viewAssetEditor(r.fn, r.idx) : viewAssets();
   else if(r.view==='tool' && r.tool==='script'){
     if(r.sub==='result') viewScriptResult(r.sid, r.fresh);
-    else if(r.sub==='vibe') viewVibeScript(r.wid);
+    else if(r.sub==='vibe') viewVibeScript(r.wid, r.vtab);
     else if(!isPro()) viewScriptSimple();
     else r.sub ? viewScriptNew(r.wid) : viewScriptHome();
   }
