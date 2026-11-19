@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>天玑 · 提示词库</title>
+<title>天玑</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -417,6 +417,23 @@ a.pill{text-decoration:none}
 .vr .ok{color:#3ddc97}
 .vr .vb{display:flex;gap:8px;flex-wrap:wrap}
 .vr .vb .btn-o{height:32px;padding:0 12px;font-size:13px}
+.vak{display:flex;gap:6px;margin:2px 0 16px}
+.vak button{height:42px;padding:0 20px;border-radius:999px;color:var(--text-2);font-size:15px}
+.vak button.on{background:#26262a;color:#fff;font-weight:600}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px}
+.vp{display:block;text-align:left;color:#fff;background:none;padding:0;cursor:pointer}
+.vp-img{position:relative;display:flex;justify-content:center;aspect-ratio:1/1;border-radius:14px;background:#1b1b1e;overflow:hidden;border:1px solid transparent;transition:border-color .15s}
+.vp:hover .vp-img{border-color:rgba(139,69,255,.6)}
+.vp .pf{height:100%;aspect-ratio:9/16;background:linear-gradient(#fafafa,#ececee);display:flex;align-items:flex-end;justify-content:center}
+.vp .pf.wide{aspect-ratio:auto;width:100%;align-items:center;color:#b9b9c0}
+.vp .pf.wide svg{width:40%;height:40%;stroke:currentColor;fill:none;stroke-width:1.2}
+.vp .fig{height:90%;margin-bottom:4%;filter:drop-shadow(0 6px 6px rgba(0,0,0,.12))}
+.vp-tag{position:absolute;top:12px;left:12px;padding:2px 7px;border-radius:6px;background:#1e8fff;color:#fff;font-size:12px;font-style:normal;font-weight:600}
+.vp-go{position:absolute;right:10px;bottom:10px;padding:6px 12px;border-radius:999px;background:var(--brand);color:#fff;font-size:12.5px;font-style:normal;opacity:0;transition:opacity .15s}
+.vp:hover .vp-go{opacity:1}
+.vp b{display:block;margin-top:12px;font-size:17px;font-weight:600}
+.vp small{display:block;margin-top:4px;color:var(--text-3);font-size:13.5px}
+@media (max-width:760px){.vgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.vp-go{opacity:1}}
 .vassets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .va{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:18px;border:1px solid var(--line);background:#151517}
 .va>div{flex:1;min-width:0}.va b{display:block}.va small{color:var(--text-3)}
@@ -2151,6 +2168,16 @@ function vibeSx(w){
   const name2 = w.vname2 || pool[(w.seed||1)%pool.length];
   return {id:w.id, title:w.title, name, name2, g, role:t, seed:w.seed||1, outline:sxOutline(t,name,g), idea:(W.core||'').trim(), leads, W};
 }
+function figSvg(g){
+  const skin='#e9dcd2', cloth='#2d2d33', dark='#1c1c20', hair='#26221f';
+  return g==='female'
+    ? `<svg viewBox="0 0 100 240" class="fig"><path d="M33 30 Q33 8 50 8 Q67 8 67 30 L69 62 Q60 66 50 64 Q40 66 31 62Z" fill="${hair}"/><ellipse cx="50" cy="28" rx="12.5" ry="15" fill="${skin}"/><path d="M45 42h10v9H45z" fill="${skin}"/>
+       <path d="M31 54 Q50 47 69 54 L66 100 Q50 104 34 100Z" fill="${cloth}"/><path d="M31 54 L22 116 L28 118 L36 66Z M69 54 L78 116 L72 118 L64 66Z" fill="${cloth}"/><circle cx="25" cy="120" r="4" fill="${skin}"/><circle cx="75" cy="120" r="4" fill="${skin}"/>
+       <path d="M34 100 Q50 104 66 100 L70 168 H30Z" fill="${dark}"/><path d="M38 168h8l-1 56h-6z M54 168h8l-1 56h-6z" fill="${skin}"/><path d="M36 222h11v6H35z M53 222h11l1 6H53z" fill="${dark}"/></svg>`
+    : `<svg viewBox="0 0 100 240" class="fig"><path d="M36 26 Q35 10 50 9 Q66 10 64 26 Q58 17 50 18 Q42 17 36 26Z" fill="${hair}"/><ellipse cx="50" cy="28" rx="13" ry="15.5" fill="${skin}"/><path d="M44 42h12v9H44z" fill="${skin}"/>
+       <path d="M25 54 Q50 45 75 54 L71 122 H29Z" fill="${cloth}"/><path d="M25 54 L15 120 L22 122 L33 66Z M75 54 L85 120 L78 122 L67 66Z" fill="${cloth}"/><circle cx="18" cy="125" r="4.5" fill="${skin}"/><circle cx="82" cy="125" r="4.5" fill="${skin}"/>
+       <path d="M30 120 H49 L47 224 H35Z M51 120 H70 L65 224 H53Z" fill="${dark}"/><path d="M33 222h15v7H31z M52 222h15l2 7H52z" fill="#111"/></svg>`;
+}
 function viewVibeScript(id, tab){
   const v=document.getElementById('view'), list=store('works')||[], w=list.find(x=>x.id===id);
   if(!w){ v.innerHTML='<div class="empty">找不到这部作品，可能已在别的浏览器里。</div>'; return; }
@@ -2172,12 +2199,14 @@ function viewVibeScript(id, tab){
     <div id="vtBody"></div>`;
   const $=id=>document.getElementById(id);
   const epTxt=i=>eps[i].split('\n').slice(1).join('\n').trim();
+  let akind='role';
   const TAB_FN={outline:'script', script:'script', assets:'assets', board:'storyboard'};
   function draw(){
     store('vibeTab',tab);
     const want='#/script/v/'+w.id+'/'+tab; if(location.hash!==want) history.replaceState(null,'',want);
     drawNav({view:'tool', tool:TAB_FN[tab], sub:'vibe', wid:w.id, vibe:{id:w.id, title:w.title, tab}});
     document.querySelectorAll('#vtTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
+    document.querySelector('.vt-act').style.display = tab==='assets' ? 'none' : '';
     if(tab==='outline'){
       $('vtBody').innerHTML=`<div class="vtable"><div class="vr vh"><span>集</span><span>集名</span><span>状态</span><span>字数</span><span>大纲</span></div>
         ${s.outline.map(([h,b],i)=>`<div class="vr"><span>第 ${i+1} 集</span><span class="vn">${esc(h)}</span><span class="ok">已完成</span><span>${nfmt(epTxt(i).length)}</span>
@@ -2197,10 +2226,21 @@ function viewVibeScript(id, tab){
         {fn:'role-board', label:'对手', name:'对手', sub:`与${s.name}作对的人`, profile:`与${s.name}作对的人。${core}`},
         {fn:'scene-board', label:'主要场景', name:'主要场景', sub:W.genre, profile:[W.genre,core].filter(Boolean).join('；')},
       ];
-      $('vtBody').innerHTML=`<div class="vassets">${items.map((x,k)=>`<div class="va"><span class="va-ic">${ico(x.fn==='scene-board'?'mount':'user')}</span>
-          <div><b>${esc(x.label)}</b><small>${esc(x.sub||x.name)}</small></div><button class="btn-o" data-as="${k}">做设定板</button></div>`).join('')}</div>`;
-      $('vtBody').querySelectorAll('[data-as]').forEach(b=>b.onclick=()=>{
+      const roles=items.map((x,k)=>({...x,k})).filter(x=>x.fn==='role-board'), scenes=items.map((x,k)=>({...x,k})).filter(x=>x.fn!=='role-board');
+      const gOf=x=>x.label.startsWith('女')?'female':x.label.startsWith('男')?'male':s.g;
+      const card=x=>`<button class="vp" data-as="${x.k}"><span class="vp-img">${x.fn==='role-board'?`<span class="pf">${figSvg(gOf(x))}</span>`:`<span class="pf wide">${ico('mount')}</span>`}
+          ${x.k===0?'<i class="vp-tag">主角</i>':''}<em class="vp-go">做设定板</em></span>
+          <b>${esc(x.fn==='role-board'&&x.name!=='对手'?x.name:x.label)}</b><small>${esc(x.fn==='role-board'&&x.name!=='对手'?x.label:(x.sub||''))}</small></button>`;
+      const drawA=()=>{
+        const list = akind==='role' ? roles : scenes;
+        $('vtBody').innerHTML=`<div class="vak"><button class="${akind==='role'?'on':''}" data-ak="role">角色 ${roles.length}</button><button class="${akind==='scene'?'on':''}" data-ak="scene">场景 ${scenes.length}</button></div>
+          <div class="vgrid">${list.map(card).join('')}</div>`;
+        $('vtBody').querySelectorAll('[data-ak]').forEach(b=>b.onclick=()=>{ akind=b.dataset.ak; drawA(); });
+        bindA();
+      };
+      const bindA=()=>$('vtBody').querySelectorAll('[data-as]').forEach(b=>b.onclick=()=>{
         const k=+b.dataset.as; store('assetSeed',{wid:w.id, title:w.title, items}); store('assetPick',{...items[k],k,wid:w.id}); location.hash='#/assets/'+items[k].fn; });
+      drawA();
     } else {
       $('vtBody').innerHTML=`<div class="vtable"><div class="vr vh vb4"><span>集</span><span>集名</span><span>镜头</span><span></span></div>
         ${s.outline.map(([h],i)=>`<div class="vr vb4"><span>第 ${i+1} 集</span><span class="vn">${esc(h)}</span><span>${(epTxt(i).match(/^## 场次/gm)||[]).length} 场</span>
