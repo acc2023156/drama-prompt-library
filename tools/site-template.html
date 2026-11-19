@@ -777,6 +777,7 @@ a.pt-banner:hover{transform:translateY(-2px)}
 .seed-go{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 18px;border-radius:12px;background:var(--brand);color:#fff;font-weight:600;text-decoration:none;box-shadow:0 0 0 3px rgba(139,69,255,.22)}
 .seed-go svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8}
 .seed-go:hover{filter:brightness(1.1)}
+.seed-go.soft{background:transparent;border:1px solid rgba(139,69,255,.6);box-shadow:none;color:#d9c8ff}
 .seedbar .x{margin-left:auto;width:30px;height:30px;border-radius:9px;color:var(--text-2);font-size:18px}
 .seedbar .x:hover{background:rgba(255,255,255,.08);color:#fff}
 .rtabs{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:nowrap;container-type:inline-size}
@@ -787,6 +788,7 @@ a.pt-banner:hover{transform:translateY(-2px)}
 @media (max-width:760px){.rtabs{flex-wrap:wrap}.rtabs #rtab{width:100%}.rtabs>.btn-o{width:44px;padding:0;justify-content:center}.rtabs>.btn-o .lbl,.rtabs .act .lbl{display:none}.rtabs .act .btn-o{width:44px;padding:0;justify-content:center}}
 .res-back{margin:24px 0 -24px;position:relative;z-index:2}
 .res-back .pill{text-decoration:none}
+.res-back .pill.dirty{background:var(--brand);border-color:var(--brand);color:#fff}
 .rtabs .gseg{margin:0}
 .rtabs>.btn-o{height:44px}
 .rtabs>.btn-o svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
@@ -1065,12 +1067,23 @@ function pvHtml(pv){
 }
 
 const seedBoard=sd=>(store('works')||[]).some(w=>w.id===sd.wid&&w.kind==='vibe') ? `#/script/v/${sd.wid}/board` : '#/storyboard';
+/* 所有页面共用的「返回」：同一个样式、同一个位置；有修改时变成「储存并返回」 */
+function backBar(href){
+  return `<div class="res-back"><a class="pill" id="pgBack" href="${href||'#/'}" ${href?'':`onclick="if(history.length>1&&!this.dataset.dirty){history.back();return false}"`}>${ico('back')}<span>返回</span></a></div>`;
+}
+function backDirty(onSave){
+  const b=document.getElementById('pgBack'); if(!b) return;
+  b._save=onSave; if(b.dataset.dirty) return;
+  b.dataset.dirty=1; b.classList.add('dirty'); b.querySelector('span').textContent='储存并返回';
+  b.addEventListener('click',()=>{ if(b.dataset.dirty&&b._save) b._save(); });
+}
+function backClean(){ const b=document.getElementById('pgBack'); if(!b) return; delete b.dataset.dirty; b.classList.remove('dirty'); b.querySelector('span').textContent='返回'; }
 function viewAssets(){
   const mine = store('assets')||[];
   const seed = store('assetSeed');
   document.getElementById('view').innerHTML = `
     <h1 class="as-title">选择起点，建立天玑资产</h1>
-    ${seed?`<div class="seedbar"><span>${sn('','done')}从《${esc(seed.title)}》导入完成</span>${(()=>{const nx=seed.items.findIndex(x=>!x.done); return seed.items.map((x,k)=>`<button class="btn-o ${x.done?'done':''} ${k===nx?'nx':''}" data-seed="${k}">${sn(k+1,x.done?'done':k===nx?'on':'')}${esc(x.label)}${/[A-Za-z]$/.test(x.label)?' ':''}设定板</button>`).join('');})()}${seed.items.every(x=>x.done)?`<a class="seed-go" href="${seedBoard(seed)}">${ico('play')}去分镜</a>`:''}<button class="x" id="seedX" title="关闭">×</button></div>`:''}
+    ${seed?`<div class="seedbar"><span>${sn('','done')}从《${esc(seed.title)}》导入完成</span>${(()=>{const nx=seed.items.findIndex(x=>!x.done); return seed.items.map((x,k)=>`<button class="btn-o ${x.done?'done':''} ${k===nx?'nx':''}" data-seed="${k}">${sn(k+1,x.done?'done':k===nx?'on':'')}${esc(x.label)}${/[A-Za-z]$/.test(x.label)?' ':''}设定板</button>`).join('');})()}<a class="seed-go ${seed.items.every(x=>x.done)?'':'soft'}" href="${seedBoard(seed)}">${ico('play')}去分镜</a><button class="x" id="seedX" title="关闭">×</button></div>`:''}
     <div class="as-cards">${ASSET_MENUS.map((m,mi)=>`
       <div class="mcard ${mi?'r':''}"><h3>${m.title}</h3>
         ${m.items.map(i=>`<a class="mi" href="#/assets/${i.id}" style="text-decoration:none">${ico(i.icon)}${i.label}
@@ -1109,7 +1122,8 @@ function viewAssetEditor(fnId, idx){
   const needProfile = /\{profile\}/.test(f.tpl);
   const v=document.getElementById('view');
   v.innerHTML=`
-    <div class="ed-head"><a class="pill" href="#/assets">${ico('back')}资产库</a><h2>${f.menu.title} · ${f.label}</h2><span class="d">${esc(f.desc)}</span></div>
+    ${backBar('#/assets')}
+    <div class="ed-head" style="margin-top:44px"><h2>${f.menu.title} · ${f.label}</h2><span class="d">${esc(f.desc)}</span></div>
     <div class="graph" id="graph">
       <svg class="wires" id="wires"></svg>
       <div class="inputs" id="ins">
@@ -1129,7 +1143,6 @@ function viewAssetEditor(fnId, idx){
       <div class="slots" id="slots"></div>
       <textarea id="prompt" spellcheck="false"></textarea>
       ${f.opts?`<div class="opts" id="opts">${f.opts.map(o=>`<span class="ck ${st.opts.includes(o)?'on':''}" data-o="${o}">${o}</span>`).join('')}</div>`:''}
-      <textarea id="extra" rows="1" placeholder="补充描述（可选），会接在提示词后面" style="min-height:0;border-top:1px solid var(--line);padding-top:8px;font-size:13px">${esc(st.extra)}</textarea>
       <div class="tools2">
         <div class="stylepop" id="spop">
           <div class="sh">${ico('search')}<input id="sq" placeholder="搜索风格"></div>
@@ -1141,7 +1154,6 @@ function viewAssetEditor(fnId, idx){
           <select id="res">${['1K','2K','4K'].map(r=>`<option ${r===st.res?'selected':''}>${r}</option>`).join('')}</select></span>
         <span class="sp"></span>
         <button class="tb" id="save">${ico('save')}保存到我的资产</button>
-        <button class="go" id="go" title="复制提示词">${ico('copy')}</button>
       </div>
     </div>`;
 
@@ -1151,11 +1163,13 @@ function viewAssetEditor(fnId, idx){
     let t=f.tpl.replace('{name}', st.name||f.name).replace('{profile}', st.profile||'（未填写）').replace('{opts}', st.opts.join('、')||'（未选择）');
     const s=styles.find(x=>x.n===st.style);
     if(s&&s.t) t+='\n风格：'+s.t;
-    if(st.extra.trim()) t+='\n补充：'+st.extra.trim();
+    if((st.extra||'').trim()) t+='\n补充：'+st.extra.trim();
     t+=`\n画面比例 ${st.ratio}，${st.res} 分辨率。`;
     return t;
   }
+  let ready=false;
   function refresh(){
+    if(ready) backDirty(()=>$('save').click());
     $('prompt').value=build();
     $('sname').textContent = st.style==='无'?'风格':st.style;
     $('outRatio').textContent = `${st.ratio} · ${st.res}`;
@@ -1189,7 +1203,6 @@ function viewAssetEditor(fnId, idx){
   });
   $('nm').oninput=e=>{st.name=e.target.value;refresh()};
   if($('pf')){ $('pf').oninput=e=>{st.profile=e.target.value;refresh()}; addMic($('pf')); }
-  $('extra').oninput=e=>{st.extra=e.target.value;refresh()};
   $('ratio').onchange=e=>{st.ratio=e.target.value;refresh()};
   $('res').onchange=e=>{st.res=e.target.value;refresh()};
   document.querySelectorAll('.ck').forEach(c=>c.onclick=()=>{const o=c.dataset.o;
@@ -1200,18 +1213,18 @@ function viewAssetEditor(fnId, idx){
   document.addEventListener('click',()=>$('spop')&&$('spop').classList.remove('open'));
   document.querySelectorAll('#stabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;drawStyles()});
   $('sq').oninput=drawStyles;
-  $('go').onclick=e=>copyText($('prompt').value,e.currentTarget);
   $('save').onclick=()=>{
     const list=store('assets')||[]; const {imgs,...keep}=st;
     const item={fn:f.id,name:st.name,prompt:$('prompt').value,state:keep,time:Date.now()};
     if(saved) list[idx]=item; else list.unshift(item);
-    store('assets',list); toast(saved?'已更新资产':'已保存到我的资产');
+    store('assets',list); toast(saved?'已更新资产':'已保存到我的资产'); backClean();
     const sd=store('assetSeed');
     if(fromSeed && sd && sd.wid===fromSeed.wid && sd.items[fromSeed.k]){ sd.items[fromSeed.k].done=true; store('assetSeed',sd);
       if(sd.items.every(x=>x.done)){ toast('资产都齐了，下一步：分镜'); setTimeout(()=>{ location.hash=seedBoard(sd); }, 900); } }
   };
   addEventListener('resize',drawWires);
-  refresh();
+  refresh(); ready=true;
+  $('prompt').addEventListener('input',()=>backDirty(()=>$('save').click()));
 }
 
 /* ---------- 剧本：新增作品（1 策划文件 → 5 确认与建立） ---------- */
@@ -1998,7 +2011,7 @@ function viewPartner(){
   ];
   document.getElementById('view').innerHTML=`
   <article class="pt">
-    <button class="pill pt-back" id="ptBack" onclick="history.length>1?history.back():location.hash='#/'">${ico('back')}返回</button>
+    ${backBar(null)}
     <section class="pt-hero">
       ${partnerBanner().replace('<a class="pt-banner" href="#/partner"','<div class="pt-banner big"').replace(/<span class="pt-go">[\s\S]*?<\/span>\s*<\/a>$/,'</div>')}
       <div class="pt-cta"><a class="magic" href="#/" style="text-decoration:none">${ico('sparkle')}现在开始创作</a><a class="btn-o" href="#pt-join" id="ptJoin" style="text-decoration:none">报名与评审</a></div>
@@ -2314,7 +2327,7 @@ function viewVibeScript(id, tab){
             <div class="vep-meta"><span>角色 ${ro}</span><span>场景 ${sc}</span><span>分镜视频 0/${sc}</span></div>
             <div class="vep-act"><button class="vep-play" data-pv="${i}" title="预览">${ico('play')}</button><button class="btn-o" data-sb="${i}">编辑</button></div></div></div>`; }).join('')}</div>`;
       const ar=(W.ratio||'9:16').replace(':','/');
-      const gen=(i,btn)=>{ copyText(eps[i], btn); toast(`已复制第 ${i+1} 集，贴进 6.0 组装器`); closeVm(); location.hash='#/assembler'; };
+      const gen=(i)=>{ closeVm(); location.hash=`#/assembler?ep=${w.id}.${i}`; };
       const vidUrl=i=>(w.videos||[])[i];
       const empty=i=>`<div class="vm-empty"><span>${ico('play')}</span><p>这一集还没有视频</p><button class="bigbtn vm-gen" data-gen="${i}">${ico('sparkle')}去生成</button></div>`;
       const openVid=i=>{
@@ -2337,7 +2350,7 @@ function viewVibeScript(id, tab){
       };
       $('vtBody').querySelectorAll('[data-vid]').forEach(b=>b.onclick=()=>openVid(+b.dataset.vid));
       $('vtBody').querySelectorAll('[data-pv]').forEach(b=>b.onclick=()=>openSeg(+b.dataset.pv));
-      $('vtBody').querySelectorAll('[data-sb]').forEach(b=>b.onclick=e=>{ const i=+b.dataset.sb; copyText(eps[i], e.currentTarget); toast(`已复制第 ${i+1} 集，贴进 6.0 组装器`); location.hash='#/assembler'; });
+      $('vtBody').querySelectorAll('[data-sb]').forEach(b=>b.onclick=()=>gen(+b.dataset.sb));
     }
   }
   document.querySelectorAll('#vtTabs button').forEach(b=>b.onclick=()=>{ tab=b.dataset.t; draw(); });
@@ -2420,7 +2433,7 @@ const FUNCS = [
   {k:'storyboard', icon:'play', label:'分镜', href:'#/storyboard'},
   {k:'prompts', icon:'grid', label:'提示词', href:'#/prompts'},
 ];
-const funcOf = r => r.view==='tool' ? r.tool : (r.view==='start'||r.view==='partner') ? 'script' : 'prompts';
+const funcOf = r => r.view==='tool' ? r.tool : (r.view==='start'||r.view==='partner') ? 'script' : r.view==='assembler' ? 'storyboard' : 'prompts';
 function drawNav(route){
   const cur = route.folder || '';
   const ch = chapterOf(cur);
@@ -2638,7 +2651,7 @@ function viewDoc(title, md){
 
 /* ---------- 6.0 assembler ---------- */
 const OPT_INFO = {'成人内容':'6.0【一】第 7 条：成人镜头的详细描写要求。只用于成人线项目，全年龄线不要打开（和第七章合规红线冲突）。'};
-function viewAssembler(){
+function viewAssembler(ep){
   const styles=Object.keys(DATA.core.styles);
   const saved=store('asm')||{};
   const st={style:saved.style&&(saved.style==='__custom'||styles.includes(saved.style))?saved.style:styles[0],
@@ -2646,7 +2659,11 @@ function viewAssembler(){
   const SEC='一二三四五六七';
   const patches={}; ENTRIES.forEach(e=>(e.patches||[]).forEach(s=>(patches[s]=patches[s]||[]).push(e)));
   const v=document.getElementById('view');
-  v.innerHTML=`<div class="sec-head" style="margin-top:36px"><h2>6.0 视频专用提示词 · 组装器</h2><span class="meta">分镜表 → 每集 4~6 段长视频提示词（生产在用）</span></div>
+  let epTxt='', head=`<h2>6.0 视频专用提示词 · 组装器</h2><span class="meta">分镜表 → 每集 4~6 段长视频提示词（生产在用）</span>`;
+  const ew = ep && (store('works')||[]).find(x=>x.id===ep.wid);
+  if(ew){ const sx=vibeSx(ew), eps=sxScript(sx), i=Math.min(ep.i, eps.length-1);
+    epTxt=eps[i]; head=`<h2>第 ${i+1} 集：${esc(sx.outline[i][0])}</h2><span class="meta">《${esc(ew.title)}》· 分镜图编辑</span>`; }
+  v.innerHTML=`${backBar(ew?`#/script/v/${ew.id}/board`:null)}<div class="sec-head" style="margin-top:56px">${head}</div>
   <div class="asm">
     <div>
       <div class="panel"><h4>统一视觉风格（第三部分）</h4>
@@ -2675,8 +2692,9 @@ function viewAssembler(){
     const style = st.style==='__custom' ? st.custom : DATA.core.styles[st.style];
     let text = DATA.core.parts.join('\n');
     text = text.replace(/^\{\{OPT:([^}]+)\}\}\n?/gm,(m,n)=> st.opts[n] ? DATA.core.options[n]+(m.endsWith('\n')?'\n':'') : '');
-    return text.replace('{{STYLE}}', style);
+    return text.replace('{{STYLE}}', style) + (epTxt ? '\n\n' + epTxt : '');
   }
+  let ready=false;
   function update(){
     document.querySelectorAll('#sty button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.style));
     ta.style.display = st.style==='__custom'?'block':'none';
@@ -2685,6 +2703,7 @@ function viewAssembler(){
     const t=assemble(); out.textContent=t;
     document.getElementById('stat').textContent=`${t.length} 字 · 风格：${st.style==='__custom'?'自定义':st.style} · 可选条款：${Object.keys(st.opts).filter(k=>st.opts[k]).join('、')||'无'}`;
     store('asm',{style:st.style,custom:st.custom});
+    if(ready) backDirty(()=>{ store('asm',{style:st.style,custom:st.custom}); toast('已储存'); });
   }
   document.querySelectorAll('#sty button').forEach(b=>b.onclick=()=>{st.style=b.dataset.v;update()});
   ta.oninput=()=>{st.custom=ta.value;update()};
@@ -2694,7 +2713,7 @@ function viewAssembler(){
     const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([assemble()],{type:'text/plain;charset=utf-8'}));
     a.download='6.0视频专用提示词.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
   };
-  update();
+  update(); ready=true;
 }
 
 /* ---------- router ---------- */
@@ -2703,6 +2722,8 @@ function parse(){
   if(h.startsWith('e/')) {const e=byId[h.slice(2)];return {view:'entry',id:h.slice(2),folder:e&&e.folder}}
   if(h.startsWith('f/')) return {view:'list',folder:h.slice(2)};
   if(h==='assembler'||h==='changelog') return {view:h};
+  if(h.startsWith('assembler?ep=')){ const [wid,i]=h.slice(13).split('.'), w=(store('works')||[]).find(x=>x.id===wid);
+    return w ? {view:'assembler', ep:{wid, i:+i}, vibe:{id:wid, title:w.title, tab:'board'}} : {view:'assembler'}; }
   if(h.startsWith('script/s/')) {const [id,q]=h.slice(9).split('?');return {view:'tool',tool:'script',sub:'result',sid:id,fresh:q==='new=1'}}
   if(h==='script/new') return {view:'tool',tool:'script',sub:'new'};
   if(h.startsWith('script/v/')){ const [wid,vtab]=h.slice(9).split('/'); return {view:'tool',tool:'script',sub:'vibe',wid,vtab}; }
@@ -2720,7 +2741,7 @@ function route(){
   document.querySelector('.tb-logo').classList.toggle('on', r.view==='start');
   if(r.view==='start') viewScriptSimple();
   else if(r.view==='entry') viewEntry(r.id);
-  else if(r.view==='assembler') viewAssembler();
+  else if(r.view==='assembler') viewAssembler(r.ep);
   else if(r.view==='tool' && r.tool==='assets') r.fn ? viewAssetEditor(r.fn, r.idx) : viewAssets();
   else if(r.view==='tool' && r.tool==='script'){
     if(r.sub==='result') viewScriptResult(r.sid, r.fresh);
