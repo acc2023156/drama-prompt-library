@@ -774,6 +774,9 @@ a.pt-banner:hover{transform:translateY(-2px)}
 .seedbar>span .sn{width:22px;height:22px}
 .seedbar .btn-o .sn{width:22px;height:22px}
 .seedbar .btn-o.done{border-color:rgba(139,69,255,.6)}
+.seed-go{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 18px;border-radius:12px;background:var(--brand);color:#fff;font-weight:600;text-decoration:none;box-shadow:0 0 0 3px rgba(139,69,255,.22)}
+.seed-go svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8}
+.seed-go:hover{filter:brightness(1.1)}
 .seedbar .x{margin-left:auto;width:30px;height:30px;border-radius:9px;color:var(--text-2);font-size:18px}
 .seedbar .x:hover{background:rgba(255,255,255,.08);color:#fff}
 .rtabs{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:nowrap;container-type:inline-size}
@@ -988,6 +991,10 @@ const TOOLS = {
   storyboard: {icon:'play',   label:'分镜',   desc:'把剧本拆成分镜表，再组装成每集 4～6 段的视频提示词。', links:[['06-video','视频生成'],['archive/04-storyboard','分镜（归档）']]},
 };
 function viewTool(k){
+  if(k==='storyboard'){
+    const vs=(store('works')||[]).filter(w=>w.kind==='vibe'), last=vs.find(w=>w.id===store('lastVibe'))||vs[0];
+    if(last){ location.replace('#/script/v/'+last.id+'/board'); return; }
+  }
   const t=TOOLS[k];
   document.getElementById('view').innerHTML=`<section class="soon">
     <div class="big">${ico(t.icon)}</div>
@@ -1057,12 +1064,13 @@ function pvHtml(pv){
     `<i style="--g:${G[g]};${span?'grid-row:'+span:''}">${ico(ic)}</i>`).join('')}</div>`;
 }
 
+const seedBoard=sd=>(store('works')||[]).some(w=>w.id===sd.wid&&w.kind==='vibe') ? `#/script/v/${sd.wid}/board` : '#/storyboard';
 function viewAssets(){
   const mine = store('assets')||[];
   const seed = store('assetSeed');
   document.getElementById('view').innerHTML = `
     <h1 class="as-title">选择起点，建立天玑资产</h1>
-    ${seed?`<div class="seedbar"><span>${sn('','done')}从《${esc(seed.title)}》导入完成</span>${(()=>{const nx=seed.items.findIndex(x=>!x.done); return seed.items.map((x,k)=>`<button class="btn-o ${x.done?'done':''} ${k===nx?'nx':''}" data-seed="${k}">${sn(k+1,x.done?'done':k===nx?'on':'')}${esc(x.label)}${/[A-Za-z]$/.test(x.label)?' ':''}设定板</button>`).join('');})()}<button class="x" id="seedX" title="关闭">×</button></div>`:''}
+    ${seed?`<div class="seedbar"><span>${sn('','done')}从《${esc(seed.title)}》导入完成</span>${(()=>{const nx=seed.items.findIndex(x=>!x.done); return seed.items.map((x,k)=>`<button class="btn-o ${x.done?'done':''} ${k===nx?'nx':''}" data-seed="${k}">${sn(k+1,x.done?'done':k===nx?'on':'')}${esc(x.label)}${/[A-Za-z]$/.test(x.label)?' ':''}设定板</button>`).join('');})()}${seed.items.every(x=>x.done)?`<a class="seed-go" href="${seedBoard(seed)}">${ico('play')}去分镜</a>`:''}<button class="x" id="seedX" title="关闭">×</button></div>`:''}
     <div class="as-cards">${ASSET_MENUS.map((m,mi)=>`
       <div class="mcard ${mi?'r':''}"><h3>${m.title}</h3>
         ${m.items.map(i=>`<a class="mi" href="#/assets/${i.id}" style="text-decoration:none">${ico(i.icon)}${i.label}
@@ -1199,7 +1207,8 @@ function viewAssetEditor(fnId, idx){
     if(saved) list[idx]=item; else list.unshift(item);
     store('assets',list); toast(saved?'已更新资产':'已保存到我的资产');
     const sd=store('assetSeed');
-    if(fromSeed && sd && sd.wid===fromSeed.wid && sd.items[fromSeed.k]){ sd.items[fromSeed.k].done=true; store('assetSeed',sd); }
+    if(fromSeed && sd && sd.wid===fromSeed.wid && sd.items[fromSeed.k]){ sd.items[fromSeed.k].done=true; store('assetSeed',sd);
+      if(sd.items.every(x=>x.done)){ toast('资产都齐了，下一步：分镜'); setTimeout(()=>{ location.hash=seedBoard(sd); }, 900); } }
   };
   addEventListener('resize',drawWires);
   refresh();
@@ -1336,7 +1345,6 @@ function showModal(title, text, fname){
 function viewScriptHome(){
   const works=store('works')||[];
   document.getElementById('view').innerHTML=`
-    <div class="wz-head"><div class="crumb"><span>天玑</span>／<span>剧本</span></div></div>
     ${chatHtml()}
     <div class="wz-head" style="margin-top:34px">
       <div class="row" style="justify-content:space-between"><h1>剧本</h1><a class="btn-white" href="#/script/new">${ico('plus')}新增作品</a></div>
@@ -2236,6 +2244,7 @@ function openVm(html){
 function viewVibeScript(id, tab){
   const v=document.getElementById('view'), list=store('works')||[], w=list.find(x=>x.id===id);
   if(!w){ v.innerHTML='<div class="empty">找不到这部作品，可能已在别的浏览器里。</div>'; return; }
+  store('lastVibe', w.id);
   if(!w.vname || !w.seed){ const s0=vibeSx(w); w.vname=s0.name; w.seed=w.seed||Math.floor(Math.random()*1e9)+1; store('works',list); }
   let s=vibeSx(w), eps=sxScript(s);
   const W=s.W, ai=W.ai||'Claude', site=AI_SITES[ai];
@@ -2305,7 +2314,7 @@ function viewVibeScript(id, tab){
             <div class="vep-meta"><span>角色 ${ro}</span><span>场景 ${sc}</span><span>分镜视频 0/${sc}</span></div>
             <div class="vep-act"><button class="vep-play" data-pv="${i}" title="预览">${ico('play')}</button><button class="btn-o" data-sb="${i}">编辑</button></div></div></div>`; }).join('')}</div>`;
       const ar=(W.ratio||'9:16').replace(':','/');
-      const gen=(i,btn)=>{ copyText(eps[i], btn); toast(`已复制第 ${i+1} 集，贴进分镜`); closeVm(); location.hash='#/storyboard'; };
+      const gen=(i,btn)=>{ copyText(eps[i], btn); toast(`已复制第 ${i+1} 集，贴进 6.0 组装器`); closeVm(); location.hash='#/assembler'; };
       const vidUrl=i=>(w.videos||[])[i];
       const empty=i=>`<div class="vm-empty"><span>${ico('play')}</span><p>这一集还没有视频</p><button class="bigbtn vm-gen" data-gen="${i}">${ico('sparkle')}去生成</button></div>`;
       const openVid=i=>{
@@ -2328,7 +2337,7 @@ function viewVibeScript(id, tab){
       };
       $('vtBody').querySelectorAll('[data-vid]').forEach(b=>b.onclick=()=>openVid(+b.dataset.vid));
       $('vtBody').querySelectorAll('[data-pv]').forEach(b=>b.onclick=()=>openSeg(+b.dataset.pv));
-      $('vtBody').querySelectorAll('[data-sb]').forEach(b=>b.onclick=e=>{ const i=+b.dataset.sb; copyText(eps[i], e.currentTarget); toast(`已复制第 ${i+1} 集，贴进分镜`); location.hash='#/storyboard'; });
+      $('vtBody').querySelectorAll('[data-sb]').forEach(b=>b.onclick=e=>{ const i=+b.dataset.sb; copyText(eps[i], e.currentTarget); toast(`已复制第 ${i+1} 集，贴进 6.0 组装器`); location.hash='#/assembler'; });
     }
   }
   document.querySelectorAll('#vtTabs button').forEach(b=>b.onclick=()=>{ tab=b.dataset.t; draw(); });
