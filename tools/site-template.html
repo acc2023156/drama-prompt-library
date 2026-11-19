@@ -786,7 +786,8 @@ a.pt-banner:hover{transform:translateY(-2px)}
 @container (max-width:520px){.rtabs>.btn-o .lbl{display:none}.rtabs>.btn-o{width:44px;padding:0;justify-content:center}}
 .rtabs>.btn-o,.rtabs .act .btn-o{flex:none}
 @media (max-width:760px){.rtabs{flex-wrap:wrap}.rtabs #rtab{width:100%}.rtabs>.btn-o{width:44px;padding:0;justify-content:center}.rtabs>.btn-o .lbl,.rtabs .act .lbl{display:none}.rtabs .act .btn-o{width:44px;padding:0;justify-content:center}}
-.res-back{margin:24px 0 -24px;position:relative;z-index:2}
+.res-back{display:flex;justify-content:flex-end;margin:24px 0 -24px;position:relative;z-index:2;pointer-events:none}
+.res-back .pill{pointer-events:auto}
 .res-back .pill{text-decoration:none}
 .res-back .pill.dirty{background:var(--brand);border-color:var(--brand);color:#fff}
 .rtabs .gseg{margin:0}
@@ -2271,7 +2272,7 @@ function viewVibeScript(id, tab){
     </section>
     <div class="vt">
       <div class="vt-tabs" id="vtTabs">${TABS.map(([k,l])=>`<button data-t="${k}">${l}</button>`).join('')}</div>
-      <div class="vt-act"><button class="btn-o" id="vtRedo">${ico('dice')}<span class="lbl">重写</span></button><button class="btn-o" id="vtAI">${ico('sparkle')}<span class="lbl">交给 ${esc(ai)} 精写</span></button></div>
+      <div class="vt-act"><button class="btn-o" id="vtAI">${ico('sparkle')}<span class="lbl">AI 审稿</span></button></div>
     </div>
     <div id="vtBody"></div>`;
   const $=id=>document.getElementById(id);
@@ -2291,10 +2292,7 @@ function viewVibeScript(id, tab){
       $('vtBody').querySelectorAll('[data-ol]').forEach(b=>b.onclick=()=>{const i=+b.dataset.ol; showModal(`第 ${i+1} 集｜${s.outline[i][0]}`, s.outline[i][1], `第${i+1}集-分集大纲.txt`);});
       $('vtBody').querySelectorAll('[data-sc]').forEach(b=>b.onclick=()=>{ tab='script'; draw(); document.getElementById('ep'+b.dataset.sc)?.scrollIntoView({behavior:'smooth',block:'start'}); });
     } else if(tab==='script'){
-      $('vtBody').innerHTML=`<div class="row vt-tools"><button class="btn-o" id="vtCopy">${ico('copy')}复制全部</button><button class="btn-o" id="vtDl">${ico('dl')}下载 .txt</button></div>
-        <div class="scr">${eps.map((x,i)=>`<div class="ep" id="ep${i}"><div class="h"><b>EP${String(i+1).padStart(2,'0')}</b><span>${esc(s.outline[i][0])}</span></div><pre>${sxHL(epTxt(i))}</pre></div>`).join('')}</div>`;
-      $('vtCopy').onclick=e=>copyText(sxScriptText(s),e.currentTarget);
-      $('vtDl').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([sxScriptText(s)],{type:'text/plain;charset=utf-8'}));a.download=`${w.title}-10集剧情对话.txt`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+      $('vtBody').innerHTML=`<div class="scr">${eps.map((x,i)=>`<div class="ep" id="ep${i}"><div class="h"><b>EP${String(i+1).padStart(2,'0')}</b><span>${esc(s.outline[i][0])}</span></div><pre>${sxHL(epTxt(i))}</pre></div>`).join('')}</div>`;
     } else if(tab==='assets'){
       const core=[W.pitch,W.core].filter(x=>x&&x.trim()).join('；');
       const items=[
@@ -2354,8 +2352,14 @@ function viewVibeScript(id, tab){
     }
   }
   document.querySelectorAll('#vtTabs button').forEach(b=>b.onclick=()=>{ tab=b.dataset.t; draw(); });
-  $('vtRedo').onclick=()=>{ w.seed=Math.floor(Math.random()*1e9)+1; store('works',list); s=vibeSx(w); eps=sxScript(s); draw(); toast('已重写一版'); };
-  $('vtAI').onclick=e=>{ copyText(wzPrompt(W), e.currentTarget); if(site) window.open(site,'_blank','noopener'); toast(site?`已复制，到 ${ai} 贴上就能精写`:'已复制精写提示词'); };
+  $('vtAI').onclick=e=>{
+    const review=[`你是短剧剧本审稿编辑。以下是《${w.title}》10 集剧本，请逐集审稿：`,
+      '1. 红线：未成年、暴力色情、政治敏感、违法引导等合规问题，指出位置并直接给出改法。',
+      '2. 前后文：人名、身份、伏笔、设定是否前后一致；改一处要同步改哪些地方。',
+      '3. 节奏与钩子：每集开头 3 秒是否抓人、结尾是否留钩子，冲突是否成立。',
+      '4. 对白：是否口语、有没有说明腔，人物说话是否有辨识度。',
+      '先给总评（三句以内），再按集列出问题与改法，最后输出修改后的完整剧本。','',sxScriptText(s)].join('\n');
+    copyText(review, e.currentTarget); if(site) window.open(site,'_blank','noopener'); toast(site?`已复制，到 ${ai} 贴上就开始审稿`:'已复制审稿提示词'); };
   draw();
 }
 
