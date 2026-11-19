@@ -2124,8 +2124,10 @@ function viewVibeScript(id, tab){
     <div id="vtBody"></div>`;
   const $=id=>document.getElementById(id);
   const epTxt=i=>eps[i].split('\n').slice(1).join('\n').trim();
+  const TAB_FN={outline:'script', script:'script', assets:'assets', board:'storyboard'};
   function draw(){
     store('vibeTab',tab);
+    drawNav({view:'tool', tool:TAB_FN[tab], sub:'vibe', wid:w.id, vibe:{id:w.id, title:w.title, tab}});
     document.querySelectorAll('#vtTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
     if(tab==='outline'){
       $('vtBody').innerHTML=`<div class="vtable"><div class="vr vh"><span>集</span><span>集名</span><span>状态</span><span>字数</span><span>大纲</span></div>
@@ -2273,12 +2275,14 @@ function drawNav(route){
     h += PICK + NAV.slice(0,3).map(n=>A('#/f/'+n.key,n.label,{cls:'fn',icon:n.icon,n:inFolder(n.key).length})).join('');
   } else if(fn==='assets'){
     const mine = store('assets')||[];
-    h += A('#/assets','资产首页',{cls:'head fn',icon:'assets',on:!route.fn});
+    if(route.vibe) h += T('当前作品') + A('#/script/v/'+route.vibe.id,'《'+route.vibe.title+'》',{cls:'head fn',icon:'user',on:true,d:'角色资产库'});
+    h += A('#/assets','资产首页',{cls:'head fn',icon:'assets',on:!route.fn&&!route.vibe});
     for(const m of ASSET_MENUS) h += T(m.title) + m.items.map(i=>A('#/assets/'+i.id,i.label,{cls:'fn',icon:i.icon,on:route.fn===i.id&&route.idx==null})).join('');
     if(mine.length) h += T('我的资产') + mine.map((x,k)=>A(`#/assets/${x.fn}?i=${k}`,x.name||'未命名',{cls:'fn',icon:FN[x.fn]?.menu.key==='scene'?'mount':'user',on:route.fn===x.fn&&route.idx===k,d:FN[x.fn]?.label||''})).join('');
     h += PICK + A('#/f/06-video/styles','画风块',{cls:'fn',icon:'film'}) + A('#/f/archive/05-design','角色与场景设定（归档）',{cls:'fn',icon:'box'});
   } else if(fn==='storyboard'){
-    h += A('#/storyboard','分镜首页',{cls:'head fn',icon:'play'}) + A('#/assembler','6.0 组装器',{cls:'head fn',icon:'wand',d:'把剧本组装成视频提示词'});
+    if(route.vibe) h += T('当前作品') + A('#/script/v/'+route.vibe.id,'《'+route.vibe.title+'》',{cls:'head fn',icon:'play',on:true,d:'分镜图'});
+    h += A('#/storyboard','分镜首页',{cls:'head fn',icon:'play',on:route.vibe?false:undefined}) + A('#/assembler','6.0 组装器',{cls:'head fn',icon:'wand',d:'把剧本组装成视频提示词'});
     const v = NAV.find(n=>n.key==='06-video');
     h += PICK + v.subs.map(([k,l])=>A('#/f/'+k,l,{cls:'fn',icon:'film',n:inFolder(k).length})).join('');
   } else {
