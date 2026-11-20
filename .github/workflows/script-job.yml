@@ -7,9 +7,6 @@ on:
       job_id:
         description: job id
         required: true
-      body:
-        description: request json
-        required: true
 
 permissions: {}
 
@@ -18,14 +15,13 @@ concurrency:
 
 jobs:
   run:
-    if: github.repository == 'LDContentHub/drama-prompt-library'
+    if: github.repository == 'acc2023156/drama-prompt-library'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - name: Generate
         env:
           JOB_ID: ${{ inputs.job_id }}
-          BODY: ${{ inputs.body }}
           QWEN_BASE: ${{ secrets.QWEN_BASE }}
           QWEN_KEY: ${{ secrets.QWEN_KEY }}
           WORKER_URL: ${{ secrets.WORKER_URL }}
@@ -34,7 +30,7 @@ jobs:
           set -u
           [[ "$JOB_ID" =~ ^[a-f0-9]{16}$ ]] || { echo "bad job id"; exit 1; }
           curl -s -X POST -H "X-Job-Secret: $JOB_SECRET" "$WORKER_URL/jobs/$JOB_ID/running" > /dev/null || true
-          printf '%s' "$BODY" > body.json
+          curl -s --fail -H "X-Job-Secret: $JOB_SECRET" -o body.json "$WORKER_URL/jobs/$JOB_ID/body" || { echo "no body"; curl -s -X POST -H "X-Job-Secret: $JOB_SECRET" -H "X-Job-Status: error" --data "job body missing" "$WORKER_URL/jobs/$JOB_ID/done"; exit 1; }
           code=$(curl -s --max-time 1500 -o out.json -w '%{http_code}' \
             -H "Authorization: Bearer $QWEN_KEY" -H 'Content-Type: application/json' \
             --data-binary @body.json "$QWEN_BASE/v1/chat/completions") || code=000
