@@ -1,0 +1,45 @@
+name: 整剧生成
+run-name: 整剧生成 ${{ inputs.job_id }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      job_id:
+        description: job id
+        required: true
+      body:
+        description: request json
+        required: true
+
+permissions: {}
+
+concurrency:
+  group: script-job-${{ inputs.job_id }}
+
+jobs:
+  run:
+    if: github.repository == 'LDContentHub/drama-prompt-library'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Generate
+        env:
+          JOB_ID: ${{ inputs.job_id }}
+          BODY: ${{ inputs.body }}
+          QWEN_BASE: ${{ secrets.QWEN_BASE }}
+          QWEN_KEY: ${{ secrets.QWEN_KEY }}
+          WORKER_URL: ${{ secrets.WORKER_URL }}
+          JOB_SECRET: ${{ secrets.JOB_SECRET }}
+        run: |
+          set -u
+          [[ "$JOB_ID" =~ ^[a-f0-9]{16}$ ]] || { echo "bad job id"; exit 1; }
+          curl -s -X POST -H "X-Job-Secret: $JOB_SECRET" "$WORKER_URL/jobs/$JOB_ID/running" > /dev/null || true
+          printf '%s' "$BODY" > body.json
+          code=$(curl -s --max-time 1500 -o out.json -w '%{http_code}' \
+            -H "Authorization: Bearer $QWEN_KEY" -H 'Content-Type: application/json' \
+            --data-binary @body.json "$QWEN_BASE/v1/chat/completions") || code=000
+          echo "upstream http $code, $(wc -c < out.json 2>/dev/null || echo 0) bytes"
+          if [ "$code" = "200" ]; then status=done; else status=error; [ -s out.json ] || echo "upstream http $code" > out.json; fi
+          curl -s --fail -X POST -H "X-Job-Secret: $JOB_SECRET" -H "X-Job-Status: $status" \
+            -H 'Content-Type: application/json' --data-binary @out.json "$WORKER_URL/jobs/$JOB_ID/done"
+          [ "$status" = done ]
