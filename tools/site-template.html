@@ -443,6 +443,13 @@ a.pill{text-decoration:none}
 .vtile svg{width:22%;height:22%;stroke:#fff;fill:none;stroke-width:1.5;opacity:.9}
 .vep-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:18px}
 .vep{display:flex;gap:20px;padding:16px;border-radius:22px;background:#1b1b1e;border:1px solid var(--line)}
+.gen-wait{margin:28px auto 0;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:14px;padding:36px 20px;border:1px solid var(--line-2);border-radius:20px;background:#17171a;text-align:center}
+.gen-wait b{font-size:17px}
+.gen-wait em{font:600 15px Inter,var(--font);font-style:normal;color:var(--text-3)}
+.gen-wait .row{gap:10px;justify-content:center;flex-wrap:wrap}
+.gen-wait .bigbtn{width:auto;padding:0 24px}
+.gw-spin{width:38px;height:38px;border-radius:50%;border:3px solid rgba(139,69,255,.25);border-top-color:var(--brand);animation:gwSpin 1s linear infinite}
+@keyframes gwSpin{to{transform:rotate(360deg)}}
 .vep-th{cursor:pointer;color:inherit;padding:0;border:0;transition:transform .15s}
 .vep-th:hover{transform:scale(1.03)}
 .vm{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.75);display:grid;place-items:center;padding:16px;animation:vmIn .15s ease-out}
@@ -2036,7 +2043,7 @@ function sxScript(s){
   });
 }
 const sxScriptText = s => `《${s.title}》10 集完整台词\n主角：${s.name}（${s.role.type}）\n\n`+sxScript(s).join('\n\n---\n\n');
-function sxHL(txt){ return esc(txt).split('\n').map(l=>/^△/.test(l)?`<span class="a">${l}</span>`:/^音乐提示|^&gt;/.test(l)?`<span class="m">${l}</span>`:/^#/.test(l)?`<b class="d">${l.replace(/^#+\s*/,'')}</b>`:/：“/.test(l)?`<span class="d">${l}</span>`:l).join('\n'); }
+function sxHL(txt){ return esc(txt).split('\n').map(l=>/^△|^\[画面\]|^【/.test(l)?`<span class="a">${l}</span>`:/^音乐提示|^&gt;/.test(l)?`<span class="m">${l}</span>`:/^#/.test(l)?`<b class="d">${l.replace(/^#+\s*/,'')}</b>`:/：“|：「/.test(l)?`<span class="d">${l}</span>`:l).join('\n'); }
 
 /* ---------- 天玑 AI短剧伙伴计划 ---------- */
 function partnerBanner(){
@@ -2294,6 +2301,8 @@ function epMat(t){
   const people=new Set(), locs=new Set();
   for(const m of t.matchAll(/^出场人物：(.+)$/gm)) m[1].split(/[、，,]/).map(x=>x.trim()).filter(Boolean).forEach(x=>people.add(x));
   for(const m of t.matchAll(/^场景：[^·]*·\s*([^·\n]+?)\s*·/gm)) locs.add(m[1]);
+  for(const m of t.matchAll(/^#{2,4}\s*场\s*\d+\s*[｜|]\s*([^（(\n]+)/gm)) locs.add(m[1].trim());
+  for(const m of t.matchAll(/^([一-龥]{2,5})(?:（[^）]*）)?：[「“]/gm)) people.add(m[1]);
   return {people:[...people], locs:[...locs]};
 }
 let vmEsc=null;
@@ -2305,20 +2314,102 @@ function openVm(html){
   vmEsc=e=>{ if(e.key==='Escape') closeVm(); }; document.addEventListener('keydown',vmEsc);
   return m;
 }
+/* 真实模型：开写 → Worker 建单 → GitHub Actions 跑整剧 → 网页轮询。没有通行码时照旧用模板草稿 */
+const TJ_API='https://tianji-api.sha-platform.workers.dev';
+(()=>{ try{ const k=new URLSearchParams(location.search).get('k'); if(k){ store('tjCode',k); history.replaceState(null,'',location.pathname+location.hash); } }catch(e){} })();
+const tjCode=()=>store('tjCode');
+async function tjApi(path, body){
+  const r=await fetch(TJ_API+path,{method:body?'POST':'GET', headers:{'X-Tianji-Code':tjCode()||'', ...(body?{'Content-Type':'application/json'}:{})}, body:body?JSON.stringify(body):undefined});
+  const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||('HTTP '+r.status)); return j;
+}
+function genReq(W0){
+  const W=Object.assign({}, WZ_DEF, W0), mins=wzMins(W)||1;
+  const req={logline:(W.pitch||'').trim(), audience:W.aud, setting:W.genre, episodes:Math.min(12,Math.max(2,+wzEps(W)||10)),
+    chars_per_episode:Math.min(1300,Math.max(400,Math.round(mins*400))), explicit_ratio:[0,0]};
+  const core=(W.core||'').trim(); if(core) req.theme=core;
+  if((W.hooks||[]).length) req.tone=W.hooks.join('、');
+  return req;
+}
+function genParse(r){
+  const x=r.x_gateway||{}, fw=x.framework||{};
+  const outline=(fw.episodes||[]).map((e,i)=>({title:e.title||`第${i+1}集`, body:[e.event, e.hook?`钩子：${e.hook}`:''].filter(Boolean).join('\n\n')}));
+  const eps=[]; (x.episodes||[]).forEach((e,i)=>{ eps[(e.ep||i+1)-1]=e.text||''; });
+  const cast=[]; for(const m of String(x.cards||'').matchAll(/\*\*([^*（(]+)[（(]([^)）]+)[)）]\*\*\s*\n([\s\S]*?)(?=\n\s*\*\*|$)/g)) cast.push({name:m[1].trim(), role:m[2].trim(), bio:m[3].trim()});
+  return {title:fw.title||x.title||'', logline:fw.logline||'', outline, eps, cast};
+}
+function updateGen(wid, patch){
+  const list=store('works')||[], w=list.find(x=>x.id===wid); if(!w) return null;
+  w.gen = patch===null ? null : {...(w.gen||{}), ...patch};
+  if(w.gen&&w.gen.status==='done'&&w.gen.data&&w.gen.data.title&&!((w.W||{}).title||'').trim()) w.title=w.gen.data.title;
+  store('works',list); return w;
+}
+function startGen(w){
+  const req=genReq(w.W);
+  updateGen(w.id,{status:'starting', at:Date.now(), req, id:null, err:null});
+  tjApi('/jobs',{messages:[{role:'user',content:JSON.stringify(req)}]})
+    .then(j=>updateGen(w.id,{status:'queued', id:j.id}))
+    .catch(e=>updateGen(w.id,{status:'error', err:e.message}));
+}
+/* 作品的剧本：有模型结果就用模型的，否则用模板草稿 */
+function vibeData(w){
+  const s=vibeSx(w), g=w.gen;
+  if(g&&g.status==='done'&&g.data&&g.data.outline.length){
+    const d=g.data;
+    s.outline=d.outline.map(o=>[o.title,o.body]); s.cast=d.cast; s.real=true;
+    const eps=s.outline.map(([h,b],i)=>`# 第${i+1}集：${h}\n`+(d.eps[i] ? d.eps[i].replace(/^#{1,3}\s*第\s*\d+\s*集[^\n]*\n+/,'') : b));
+    return {s, eps};
+  }
+  return {s, eps:sxScript(s)};
+}
+const mmss=sec=>`${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
+function genWait(v, w, tab){
+  const g=w.gen;
+  drawNav({view:'tool', tool:'script', sub:'vibe', wid:w.id, vibe:{id:w.id, title:w.title, tab}});
+  v.innerHTML=`${backBar('#/script')}
+    <section class="done-hero"><h1>《${esc(w.title)}》</h1></section>
+    <div class="gen-wait"><span class="gw-spin"></span><b>AI 正在写这部剧</b><em id="gwT">00:00</em></div>`;
+  let n=0;
+  const iv=setInterval(async()=>{
+    const el=document.getElementById('gwT'); if(!el){ clearInterval(iv); return; }
+    el.textContent=mmss(Math.floor((Date.now()-g.at)/1000));
+    if(n++%8) return;
+    const cur=((store('works')||[]).find(x=>x.id===w.id)||{}).gen||{};
+    if(!cur.id){ if(cur.status==='error'||Date.now()-g.at>90000){ clearInterval(iv); if(cur.status!=='error') updateGen(w.id,{status:'error',err:'start failed'}); viewVibeScript(w.id,tab); } return; }
+    try{
+      const j=await tjApi('/jobs/'+cur.id);
+      if(j.status==='done'&&j.result){ clearInterval(iv); updateGen(w.id,{status:'done', data:genParse(j.result)}); if(document.getElementById('gwT')) viewVibeScript(w.id,tab); }
+      else if(j.status==='error'){ clearInterval(iv); updateGen(w.id,{status:'error', err:j.error||''}); if(document.getElementById('gwT')) viewVibeScript(w.id,tab); }
+    }catch(e){}
+  },1000);
+}
+function genFail(v, w, tab){
+  drawNav({view:'tool', tool:'script', sub:'vibe', wid:w.id, vibe:{id:w.id, title:w.title, tab}});
+  v.innerHTML=`${backBar('#/script')}
+    <section class="done-hero"><h1>《${esc(w.title)}》</h1></section>
+    <div class="gen-wait"><b>这次没写成</b><div class="row"><button class="bigbtn" id="gRetry">${ico('sparkle')}再写一次</button><button class="btn-o" id="gDraft">先看草稿</button></div></div>`;
+  document.getElementById('gRetry').onclick=()=>{ updateGen(w.id,null); viewVibeScript(w.id,tab); };
+  document.getElementById('gDraft').onclick=()=>{ updateGen(w.id,{status:'off'}); viewVibeScript(w.id,tab); };
+}
 function viewVibeScript(id, tab){
   const v=document.getElementById('view'), list=store('works')||[], w=list.find(x=>x.id===id);
   if(!w){ v.innerHTML='<div class="empty">找不到这部作品，可能已在别的浏览器里。</div>'; return; }
   store('lastVibe', w.id);
   if(!w.vname || !w.seed){ const s0=vibeSx(w); w.vname=s0.name; w.seed=w.seed||Math.floor(Math.random()*1e9)+1; store('works',list); }
-  let s=vibeSx(w), eps=sxScript(s);
-  const W=s.W, ai=W.ai||'Claude', site=AI_SITES[ai];
   tab = tab || store('vibeTab') || 'outline';
+  if(tjCode()){
+    if(w.gen && w.gen.req && w.gen.status!=='off' && JSON.stringify(w.gen.req)!==JSON.stringify(genReq(w.W))) w.gen=null;
+    if(w.gen==null){ startGen(w); return viewVibeScript(id, tab); }
+  }
+  if(w.gen && /starting|queued|running/.test(w.gen.status)) return genWait(v, w, tab);
+  if(w.gen && w.gen.status==='error') return genFail(v, w, tab);
+  let {s, eps}=vibeData(w);
+  const W=s.W, ai=W.ai||'Claude', site=AI_SITES[ai];
   const TABS=[['outline','各集大纲'],['script','剧情对话'],['assets','角色资产库'],['board','分镜图']];
   v.innerHTML=`
     <div class="res-back"><a class="pill" href="#/script">${ico('back')}返回</a></div>
     <section class="done-hero">
       <h1>《${esc(w.title)}》</h1>
-      <div class="stats"><span><b>10</b>集</span><span><b>${wzMins(W)}</b>分钟 / 集</span><span>${esc(W.aud)}</span><span>${esc(W.pair)}</span>${W.style&&W.style!=='无'?`<span>${esc(W.style)}</span>`:''}<span>${esc(W.ratio||'9:16')}</span></div>
+      <div class="stats"><span><b>${s.outline.length}</b>集</span><span><b>${wzMins(W)}</b>分钟 / 集</span><span>${esc(W.aud)}</span><span>${esc(W.pair)}</span>${W.style&&W.style!=='无'?`<span>${esc(W.style)}</span>`:''}<span>${esc(W.ratio||'9:16')}</span></div>
     </section>
     <div class="vt">
       <div class="vt-tabs" id="vtTabs">${TABS.map(([k,l])=>`<button data-t="${k}">${l}</button>`).join('')}</div>
@@ -2345,12 +2436,18 @@ function viewVibeScript(id, tab){
       $('vtBody').innerHTML=`<div class="scr">${eps.map((x,i)=>`<div class="ep" id="ep${i}"><div class="h"><b>EP${String(i+1).padStart(2,'0')}</b><span>${esc(s.outline[i][0])}</span></div><pre>${sxHL(epTxt(i))}</pre></div>`).join('')}</div>`;
     } else if(tab==='assets'){
       const core=[W.pitch,W.core].filter(x=>x&&x.trim()).join('；');
-      const items=[
+      const locCount={}; eps.forEach(e=>epMat(e).locs.forEach(l=>locCount[l]=(locCount[l]||0)+1));
+      const topLocs=Object.keys(locCount).sort((a,b)=>locCount[b]-locCount[a]).slice(0,4);
+      const items = s.cast&&s.cast.length ? [
+        ...s.cast.slice(0,6).map(c=>({fn:'role-board', label:c.role.split(/[·・\s]/)[0], name:c.name, profile:`${c.name}（${c.role}）\n${c.bio}`})),
+        ...topLocs.map(l=>({fn:'scene-board', label:l, name:l, sub:'场景', profile:l})),
+      ] : [
         {fn:'role-board', label:s.leads[0], name:s.name, profile:`${s.leads[0]}${s.name}。${core}`},
         {fn:'role-board', label:s.leads[1], name:s.name2, profile:`${s.leads[1]}${s.name2}，${s.name}的感情线对象。${core}`},
         {fn:'role-board', label:'对手', name:'对手', sub:`与${s.name}作对的人`, profile:`与${s.name}作对的人。${core}`},
         {fn:'scene-board', label:'主要场景', name:'主要场景', sub:W.genre, profile:[W.genre,core].filter(Boolean).join('；')},
       ];
+      if(!items.some(x=>x.fn==='scene-board')) items.push({fn:'scene-board', label:'主要场景', name:'主要场景', sub:W.genre, profile:[W.genre,core].filter(Boolean).join('；')});
       const roles=items.map((x,k)=>({...x,k})).filter(x=>x.fn==='role-board'), scenes=items.map((x,k)=>({...x,k})).filter(x=>x.fn!=='role-board');
       const gOf=x=>x.label.startsWith('女')?'female':x.label.startsWith('男')?'male':s.g;
       const card=x=>`<button class="vp" data-as="${x.k}"><span class="vp-img"><span class="vtile" style="--c:${SX_COLORS[x.k%10]}">${ico(x.fn==='role-board'?(gOf(x)==='female'?'female':'user'):'mount')}</span>
@@ -2423,7 +2520,7 @@ function viewVibeScript(id, tab){
       '2. 前后文：人名、身份、伏笔、设定是否前后一致；改一处要同步改哪些地方。',
       '3. 节奏与钩子：每集开头 3 秒是否抓人、结尾是否留钩子，冲突是否成立。',
       '4. 对白：是否口语、有没有说明腔，人物说话是否有辨识度。',
-      '先给总评（三句以内），再按集列出问题与改法，最后输出修改后的完整剧本。','',sxScriptText(s)].join('\n');
+      '先给总评（三句以内），再按集列出问题与改法，最后输出修改后的完整剧本。','',`《${w.title}》`,'',eps.join('\n\n---\n\n')].join('\n');
     copyText(review, e.currentTarget); if(site) window.open(site,'_blank','noopener'); toast(site?`已复制，到 ${ai} 贴上就开始审稿`:'已复制审稿提示词'); };
   draw();
 }
@@ -2757,7 +2854,7 @@ function viewAssembler(ep){
   const v=document.getElementById('view');
   let epTxt='', head=`<h2>6.0 视频专用提示词 · 组装器</h2><span class="meta">分镜表 → 每集 4~6 段长视频提示词（生产在用）</span>`;
   const ew = ep && (store('works')||[]).find(x=>x.id===ep.wid);
-  if(ew){ const sx=vibeSx(ew), eps=sxScript(sx), i=Math.min(ep.i, eps.length-1);
+  if(ew){ const {s:sx, eps}=vibeData(ew), i=Math.min(ep.i, eps.length-1);
     epTxt=eps[i]; head=`<h2>第 ${i+1} 集：${esc(sx.outline[i][0])}</h2><span class="meta">《${esc(ew.title)}》· 分镜图编辑</span>`; }
   v.innerHTML=`${backBar(ew?`#/script/v/${ew.id}/board`:null)}<div class="sec-head" style="margin-top:56px">${head}</div>
   <div class="asm">
