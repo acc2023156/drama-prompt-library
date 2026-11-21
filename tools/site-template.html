@@ -444,6 +444,13 @@ a.pill{text-decoration:none}
 .vtile svg{width:22%;height:22%;stroke:#fff;fill:none;stroke-width:1.5;opacity:.9}
 .vep-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:18px}
 .vep{display:flex;gap:20px;padding:16px;border-radius:22px;background:#1b1b1e;border:1px solid var(--line)}
+.gen-prog{position:relative;display:inline-flex;align-items:center;gap:10px;margin:2px 0 14px;padding:8px 16px;border-radius:99px;background:rgba(139,69,255,.14);color:#d9c8ff;font-size:14px;overflow:hidden}
+.gen-prog .gw-spin{width:16px;height:16px;border-width:2px}
+.gen-prog i{position:absolute;left:0;bottom:0;height:2px;width:var(--p);background:var(--brand);transition:width .4s}
+.gen-prog.err{background:rgba(255,93,108,.12);color:#ffb3bb}
+.gen-prog .btn-o{height:30px;padding:0 12px}
+.vr .wait{color:var(--text-3)}
+.ep .h .ep-redo{margin-left:auto;height:30px;padding:0 12px;font-size:13px}
 .gen-wait{margin:28px auto 0;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:14px;padding:36px 20px;border:1px solid var(--line-2);border-radius:20px;background:#17171a;text-align:center}
 .gen-wait b{font-size:17px}
 .gen-wait em{font:600 15px Inter,var(--font);font-style:normal;color:var(--text-3)}
@@ -2434,7 +2441,7 @@ function genParse(r){
 function updateGen(wid, patch){
   const list=store('works')||[], w=list.find(x=>x.id===wid); if(!w) return null;
   w.gen = patch===null ? null : {...(w.gen||{}), ...patch};
-  if(w.gen&&w.gen.status==='done'&&w.gen.data&&w.gen.data.title&&!((w.W||{}).title||'').trim()) w.title=w.gen.data.title;
+  if(w.gen&&w.gen.data&&w.gen.data.title&&!((w.W||{}).title||'').trim()) w.title=w.gen.data.title;
   store('works',list); return w;
 }
 function startGen(w){
@@ -2444,12 +2451,83 @@ function startGen(w){
     .then(j=>updateGen(w.id,{status:'queued', id:j.id}))
     .catch(e=>updateGen(w.id,{status:'error', err:e.message}));
 }
+/* 逐集写：先出大纲（快模型），再一集一集写（主写模型）；离开页面会停，回来接着写 */
+const YQ_PLAN='deepseek-v41-flash-uncensored', YQ_WRITE='sealion-nova-pro';
+const YQ_RULES='【底线】所有角色都是 20 岁以上的成年人，不写学生、校园或未成年暗示；不写血亲、继亲、姻亲之间的感情或亲密；亲密戏必须看得出双方清楚自愿，不写醉酒、昏迷、催眠、下药或威胁下的亲密；不对应真实人物，不用知名作品的角色名；不碰时事政治。亲密戏点到为止，不写露骨细节。';
+async function yqChat(model, content, max_tokens){
+  const r=await fetch(TJ_API+'/yq/v1/chat/completions',{method:'POST', headers:{'X-Tianji-Code':tjCode()||'','Content-Type':'application/json'},
+    body:JSON.stringify({model, messages:[{role:'user',content}], max_tokens:max_tokens||3000, temperature:0.8})});
+  const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error((j.error&&(j.error.message||j.error))||('HTTP '+r.status));
+  return String(((j.choices||[])[0]||{}).message?.content||'').replace(/<think>[\s\S]*?<\/think>/g,'').trim();
+}
+function yqPlanPrompt(W, n){
+  const x=[`一句话故事：${(W.pitch||'').trim()}`, `受众：${W.aud}`, `配对：${W.pair}`, `题材：${W.genre}`];
+  if(W.qxRole) x.push(`核心角色类型：${W.qxRole}`); if(W.qxMode) x.push(`剧本模式：${W.qxMode}`);
+  if((W.hooks||[]).length) x.push(`爽点：${W.hooks.join('、')}`); if((W.core||'').trim()) x.push(`作者的点子：${W.core.trim()}`);
+  if((W.title||'').trim()) x.push(`剧名：${W.title.trim()}`);
+  return `你是短剧总编剧。依下面设定，规划一部 ${n} 集的竖屏短剧，每集约 ${wzMins(W)||1} 分钟。\n${x.join('\n')}\n\n${YQ_RULES}\n
+只输出一个 JSON，不要任何说明：
+{"title":"剧名（没给就自己取，8 字内）","logline":"一句话梗概","cast":[{"name":"人名（不要用设定里的形容词当名字）","role":"女主/男主/反派/配角","age":25,"bio":"一句话人设"}],"episodes":[{"title":"集名（6 字内）","event":"本集发生什么，两三句","hook":"集尾钩子，一句"}]}
+cast 3 到 6 人；episodes 正好 ${n} 个，前后连贯，每集都有冲突与钩子，最后一集收尾。`;
+}
+function yqEpPrompt(d, W, i){
+  const ep=d.outline[i], chars=Math.round((wzMins(W)||1)*400), prev=(d.eps[i-1]||'').slice(-600);
+  return `你是短剧编剧。写《${d.title}》第 ${i+1} 集（共 ${d.outline.length} 集），约 ${chars} 字。
+故事：${d.logline}
+人物：${d.cast.map(c=>`${c.name}（${c.role}）${c.bio}`).join('；')}
+各集大纲：
+${d.outline.map((o,k)=>`第${k+1}集 ${o.title}：${o.event}`).join('\n')}
+${prev?`上一集结尾：\n${prev}\n`:''}
+本集要写：${ep.event}
+集尾钩子：${ep.hook}
+
+格式（只输出剧本，不要标题和说明）：
+场1｜地点（内/外·日/夜）
+[画面] 拍得出来的动作
+人物名：「台词」
+
+要求：开头 3 秒有钩子，场次 2 到 4 场，台词口语、短而有力，人名与设定一致，不写旁白说明，不用字幕交代剧情。
+${YQ_RULES}`;
+}
+const parseJSON=t=>{ const a=t.indexOf('{'), b=t.lastIndexOf('}'); return JSON.parse(t.slice(a,b+1)); };
+const yqRun={};
+function yqRefresh(wid){
+  const m=location.hash.match(/^#\/script\/v\/([^/]+)\/?(\w+)?/); if(!m||m[1]!==wid) return;
+  const y=scrollY; viewVibeScript(wid, m[2]); scrollTo(0,y);
+}
+async function yqDrive(wid){
+  if(yqRun[wid]) return; yqRun[wid]=1;
+  const cur=()=>(store('works')||[]).find(x=>x.id===wid);
+  try{
+    let w=cur(); if(!w||!w.gen) return;
+    if(!w.gen.data){
+      const W=Object.assign({},WZ_DEF,w.W), n=Math.max(2,Math.min(80,+wzEps(W)||10));
+      const pl=parseJSON(await yqChat(YQ_PLAN, yqPlanPrompt(W,n), 8000));
+      const outline=(pl.episodes||[]).slice(0,n).map((e,i)=>({title:e.title||`第${i+1}集`, event:e.event||'', hook:e.hook||'', body:[e.event, e.hook?`钩子：${e.hook}`:''].filter(Boolean).join('\n\n')}));
+      if(!outline.length) throw new Error('outline empty');
+      const data={title:(pl.title||'').trim(), logline:pl.logline||'', outline, eps:[],
+        cast:(pl.cast||[]).filter(c=>c&&c.name).map(c=>({name:String(c.name).trim(), role:String(c.role||'配角'), bio:`${c.age?c.age+' 岁，':''}${c.bio||''}`}))};
+      updateGen(wid,{status:'writing', data}); yqRefresh(wid);
+    }
+    for(;;){
+      w=cur(); if(!w||!w.gen||w.gen.status!=='writing'||!w.gen.data) break;
+      const d=w.gen.data, i=d.outline.findIndex((_,k)=>!d.eps[k]);
+      if(i<0){ updateGen(wid,{status:'done'}); yqRefresh(wid); break; }
+      const txt=await yqChat(YQ_WRITE, yqEpPrompt(d, Object.assign({},WZ_DEF,w.W), i), 3000);
+      if(!txt) throw new Error('empty episode');
+      const w2=cur(); if(!w2||!w2.gen||!w2.gen.data) break;
+      w2.gen.data.eps[i]=txt; updateGen(wid,{data:w2.gen.data}); yqRefresh(wid);
+    }
+  }catch(e){ updateGen(wid,{status:'error', err:String(e.message||e)}); yqRefresh(wid); }
+  finally{ delete yqRun[wid]; }
+}
+function startYq(w){ updateGen(w.id,{engine:'yq', status:'outline', at:Date.now(), req:genReq(w.W), data:null, err:null}); }
 /* 作品的剧本：有模型结果就用模型的，否则用模板草稿 */
 function vibeData(w){
   const s=vibeSx(w), g=w.gen;
-  if(g&&g.status==='done'&&g.data&&g.data.outline.length){
+  if(g&&(g.status==='done'||g.status==='writing'||(g.status==='error'&&g.engine==='yq'))&&g.data&&g.data.outline.length){
     const d=g.data;
-    s.outline=d.outline.map(o=>[o.title,o.body]); s.cast=d.cast; s.real=true;
+    s.outline=d.outline.map(o=>[o.title,o.body]); s.cast=d.cast; s.real=true; s.written=d.outline.map((_,i)=>!!d.eps[i]);
     const eps=s.outline.map(([h,b],i)=>`# 第${i+1}集：${h}\n`+(d.eps[i] ? d.eps[i].replace(/^#{1,3}\s*第\s*\d+\s*集[^\n]*\n+/,'') : b));
     return {s, eps};
   }
@@ -2461,7 +2539,8 @@ function genWait(v, w, tab){
   drawNav({view:'tool', tool:'script', sub:'vibe', wid:w.id, vibe:{id:w.id, title:w.title, tab}});
   v.innerHTML=`${backBar('#/script')}
     <section class="done-hero"><h1>《${esc(w.title)}》</h1></section>
-    <div class="gen-wait"><span class="gw-spin"></span><b>AI 正在写这部剧</b><em id="gwT">00:00</em></div>`;
+    <div class="gen-wait"><span class="gw-spin"></span><b>${g.engine==='yq'?'AI 正在排大纲':'AI 正在写这部剧'}</b><em id="gwT">00:00</em></div>`;
+  if(g.engine==='yq'){ yqDrive(w.id); const iv=setInterval(()=>{ const el=document.getElementById('gwT'); if(!el){ clearInterval(iv); return; } el.textContent=mmss(Math.floor((Date.now()-g.at)/1000)); },1000); return; }
   let n=0;
   const iv=setInterval(async()=>{
     const el=document.getElementById('gwT'); if(!el){ clearInterval(iv); return; }
@@ -2481,7 +2560,7 @@ function genFail(v, w, tab){
   v.innerHTML=`${backBar('#/script')}
     <section class="done-hero"><h1>《${esc(w.title)}》</h1></section>
     <div class="gen-wait"><b>这次没写成</b><div class="row"><button class="bigbtn" id="gRetry">${ico('sparkle')}再写一次</button><button class="btn-o" id="gDraft">先看草稿</button></div></div>`;
-  document.getElementById('gRetry').onclick=()=>{ updateGen(w.id,null); viewVibeScript(w.id,tab); };
+  document.getElementById('gRetry').onclick=()=>{ updateGen(w.id, w.gen.engine==='yq'&&w.gen.data?{status:'writing',err:null}:null); viewVibeScript(w.id,tab); };
   document.getElementById('gDraft').onclick=()=>{ updateGen(w.id,{status:'off'}); viewVibeScript(w.id,tab); };
 }
 function viewVibeScript(id, tab){
@@ -2492,10 +2571,11 @@ function viewVibeScript(id, tab){
   tab = tab || store('vibeTab') || 'outline';
   if(tjCode()){
     if(w.gen && w.gen.req && w.gen.status!=='off' && JSON.stringify(w.gen.req)!==JSON.stringify(genReq(w.W))) w.gen=null;
-    if(w.gen==null){ startGen(w); return viewVibeScript(id, tab); }
+    if(w.gen==null){ startYq(w); return viewVibeScript(id, tab); }
   }
-  if(w.gen && /starting|queued|running/.test(w.gen.status)) return genWait(v, w, tab);
-  if(w.gen && w.gen.status==='error') return genFail(v, w, tab);
+  if(w.gen && /starting|queued|running|outline/.test(w.gen.status)) return genWait(v, w, tab);
+  if(w.gen && w.gen.status==='error' && !(w.gen.engine==='yq'&&w.gen.data)) return genFail(v, w, tab);
+  if(w.gen && w.gen.status==='writing') yqDrive(w.id);
   let {s, eps}=vibeData(w);
   const W=s.W, ai=W.ai||'Claude', site=AI_SITES[ai];
   const TABS=[['outline','各集大纲'],['script','剧情对话'],['assets','角色资产库'],['board','分镜图']];
@@ -2503,6 +2583,7 @@ function viewVibeScript(id, tab){
     <div class="res-back"><a class="pill" href="#/script">${ico('back')}返回</a></div>
     <section class="done-hero">
       <h1>《${esc(w.title)}》</h1>
+      ${w.gen&&w.gen.engine==='yq'&&w.gen.data&&w.gen.status!=='done'?(()=>{const n=s.outline.length,k=(s.written||[]).filter(Boolean).length,nx=Math.max(0,(s.written||[]).indexOf(false))+1;return w.gen.status==='error'?`<div class="gen-prog err">第 ${nx} 集没写成<button class="btn-o" id="gResume">接着写</button></div>`:`<div class="gen-prog"><span class="gw-spin"></span>正在写第 ${nx} / ${n} 集<i style="--p:${Math.round(k/n*100)}%"></i></div>`})():''}
       <div class="stats"><span><b>${s.outline.length}</b>集</span><span><b>${wzMins(W)}</b>分钟 / 集</span><span>${esc(W.aud)}</span><span>${esc(W.pair)}</span>${W.style&&W.style!=='无'?`<span>${esc(W.style)}</span>`:''}<span>${esc(W.ratio||'9:16')}</span></div>
     </section>
     <div class="vt">
@@ -2512,6 +2593,7 @@ function viewVibeScript(id, tab){
     <div id="vtBody"></div>`;
   const $=id=>document.getElementById(id);
   const epTxt=i=>eps[i].split('\n').slice(1).join('\n').trim();
+  if($('gResume')) $('gResume').onclick=()=>{ updateGen(w.id,{status:'writing',err:null}); viewVibeScript(w.id,tab); };
   let akind='role';
   const TAB_FN={outline:'script', script:'script', assets:'assets', board:'storyboard'};
   function draw(){
@@ -2522,12 +2604,13 @@ function viewVibeScript(id, tab){
     $('vtAI').style.display = tab==='assets'||tab==='board' ? 'none' : '';
     if(tab==='outline'){
       $('vtBody').innerHTML=`<div class="vtable"><div class="vr vh"><span>集</span><span>集名</span><span>状态</span><span>字数</span><span>大纲</span></div>
-        ${s.outline.map(([h,b],i)=>`<div class="vr"><span>第 ${i+1} 集</span><span class="vn">${esc(h)}</span><span class="ok">已完成</span><span>${nfmt(epTxt(i).length)}</span>
+        ${s.outline.map(([h,b],i)=>`<div class="vr"><span>第 ${i+1} 集</span><span class="vn">${esc(h)}</span>${s.real&&!s.written[i]?'<span class="wait">待写</span>':'<span class="ok">已完成</span>'}<span>${nfmt(epTxt(i).length)}</span>
           <span class="vb"><button class="btn-o" data-ol="${i}">分集大纲</button><button class="btn-o" data-sc="${i}">剧情对话</button></span></div>`).join('')}</div>`;
       $('vtBody').querySelectorAll('[data-ol]').forEach(b=>b.onclick=()=>{const i=+b.dataset.ol; showModal(`第 ${i+1} 集｜${s.outline[i][0]}`, s.outline[i][1], `第${i+1}集-分集大纲.txt`);});
       $('vtBody').querySelectorAll('[data-sc]').forEach(b=>b.onclick=()=>{ tab='script'; draw(); document.getElementById('ep'+b.dataset.sc)?.scrollIntoView({behavior:'smooth',block:'start'}); });
     } else if(tab==='script'){
-      $('vtBody').innerHTML=`<div class="scr">${eps.map((x,i)=>`<div class="ep" id="ep${i}"><div class="h"><b>EP${String(i+1).padStart(2,'0')}</b><span>${esc(s.outline[i][0])}</span></div><pre>${sxHL(epTxt(i))}</pre></div>`).join('')}</div>`;
+      $('vtBody').innerHTML=`<div class="scr">${eps.map((x,i)=>`<div class="ep" id="ep${i}"><div class="h"><b>EP${String(i+1).padStart(2,'0')}</b><span>${esc(s.outline[i][0])}</span>${s.real&&s.written[i]&&w.gen.status!=='writing'?`<button class="btn-o ep-redo" data-redo="${i}">${ico('dice')}重写</button>`:''}</div><pre>${sxHL(epTxt(i))}</pre></div>`).join('')}</div>`;
+      $('vtBody').querySelectorAll('[data-redo]').forEach(b=>b.onclick=()=>{ const k=+b.dataset.redo, d=w.gen.data; d.eps[k]=null; updateGen(w.id,{data:d, status:'writing', err:null}); viewVibeScript(w.id,'script'); });
     } else if(tab==='assets'){
       const core=[W.pitch,W.core].filter(x=>x&&x.trim()).join('；');
       const locCount={}; eps.forEach(e=>epMat(e).locs.forEach(l=>locCount[l]=(locCount[l]||0)+1));
