@@ -823,7 +823,7 @@ a.pt-banner:hover{transform:translateY(-2px)}
 @container (max-width:520px){.rtabs>.btn-o .lbl{display:none}.rtabs>.btn-o{width:44px;padding:0;justify-content:center}}
 .rtabs>.btn-o,.rtabs .act .btn-o{flex:none}
 @media (max-width:760px){.rtabs{flex-wrap:wrap}.rtabs #rtab{width:100%}.rtabs>.btn-o{width:44px;padding:0;justify-content:center}.rtabs>.btn-o .lbl,.rtabs .act .lbl{display:none}.rtabs .act .btn-o{width:44px;padding:0;justify-content:center}}
-.res-back{display:flex;justify-content:flex-end;margin:24px 0 -24px;position:relative;z-index:2;pointer-events:none}
+.res-back{display:flex;justify-content:flex-end;margin:24px 0 -24px;position:sticky;top:68px;z-index:20;pointer-events:none}
 .res-back .pill{pointer-events:auto}
 .res-back .pill{text-decoration:none}
 .res-back .pill.dirty{background:var(--brand);border-color:var(--brand);color:#fff}
@@ -2930,7 +2930,7 @@ function viewAssembler(ep){
   function update(){
     document.querySelectorAll('#sty button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.style));
     ta.style.display = st.style==='__custom'?'block':'none';
-    document.querySelectorAll('.sw').forEach(b=>b.classList.toggle('on',!!st.opts[b.dataset.o]));
+    document.querySelectorAll('.sw[data-o]').forEach(b=>b.classList.toggle('on',!!st.opts[b.dataset.o]));
     document.getElementById('optWarn').style.display = st.opts['成人内容']?'block':'none';
     const t=assemble(); out.textContent=t;
     document.getElementById('stat').textContent=`${t.length} 字 · 风格：${st.style==='__custom'?'自定义':st.style} · 可选条款：${Object.keys(st.opts).filter(k=>st.opts[k]).join('、')||'无'}`;
@@ -2939,7 +2939,7 @@ function viewAssembler(ep){
   }
   document.querySelectorAll('#sty button').forEach(b=>b.onclick=()=>{st.style=b.dataset.v;update()});
   ta.oninput=()=>{st.custom=ta.value;update()};
-  document.querySelectorAll('.sw').forEach(b=>b.onclick=()=>{st.opts[b.dataset.o]=!st.opts[b.dataset.o];update()});
+  document.querySelectorAll('.sw[data-o]').forEach(b=>b.onclick=()=>{st.opts[b.dataset.o]=!st.opts[b.dataset.o];update()});
   document.getElementById('cpAll').onclick=e=>copyText(assemble(),e.currentTarget);
   document.getElementById('dl').onclick=()=>{
     const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([assemble()],{type:'text/plain;charset=utf-8'}));
