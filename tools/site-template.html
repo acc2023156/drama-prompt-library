@@ -2178,21 +2178,22 @@ function viewScriptSimple(){
     </div>`;
   const $=id=>document.getElementById(id);
   const hotBase=[['AI 短剧','短剧',94,31,'+12'],['重生复仇','重生',89,22,'+8'],['真假千金','千金',83,16,'+5'],['先婚后爱','先婚',77,12,'+3'],['末日求生','末日',72,9,'+11'],['悬疑反转','反转',66,6,'+4'],['古装权谋','古装',61,4,'-1']];
-  const rolePick=[['female',0],['male',0],['female',1],['male',1],['female',2],['male',2],['female',3]];
+  // 开阳演员库精选：仅带入公开展示所需的姓名与分类；角色能力仍映射到天玑本地角色原型。
+  const rolePick=[['小倩','female',0],['苏晚','female',1],['沈知微','female',2],['江眠琴','female',3],['邓依依','female',4],['乔乔','female',5],['乔安','female',6]];
   const starColors=['#8b45ff','#3282ff','#00a88b','#f09a3e','#e44f82','#7183a4','#b76cff'];
   let orbitRange='24h', dipperBoard='hot';
   const hotData=()=>hotBase.map((d,i)=>[d[0],d[1],Math.max(45,d[2]+(orbitRange==='1h'?[3,2,-1,2,5,-2,1][i]:orbitRange==='7d'?[-5,1,3,4,-2,5,2][i]:0)),d[3],d[4]]);
-  const roleData=()=>rolePick.map(([g,i],k)=>{const r=DATA.roles[g][i];return [r.type,g,i,92-k*6,Math.max(5,24-k*3),k<3?`+${8-k*2}`:`+${k-2}`]});
+  const roleData=()=>rolePick.map(([name,g,i],k)=>[name,g,i,92-k*6,Math.max(5,24-k*3),k<3?`+${8-k*2}`:`+${k-2}`,'开阳精选 · 真人现代']);
   function openHot(d){state.q=d[1];location.hash='#/prompts';}
   function openRole(d,write){const pick={g:d[1],idx:d[2],name:'',title:'',q:''};store('sxPick',pick);store('homeMode',write?'create':'lib');store('libNav',{lv:'role',g:d[1],i:d[2]});viewScriptSimple();requestAnimationFrame(()=>document.getElementById(write?'roles':'mLib')?.scrollIntoView({behavior:'smooth',block:'start'}));}
   function drawOrbit(){
     const data=dipperBoard==='hot'?hotData():roleData(),stage=$('orbitStage'),ranks=$('orbitRanks');
     stage.querySelectorAll('.planet-path').forEach(x=>x.remove());
-    $('orbitTitle').childNodes[0].nodeValue=dipperBoard==='hot'?'剧本热点七星 ':'角色库七星 ';
-    $('orbitSub').textContent=dipperBoard==='hot'?'七颗星对应七个剧本主题，星体大小代表热度指数':'七颗星对应七类热门角色，点击即可进入角色库';
+    $('orbitTitle').childNodes[0].nodeValue=dipperBoard==='hot'?'剧本热点七星 ':'开阳角色七星 ';
+    $('orbitSub').textContent=dipperBoard==='hot'?'七颗星对应七个剧本主题，星体大小代表热度指数':'开阳精选角色映射到天玑角色原型，点击星体或排行即可查看';
     const top=data[0],topHeat=dipperBoard==='hot'?top[2]:top[3];$('orbitCore').innerHTML=`<span><b>${top[0]}</b><strong>${topHeat}</strong><small>热度第一</small></span>`;$('orbitCore').onclick=()=>dipperBoard==='hot'?openHot(top):openRole(top,false);
     data.slice(1).forEach((d,j)=>{const i=j+1,heat=dipperBoard==='hot'?d[2]:d[3],path=document.createElement('span'),ring=j<1?1:j<3?2:3;path.className=`planet-path ring${ring}`;path.style.cssText=`--angle:${[25,145,255,70,190,310][j]}deg;--dur:${[24,32,28,38,34,42][j]}s`;path.innerHTML=`<button class="planet" style="--size:${Math.round(48+heat*.32)}px;--color:${starColors[i]}" aria-label="第 ${i+1} 名 ${d[0]}，热度 ${heat}"><b>${d[0]}</b><span>${heat}</span></button>`;path.querySelector('button').onclick=()=>dipperBoard==='hot'?openHot(d):openRole(d,false);stage.append(path);});
-    ranks.innerHTML=`<h3>TOP 7 ${dipperBoard==='hot'?'热点主题':'角色类型'}</h3>${data.map((d,i)=>{const heat=dipperBoard==='hot'?d[2]:d[3],share=dipperBoard==='hot'?d[3]:d[4],trend=dipperBoard==='hot'?d[4]:d[5];return `<div class="rank-row" data-star="${i}" style="--c:${starColors[i]}"><i>${String(i+1).padStart(2,'0')}</i><span><b>${d[0]}</b><small>声量 ${share}% · 趋势 ${trend}</small></span><strong>${heat}</strong>${dipperBoard==='role'?`<span class="rank-actions"><button data-view="${i}">角色库</button><button data-write="${i}">开剧本</button></span>`:''}</div>`}).join('')}`;
+    ranks.innerHTML=`<h3>TOP 7 ${dipperBoard==='hot'?'热点主题':'角色排行'}</h3>${data.map((d,i)=>{const heat=dipperBoard==='hot'?d[2]:d[3],share=dipperBoard==='hot'?d[3]:d[4],trend=dipperBoard==='hot'?d[4]:d[5],meta=dipperBoard==='hot'?`声量 ${share}% · 趋势 ${trend}`:`${d[6]} · 热度 ${heat}`;return `<div class="rank-row" data-star="${i}" style="--c:${starColors[i]}"><i>${String(i+1).padStart(2,'0')}</i><span><b>${d[0]}</b><small>${meta}</small></span><strong>${heat}</strong>${dipperBoard==='role'?`<span class="rank-actions"><button data-view="${i}">角色库</button><button data-write="${i}">开剧本</button></span>`:''}</div>`}).join('')}`;
     ranks.querySelectorAll('[data-star]').forEach(row=>row.onclick=e=>{if(e.target.closest('.rank-actions'))return;const d=data[+row.dataset.star];dipperBoard==='hot'?openHot(d):openRole(d,false)});
     ranks.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>openRole(data[+b.dataset.view],false));ranks.querySelectorAll('[data-write]').forEach(b=>b.onclick=()=>openRole(data[+b.dataset.write],true));
     stage.onmouseenter=()=>stage.querySelectorAll('.planet-path').forEach(x=>x.classList.add('paused'));stage.onmouseleave=()=>stage.querySelectorAll('.planet-path').forEach(x=>x.classList.remove('paused'));
