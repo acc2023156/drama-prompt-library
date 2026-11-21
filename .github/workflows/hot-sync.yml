@@ -1,0 +1,26 @@
+name: 热点同步
+
+on:
+  schedule:
+    - cron: '7,37 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  sync:
+    if: github.repository == 'acc2023156/drama-prompt-library'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Sync
+        env:
+          HOT_SRC: ${{ secrets.HOT_SRC }}
+          WORKER_URL: ${{ secrets.WORKER_URL }}
+          JOB_SECRET: ${{ secrets.JOB_SECRET }}
+        run: |
+          set -u
+          curl -s --fail --max-time 60 -o hot.json "$HOT_SRC?t=$(date +%s)"
+          curl -s --fail -X POST -H "X-Job-Secret: $JOB_SECRET" -H 'Content-Type: application/json' \
+            --data-binary @hot.json "$WORKER_URL/hot/push" > /dev/null
+          echo synced
