@@ -385,6 +385,7 @@ a.pill{text-decoration:none}
 .wc-title input::placeholder{color:var(--text-3)}
 .wc-story{display:block;width:100%;margin-top:12px;border:1px solid var(--line-2);border-radius:14px;background:#0f0f11;color:#fff;font:16px/1.7 var(--font);padding:12px 14px;resize:vertical;outline:0}
 .wc-story:focus{border-color:rgba(139,69,255,.6)}
+.cpop .qx{display:grid;place-items:center;width:18px;height:18px;border-radius:50%;background:rgba(139,69,255,.25);color:#d9c8ff;font:600 11px Inter,var(--font);font-style:normal}
 .wc-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .psel span{font:600 14px var(--font);white-space:nowrap}
 .psel>svg:last-child{width:12px;height:12px;stroke:var(--text-3);stroke-width:2}
@@ -1595,9 +1596,19 @@ function bindChat(){
 
 /* 氛围写作起手式：作品卡（一句话 → 先猜好的设定 → 一键开写），直接取代对话框的输入区 */
 const rbIcon=(r,box=18)=>{const [a,b]=(r||'9:16').split(':').map(Number),k=box/Math.max(a,b);return `<i class="rb" style="width:${Math.round(a*k)}px;height:${Math.round(b*k)}px"></i>`;};
-function wcardOpts(){
-  const st=styleList();
+/* 七星：投产剧本里最常用的 7 种角色、7 种剧本模式，男频 / 女频各一组 */
+const QIXING={
+  male:{role:['霸总／上司','白领／秘书','逆袭者','人妻／少妇','千金／富二代','主仆／雇佣','妖／仙'],
+        mode:['支配／臣服','逆袭打脸','隐藏身份／掉马','性觉醒','后宫','换伴／多角','复仇']},
+  female:{role:['妖／仙','逆袭者','熟女／御姐','师徒／教练','主仆／雇佣','魅魔／恶魔／天使','霸总／上司'],
+          mode:['逆袭打脸','支配／臣服','隐藏身份／掉马','虐恋','甜宠','逆后宫','复仇']},
+};
+const qxSide=W=>W.aud==='女性向'?'female':'male';
+function wcardOpts(W){
+  const st=styleList(), Q=QIXING[qxSide(W||WZ_DEF)];
   return {
+    qxRole:{items:Q.role.map((v,i)=>({v,l:v,ic:`<i class="qx">${i+1}</i>`})), lead:()=>ico('user'), label:v=>v||'角色'},
+    qxMode:{items:Q.mode.map((v,i)=>({v,l:v,ic:`<i class="qx">${i+1}</i>`})), lead:()=>ico('sparkle'), label:v=>v||'模式'},
     style:{items:st.map(x=>({v:x.n,l:x.n,ic:`<i style="background:${x.g}"></i>`})), lead:v=>ico('palette'), label:v=>v&&v!=='无'?v:'风格'},
     ratio:{items:RATIOS.map(r=>({v:r,l:r,ic:rbIcon(r)})), lead:v=>rbIcon(v,16), label:v=>v||'9:16'},
     genre:{items:WZ_OPT.genre.map(v=>({v,l:v}))},
@@ -1643,7 +1654,7 @@ function wzRollTitle(W, prev){
   return pool[Math.floor(Math.random()*pool.length)];
 }
 function wcardHtml(W){
-  const O=wcardOpts();
+  const O=wcardOpts(W);
   const dd=k=>{const o=O[k], cur=o.items.find(x=>String(x.v)===String(W[k]));
     const lab=o.label?o.label(W[k]):(cur?cur.l:W[k]);
     return `<div class="cpop-w"><button class="psel" data-dd="${k}">${o.lead?o.lead(W[k]):''}<span>${esc(String(lab))}</span>${ico('chev')}</button>
@@ -1652,7 +1663,7 @@ function wcardHtml(W){
     <button class="wc-x" data-x title="回到输入">${ico('x')}</button>
     <div class="wc-title">《<input data-c="title" placeholder="AI 帮你取剧名" value="${esc(W.title)}">》<button class="wc-dice" data-dice title="帮我取一个">${ico('dice')}</button></div>
     <textarea class="wc-story" data-c="pitch" rows="2" placeholder="说一句你的故事">${esc(W.pitch)}</textarea>
-    <div class="wc-pills">${['style','ratio','aud','pair','eps','mins'].map(dd).join('')}</div>
+    <div class="wc-pills">${['style','ratio','aud','qxRole','qxMode','pair','eps','mins'].map(dd).join('')}</div>
     <div class="chips wc-hooks">${WZ_OPT.hooks.map(h=>`<span class="ck ${W.hooks.includes(h)?'on':''}" data-h="${h}">${h}</span>`).join('')}</div>
     <details class="wc-idea" ${W.core.trim()?'open':''}>
       <summary class="wc-idea-h">${ico('sparkle')}你的独家点子，让这部与众不同${ico('chev')}</summary>
@@ -1664,7 +1675,7 @@ function wcardHtml(W){
   </div>`;
 }
 function bindWcard(root, W, save, close){
-  const q=sel=>root.querySelector(sel), O=wcardOpts();
+  const q=sel=>root.querySelector(sel), O=wcardOpts(W);
   W.adult=true; W.dup=null;
   const refresh=()=>{ q('.wc-go').disabled = !W.pitch.trim(); const {dup,...keep}=W; save(keep); };
   const core=q('[data-c=core]');
@@ -1696,6 +1707,8 @@ function bindWcard(root, W, save, close){
     m.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===it)); m.classList.remove('open');
     const b=m.previousElementSibling, cur=o.items.find(x=>String(x.v)===String(v));
     b.innerHTML=`${o.lead?o.lead(v):''}<span>${esc(String(o.label?o.label(v):cur.l))}</span>${ico('chev')}`;
+    if(k==='aud'){ const Q=QIXING[qxSide(W)]; if(!Q.role.includes(W.qxRole)) W.qxRole=''; if(!Q.mode.includes(W.qxMode)) W.qxMode='';
+      refresh(); root.innerHTML=wcardHtml(W); bindWcard(root, W, save, close); return; }
     refresh();
   });
   root.querySelectorAll('.ck[data-h]').forEach(c=>c.onclick=()=>{
@@ -2330,7 +2343,7 @@ function vibeSx(w){
   const m=pitch.match(/^([一-龥]{2,3}?)(?:变成|穿成|穿越|重生|成了|是|被|靠|在|的)/);
   const name = w.vname || (m && m[1]) || pick(SX_NAMES[g]);
   const t={type:`${W.genre} · ${leads[0]}`, surface:pitch.split(/[，,。]/)[0]||W.genre, hidden:(W.core||'').trim().split('\n')[0]||'一张没人知道的底牌',
-    gold:W.hooks[0]||'身分反转', hook:pitch, rel:`${name}-${(W.rival||'').trim()||'对手'}`, genres:[W.genre,...W.hooks].join('、'), note:(W.core||'').trim()};
+    gold:W.qxMode||W.hooks[0]||'身分反转', hook:pitch, rel:`${name}-${(W.rival||'').trim()||'对手'}`, genres:[W.genre,...W.hooks].join('、'), note:(W.core||'').trim()};
   const g2 = leads[1].startsWith('女')?'female':'male', pool=SX_NAMES[g2].filter(x=>x!==name);
   const name2 = w.vname2 || pool[(w.seed||1)%pool.length];
   return {id:w.id, title:w.title, name, name2, g, role:t, seed:w.seed||1, outline:sxOutline(t,name,g), idea:(W.core||'').trim(), leads, W};
@@ -2366,7 +2379,8 @@ function genReq(W0){
   const req={logline:(W.pitch||'').trim(), audience:W.aud, setting:W.genre, episodes:Math.min(12,Math.max(2,+wzEps(W)||10)),
     chars_per_episode:Math.min(1300,Math.max(400,Math.round(mins*400))), explicit_ratio:[0,0]};
   const core=(W.core||'').trim(); if(core) req.theme=core;
-  if((W.hooks||[]).length) req.tone=W.hooks.join('、');
+  const tone=[W.qxMode, ...(W.hooks||[])].filter(Boolean); if(tone.length) req.tone=tone.join('、');
+  if(W.qxRole) req.characters=[{name:'', role:'核心角色', brief:W.qxRole}];
   return req;
 }
 function genParse(r){
