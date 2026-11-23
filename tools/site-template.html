@@ -385,6 +385,9 @@ a.pill{text-decoration:none}
 .wc-title input::placeholder{color:var(--text-3)}
 .wc-story{display:block;width:100%;margin-top:12px;border:1px solid var(--line-2);border-radius:14px;background:#0f0f11;color:#fff;font:16px/1.7 var(--font);padding:12px 14px;resize:vertical;outline:0}
 .wc-story:focus{border-color:rgba(139,69,255,.6)}
+.cpop .qx.heat{width:auto;padding:0 5px;border-radius:9px;font-size:9px;letter-spacing:-1px}
+.cpop .qx.h1{background:rgba(255,95,162,.25);color:#ffc2dc}.cpop .qx.h2{background:rgba(255,77,109,.35);color:#ffd0d8}
+.heat-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#8b8b93}.heat-dot.h1{background:#ff5fa2}.heat-dot.h2{background:#ff3d5a;box-shadow:0 0 6px #ff3d5a}
 .cpop .qx{display:grid;place-items:center;width:18px;height:18px;border-radius:50%;background:rgba(139,69,255,.25);color:#d9c8ff;font:600 11px Inter,var(--font);font-style:normal}
 .wc-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .psel span{font:600 14px var(--font);white-space:nowrap}
@@ -1629,6 +1632,7 @@ function wcardOpts(W){
   return {
     qxRole:{items:Q.role.map((v,i)=>({v,l:v,ic:`<i class="qx">${i+1}</i>`})), lead:()=>ico('user'), label:v=>v||'角色'},
     qxMode:{items:Q.mode.map((v,i)=>({v,l:v,ic:`<i class="qx">${i+1}</i>`})), lead:()=>ico('sparkle'), label:v=>v||'模式'},
+    heat:{items:HEAT.map((v,i)=>({v,l:v,ic:`<i class="qx heat h${i}">${'♥'.repeat(i+1)}</i>`})), lead:v=>`<i class="heat-dot h${HEAT.indexOf(heatOf({heat:v}))}"></i>`, label:v=>heatOf({heat:v})},
     style:{items:st.map(x=>({v:x.n,l:x.n,ic:`<i style="background:${x.g}"></i>`})), lead:v=>ico('palette'), label:v=>v&&v!=='无'?v:'风格'},
     ratio:{items:RATIOS.map(r=>({v:r,l:r,ic:rbIcon(r)})), lead:v=>rbIcon(v,16), label:v=>v||'9:16'},
     genre:{items:WZ_OPT.genre.map(v=>({v,l:v}))},
@@ -1683,7 +1687,7 @@ function wcardHtml(W){
     <button class="wc-x" data-x title="回到输入">${ico('x')}</button>
     <div class="wc-title">《<input data-c="title" placeholder="AI 帮你取剧名" value="${esc(W.title)}">》<button class="wc-dice" data-dice title="帮我取一个">${ico('dice')}</button></div>
     <textarea class="wc-story" data-c="pitch" rows="2" placeholder="说一句你的故事">${esc(W.pitch)}</textarea>
-    <div class="wc-pills">${['style','ratio','aud','qxRole','qxMode','pair','eps','mins'].map(dd).join('')}</div>
+    <div class="wc-pills">${['style','ratio','aud','qxRole','qxMode','heat','pair','eps','mins'].map(dd).join('')}</div>
     <div class="chips wc-hooks">${WZ_OPT.hooks.map(h=>`<span class="ck ${W.hooks.includes(h)?'on':''}" data-h="${h}">${h}</span>`).join('')}</div>
     <details class="wc-idea" ${W.core.trim()?'open':''}>
       <summary class="wc-idea-h">${ico('sparkle')}你的独家点子，让这部与众不同${ico('chev')}</summary>
@@ -2438,7 +2442,7 @@ async function tjApi(path, body){
 function genReq(W0){
   const W=Object.assign({}, WZ_DEF, W0), mins=wzMins(W)||1;
   const req={logline:(W.pitch||'').trim(), audience:W.aud, setting:W.genre, episodes:Math.min(12,Math.max(2,+wzEps(W)||10)),
-    chars_per_episode:Math.min(1300,Math.max(400,Math.round(mins*400))), explicit_ratio:[0,0]};
+    chars_per_episode:Math.min(1300,Math.max(400,Math.round(mins*400))), explicit_ratio:[0,0], heat:heatOf(W)};
   const core=(W.core||'').trim(); if(core) req.theme=core;
   const tone=[W.qxMode, ...(W.hooks||[])].filter(Boolean); if(tone.length) req.tone=tone.join('、');
   if(W.qxRole) req.characters=[{name:'', role:'核心角色', brief:W.qxRole}];
@@ -2466,7 +2470,15 @@ function startGen(w){
 }
 /* 逐集写：先出大纲（快模型），再一集一集写（主写模型）；离开页面会停，回来接着写 */
 const YQ_PLAN='deepseek-v41-flash-uncensored', YQ_WRITE='sealion-nova-pro';
-const YQ_RULES='【底线】所有角色都是 20 岁以上的成年人，不写学生、校园或未成年暗示；不写血亲、继亲、姻亲之间的感情或亲密；亲密戏必须看得出双方清楚自愿，不写醉酒、昏迷、催眠、下药或威胁下的亲密；不对应真实人物，不用知名作品的角色名；不碰时事政治。亲密戏点到为止，不写露骨细节。';
+const YQ_RULES='【底线】所有角色都是 20 岁以上的成年人，不写学生、校园或未成年暗示；不写血亲、继亲、姻亲之间的感情或亲密；亲密戏必须看得出双方清楚自愿，不写醉酒、昏迷、催眠、下药或威胁下的亲密；任何角色说「不要」「放开」「停」，对方就要停下，不能继续推进；强势、支配类的情节要写成双方都乐意的拉扯，不是强迫；不对应真实人物，不用知名作品的角色名；不碰时事政治。';
+/* 尺度：三档。高尺度的亲密场次改由亲密戏写得最开的模型来写 */
+const HEAT=['点到为止','正常','高尺度'];
+const YQ_HEAT={
+  '点到为止':'【尺度】亲密戏点到为止：镜头停在接吻、拥抱或关灯处就切走，不写露骨细节。',
+  '正常':'【尺度】成人向：亲密戏要写出来，有身体接触、动作推进与情绪变化，用含蓄、有画面感的词，不写性器官细节。',
+  '高尺度':'【尺度】成人向高尺度（观众均为已验证的成年人）：每集至少一场亲密戏，完整展开不一笔带过——直接写身体、动作、感官、声音与高潮，用直白的词，节奏由慢到快，亲密段落约占本集一半；主动与回应都要写出来，看得出双方乐在其中。'};
+const heatOf=W=>HEAT.includes(W.heat)?W.heat:'点到为止';
+const YQ_HOT='gemma4-31b-heretic';
 async function yqChat(model, content, max_tokens){
   const r=await fetch(TJ_API+'/yq/v1/chat/completions',{method:'POST', headers:{'X-Tianji-Code':tjCode()||'','Content-Type':'application/json'},
     body:JSON.stringify({model, messages:[{role:'user',content}], max_tokens:max_tokens||3000, temperature:0.8})});
@@ -2478,7 +2490,7 @@ function yqPlanPrompt(W, n){
   if(W.qxRole) x.push(`核心角色类型：${W.qxRole}`); if(W.qxMode) x.push(`剧本模式：${W.qxMode}`);
   if((W.hooks||[]).length) x.push(`爽点：${W.hooks.join('、')}`); if((W.core||'').trim()) x.push(`作者的点子：${W.core.trim()}`);
   if((W.title||'').trim()) x.push(`剧名：${W.title.trim()}`);
-  return `你是短剧总编剧。依下面设定，规划一部 ${n} 集的竖屏短剧，每集约 ${wzMins(W)||1} 分钟。\n${x.join('\n')}\n\n${YQ_RULES}\n
+  return `你是短剧总编剧。依下面设定，规划一部 ${n} 集的竖屏短剧，每集约 ${wzMins(W)||1} 分钟。\n${x.join('\n')}\n\n${YQ_RULES}\n${YQ_HEAT[heatOf(W)]}${heatOf(W)==='高尺度'?'每集的 event 都要写到亲密情节如何发生。':''}\n
 只输出一个 JSON，不要任何说明：
 {"title":"剧名（没给就自己取，8 字内）","logline":"一句话梗概","cast":[{"name":"人名（不要用设定里的形容词当名字）","role":"女主/男主/反派/配角","age":25,"bio":"一句话人设"}],"episodes":[{"title":"集名（6 字内）","event":"本集发生什么，两三句","hook":"集尾钩子，一句"}]}
 cast 3 到 6 人；episodes 正好 ${n} 个，前后连贯，每集都有冲突与钩子，最后一集收尾。`;
@@ -2500,7 +2512,8 @@ ${prev?`上一集结尾：\n${prev}\n`:''}
 人物名：「台词」
 
 要求：开头 3 秒有钩子，场次 2 到 4 场，台词口语、短而有力，人名与设定一致，不写旁白说明，不用字幕交代剧情。
-${YQ_RULES}`;
+${YQ_RULES}
+${YQ_HEAT[heatOf(W)]}`;
 }
 const parseJSON=t=>{ const a=t.indexOf('{'), b=t.lastIndexOf('}'); return JSON.parse(t.slice(a,b+1)); };
 const yqRun={};
@@ -2526,7 +2539,7 @@ async function yqDrive(wid){
       w=cur(); if(!w||!w.gen||w.gen.status!=='writing'||!w.gen.data) break;
       const d=w.gen.data, i=d.outline.findIndex((_,k)=>!d.eps[k]);
       if(i<0){ updateGen(wid,{status:'done'}); yqRefresh(wid); break; }
-      const txt=await yqChat(YQ_WRITE, yqEpPrompt(d, Object.assign({},WZ_DEF,w.W), i), 3000);
+      const Wx=Object.assign({},WZ_DEF,w.W), txt=await yqChat(heatOf(Wx)==='高尺度'?YQ_HOT:YQ_WRITE, yqEpPrompt(d, Wx, i), heatOf(Wx)==='点到为止'?3000:4000);
       if(!txt) throw new Error('empty episode');
       const w2=cur(); if(!w2||!w2.gen||!w2.gen.data) break;
       w2.gen.data.eps[i]=txt; updateGen(wid,{data:w2.gen.data}); yqRefresh(wid);
