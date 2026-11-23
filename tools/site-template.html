@@ -390,10 +390,12 @@ a.pill{text-decoration:none}
 .heat-lead{font-style:normal;font-size:11px;letter-spacing:-1px;padding:1px 5px;border-radius:8px;background:rgba(255,255,255,.1);color:#d8c9ff}
 .heat-lead.h1{background:rgba(255,95,162,.25);color:#ffc2dc}.heat-lead.h2{background:rgba(255,61,90,.35);color:#ffd0d8}
 .cfoot .think-w{margin-left:auto}
-.wc-foot{display:flex;align-items:center;gap:10px}.wc-foot .wc-go{flex:1}
-.think-pop.up{bottom:calc(100% + 8px);top:auto;left:0;right:auto}.cfoot .think-w~.cmic{margin-left:8px}
+.has-think{position:relative}.has-think .wc-think{position:absolute;right:60px;bottom:10px;z-index:3}
+.has-think .wc-think .cthink{height:36px;font-size:13.5px}
+.has-think textarea{padding-bottom:52px}
+.wc-think .think-pop{right:-52px;left:auto;top:calc(100% + 8px);bottom:auto}.cfoot .think-w~.cmic{margin-left:8px}
 .cthink{background:#26262a;border-radius:999px;padding:0 14px;color:var(--text-2)}.cthink svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
-.think-pop{width:260px;padding:16px 18px 12px;right:0;left:auto}
+.think-pop{width:260px;padding:16px 18px 12px;right:0;left:auto;overflow:visible;max-height:none}
 .tk-h{display:flex;align-items:baseline;justify-content:center;gap:8px;margin-bottom:12px}.tk-h b{font-size:18px}.tk-h span{color:var(--text-3);font-size:12.5px}
 .tk-r{width:100%;-webkit-appearance:none;appearance:none;height:26px;border-radius:99px;background:linear-gradient(90deg,var(--brand) var(--p),#2c2c31 var(--p));outline:none;cursor:pointer}
 .tk-r::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.4)}
@@ -1741,8 +1743,8 @@ function wcardHtml(W){
       <div class="wc-say"><textarea class="wc-story" data-c="core" rows="2" placeholder="想到什么写什么，没想好也没关系">${esc(W.core)}</textarea>
         ${SpeechRec?`<button class="wc-mic" data-mic title="用说的">${ico('mic')}</button>`:''}</div>
     </details>
-    <div class="wc-foot"><div class="cpop-w think-w"><button class="cbtn cthink" data-think><span>${depthOf(W).slice(0,1)}度思考</span>${ico('chev')}</button><div class="cpop think-pop up" data-thinkpop></div></div>
-    <button class="bigbtn wc-go">${ico('sparkle')}${W.id?'继续写':'开写'}</button></div>
+    <div class="cpop-w think-w wc-think"><button class="cbtn cthink" data-think><span>${depthOf(W).slice(0,1)}度思考</span>${ico('chev')}</button><div class="cpop think-pop" data-thinkpop></div></div>
+    <button class="bigbtn wc-go">${ico('sparkle')}${W.id?'继续写':'开写'}</button>
   </div>`;
 }
 function bindWcard(root, W, save, close){
@@ -1759,6 +1761,7 @@ function bindWcard(root, W, save, close){
   const mic=q('[data-mic]');
   if(mic) mic.onclick=e=>{ e.preventDefault(); micListen(mic, core, '\n'); };
   addMic(q('[data-c=pitch]'));
+  { const tw=q('.wc-think'), pw=q('[data-c=pitch]').closest('.mic-w')||q('[data-c=pitch]').parentElement; pw.classList.add('has-think'); pw.append(tw); }
   q('[data-dice]').onclick=()=>{ const t=q('[data-c=title]'); t.value=wzRollTitle(W, t.value); t.dispatchEvent(new Event('input',{bubbles:true})); };
   root.querySelectorAll('[data-c]').forEach(el=>{
     el.oninput=el.onchange=()=>{
