@@ -682,7 +682,8 @@ a.pt-banner:hover{transform:translateY(-2px)}
 .pt-entry svg{width:15px;height:15px;stroke:#0f3550;fill:none;stroke-width:1.9}
 .sx-hero h1{margin:0;font-family:"Noto Sans SC",var(--font);font-weight:900;font-size:clamp(30px,4.4vw,46px);
   background:linear-gradient(90deg,#aeb4be,#fff 50%,#aeb4be);-webkit-background-clip:text;background-clip:text;color:transparent}
-.sx-hero p{margin:10px 0 0;color:var(--text-2);font-size:15px}
+.sx-hero p,.create-intro p{margin:10px 0 0;color:var(--text-2);font-size:15px}
+.create-intro{text-align:center;margin:6px 0 22px}
 .sx-steps{display:flex;justify-content:center;gap:8px;margin:22px 0 0;flex-wrap:wrap}
 .sx-steps span{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px 0 6px;border-radius:999px;background:#18181b;border:1px solid var(--line);color:var(--text-3);font-size:13px}
 .sx-steps .sn{width:22px;height:22px}
@@ -2178,11 +2179,6 @@ function viewScriptSimple(){
     <section class="sx-hero">
       <h1><span class="h1w">人物即剧本<a class="pt-tag" href="#/partner">${ico('sparkle')}AI短剧伙伴计划</a></span></h1>
       <div class="modeseg" id="modeSeg"><button data-m="lib">角色库</button><button data-m="create">创作平台</button></div>
-      <div id="heroCreate">
-      <p>选一个主角，一键产出 10 集短剧剧本</p>
-      <div class="sx-steps" id="sxSteps"></div>
-      <div class="locks"><span>${ico('lock')}10 集</span><span>${ico('lock')}每集 1 分钟</span><span>${ico('lock')}简体中文</span><span>${ico('lock')}一季完结</span></div>
-      </div>
     </section>
     ${partnerBanner()}
     </div>
@@ -2193,6 +2189,11 @@ function viewScriptSimple(){
     </section>
     <section class="lib" id="mLib"></section>
     <div id="mCreate">
+    <div id="heroCreate" class="create-intro">
+      <p>选一个主角，一键产出 10 集短剧剧本</p>
+      <div class="sx-steps" id="sxSteps"></div>
+      <div class="locks"><span>${ico('lock')}10 集</span><span>${ico('lock')}每集 1 分钟</span><span>${ico('lock')}简体中文</span><span>${ico('lock')}一季完结</span></div>
+    </div>
     <div class="sx-bar">
       <div class="gseg" id="gseg"><button data-g="male">男频</button><button data-g="female">女频</button></div>
       <label class="search2">${ico('search')}<input id="sxq" placeholder="搜角色、金手指、流派，如“系统”“真假千金”" value="${esc(st.q)}"></label>
