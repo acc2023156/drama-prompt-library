@@ -28,7 +28,7 @@ a.cta,a.btn-white,a.btn-dark{text-decoration:none}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 ::selection{background:var(--brand);color:#fff}
 /* ---------- top bar ---------- */
-.topbar{position:sticky;top:0;z-index:6;height:60px;display:flex;align-items:center;gap:14px;padding:0 18px 0 22px;background:rgba(13,13,13,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.topbar{position:sticky;top:0;z-index:30;height:60px;display:flex;align-items:center;gap:14px;padding:0 18px 0 22px;background:rgba(13,13,13,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .tb-logo{display:flex;align-items:center;gap:8px;height:48px;padding:0 14px 0 8px;margin-right:4px;border-radius:12px;flex:none;text-decoration:none}
 .tb-logo:hover{background:rgba(255,255,255,.06)}
 .tb-logo.on{background:#2a2a2e}
@@ -467,6 +467,14 @@ a.pill{text-decoration:none}
 .login-row .bigbtn{width:auto;padding:0 20px;height:42px}
 .points-card .login-row{max-width:none;margin:0 0 8px}
 .account-head{position:relative}.acc-out{margin-left:auto;align-self:center;height:30px;padding:0 12px;border-radius:9px;background:rgba(255,255,255,.08);color:var(--text-2);font-size:12.5px}
+.hw-cats{margin-bottom:14px}
+.hw-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px}
+.hw-row{display:grid;grid-template-columns:26px auto auto 1fr 40px;align-items:center;gap:10px;padding:12px 14px;border-radius:13px;background:#1b1c20;border:1px solid transparent;text-align:left;color:#fff}
+.hw-row:hover{border-color:rgba(139,69,255,.5)}
+.hw-row i{font-style:normal;color:var(--text-3);font-size:12.5px}.hw-row b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hw-t{font-style:normal;font-size:11.5px;padding:2px 7px;border-radius:99px;background:rgba(255,77,109,.18);color:#ffb3c0}
+.hw-bar{height:6px;border-radius:99px;background:#2a2a2f;overflow:hidden}.hw-bar s{display:block;height:100%;background:linear-gradient(90deg,#ff4d6d,#ffb547);border-radius:99px}
+.hw-row strong{text-align:right;font:600 14px Inter,var(--font)}
 .adm-key{margin:0 0 18px;max-width:420px}
 .adm-table{display:grid;gap:6px;overflow-x:auto}
 .adm-r{display:grid;grid-template-columns:96px 120px 100px 70px 60px 60px 50px 110px minmax(260px,1fr);gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:#1b1c20;font-size:13.5px;min-width:980px}
@@ -970,6 +978,7 @@ a.pt-banner:hover{transform:translateY(-2px)}
       <button class="space-card" type="button"><span class="space-icon">天</span><span class="space-copy"><b>个人空间</b><span>仅自己可见</span></span><span class="space-arrow">›</span></button>
       <div class="points-card"><div class="points-balance">积分余额：43</div><div class="points-row"><span>创作成本直降，会员低至 4.5 折</span><button class="upgrade" type="button">升级会员</button></div></div>
       <nav class="account-menu">
+        <a class="account-link" href="#/hotwords"><svg viewBox="0 0 24 24"><path d="M12 3c1 3.2 4.5 4.6 4.5 9a4.5 4.5 0 0 1-9 0c0-2 .8-3.2 1.8-4.2.3 1.6 1.1 2.4 2 2.7C11 8.2 11.2 5.6 12 3Z"/></svg>热词</a>
         <a class="account-link" href="#/help"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.8 9a2.4 2.4 0 1 1 3.8 2c-1.1.7-1.6 1.1-1.6 2.4M12 17.2v.1"/></svg>帮助中心</a>
         <a class="account-link" href="#/manual"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 7h6M9 11h5"/></svg>使用手册</a>
         <button class="account-link" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h6"/></svg>快捷键</button>
@@ -3083,6 +3092,24 @@ function drawAccount(){
 }
 async function refreshMe(){ const A=authGet(); if(!A) return; try{ const j=await api('/me'); A.user=j.user; authSet(A); }catch(e){} }
 
+/* 热词：词根、分类、热度、走势；点一个词就带进氛围写作 */
+async function viewHotwords(){
+  const v=document.getElementById('view');
+  v.innerHTML=`${backBar('#/')}<div class="sec-head" style="margin-top:56px"><h2>热词</h2><span class="meta" id="hwMeta">读取中…</span></div><div class="hw" id="hwBody"></div>`;
+  try{
+    const r=await fetch(TJ_API+'/words'); if(!r.ok) throw 0; const j=await r.json(), W=j.words||[], top=Math.max(1,...W.map(w=>w.heat||0));
+    document.getElementById('hwMeta').textContent=`${W.length} 个 · ${j.at||''} 更新`;
+    const cats=['全部',...new Set(W.map(w=>w.cat).filter(Boolean))];
+    const draw=c=>{ const L=c==='全部'?W:W.filter(w=>w.cat===c);
+      document.getElementById('hwBody').innerHTML=(cats.length>2?`<div class="hseg hw-cats">${cats.map(k=>`<button data-c="${esc(k)}" class="${k===c?'on':''}" style="--a:#ff4d6d;--b:#ffb547">${esc(k)}</button>`).join('')}</div>`:'')+
+        `<div class="hw-list">${L.map((w,i)=>`<button class="hw-row" data-w="${esc(w.word)}"><i>${String(i+1).padStart(2,'0')}</i><b>${esc(w.word)}</b>${w.trend?`<em class="hw-t">${esc(w.trend)}</em>`:''}<span class="hw-bar"><s style="width:${Math.round((w.heat||0)/top*100)}%"></s></span><strong>${w.heat||0}</strong></button>`).join('')}</div>`;
+      document.querySelectorAll('.hw-cats [data-c]').forEach(b=>b.onclick=()=>draw(b.dataset.c));
+      document.querySelectorAll('.hw-row').forEach(b=>b.onclick=()=>{ const C=chatState(); store('chat',{...C, tab:'auto', pitch:`以「${b.dataset.w}」为题材，`}); store('vibeCard',null); store('pro',true); location.hash='#/script'; toast('补完这句故事就能开写'); });
+    };
+    draw('全部');
+  }catch(e){ document.getElementById('hwMeta').textContent='暂时读不到，稍后再试'; }
+}
+
 /* 管理后台：会员 UID、积分、手动加点 */
 function viewAdmin(){
   const v=document.getElementById('view'), key=()=>sessionStorage.getItem('tjAdmin')||'';
@@ -3362,7 +3389,7 @@ function parse(){
   if(h==='membership') return {view:'membership'};
   if(h.startsWith('e/')) {const e=byId[h.slice(2)];return {view:'entry',id:h.slice(2),folder:e&&e.folder}}
   if(h.startsWith('f/')) return {view:'list',folder:h.slice(2)};
-  if(h==='assembler'||h==='changelog'||h==='admin') return {view:h};
+  if(h==='assembler'||h==='changelog'||h==='admin'||h==='hotwords') return {view:h};
   if(h.startsWith('assembler?ep=')){ const [wid,i]=h.slice(13).split('.'), w=(store('works')||[]).find(x=>x.id===wid);
     return w ? {view:'assembler', ep:{wid, i:+i}, vibe:{id:wid, title:w.title, tab:'board'}} : {view:'assembler'}; }
   if(h.startsWith('script/s/')) {const [id,q]=h.slice(9).split('?');return {view:'tool',tool:'script',sub:'result',sid:id,fresh:q==='new=1'}}
@@ -3383,6 +3410,7 @@ function route(){
   if(r.view==='start') viewScriptSimple();
   else if(r.view==='membership') viewMembership();
   else if(r.view==='admin') viewAdmin();
+  else if(r.view==='hotwords') viewHotwords();
   else if(r.view==='entry') viewEntry(r.id);
   else if(r.view==='assembler') viewAssembler(r.ep);
   else if(r.view==='tool' && r.tool==='assets') r.fn ? viewAssetEditor(r.fn, r.idx) : viewAssets();
