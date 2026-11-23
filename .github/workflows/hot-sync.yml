@@ -11,29 +11,43 @@ jobs:
   sync:
     if: github.repository == 'acc2023156/drama-prompt-library'
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
+    env:
+      WORKER_URL: ${{ secrets.WORKER_URL }}
+      JOB_SECRET: ${{ secrets.JOB_SECRET }}
     steps:
-      - name: Sync
+      - name: Runner IP
+        run: echo "runner ip $(curl -s --max-time 10 https://api.ipify.org)"
+      # 来源偶尔连不上：重试几次；还是不行就跳过这一轮（网站继续用上一批资料），不当成失败
+      - name: Hot topics
         env:
-          HOT_SRC: ${{ secrets.HOT_SRC }}
-          WORKER_URL: ${{ secrets.WORKER_URL }}
-          JOB_SECRET: ${{ secrets.JOB_SECRET }}
+          SRC: ${{ secrets.HOT_SRC }}
         run: |
           set -u
-          # 来源偶尔连不上：重试几次；还是不行就跳过这一轮（网站继续用上一批资料），不当成失败
           ok=0
           for i in 1 2 3 4; do
-            code=$(curl -s --max-time 60 -o hot.json -w '%{http_code}' "$HOT_SRC?t=$(date +%s)") || code=000
+            code=$(curl -s --max-time 60 -o data.json -w '%{http_code}' "$SRC?t=$(date +%s)") || code=000
             echo "source try $i: http $code"
-            if [ "$code" = "200" ] && [ -s hot.json ]; then ok=1; break; fi
+            if [ "$code" = "200" ] && [ -s data.json ]; then ok=1; break; fi
             sleep $((i * 15))
           done
-          if [ "$ok" != "1" ]; then echo "::warning::source unreachable, keep last batch"; exit 0; fi
-          for i in 1 2 3; do
-            code=$(curl -s -o push.out -w '%{http_code}' -X POST -H "X-Job-Secret: $JOB_SECRET" -H 'Content-Type: application/json' \
-              --data-binary @hot.json "$WORKER_URL/hot/push") || code=000
-            echo "push try $i: http $code"
-            [ "$code" = "200" ] && { echo synced; exit 0; }
-            sleep 10
+          if [ "$ok" != "1" ]; then echo "::warning::hot source unreachable, keep last batch"; exit 0; fi
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST -H "X-Job-Secret: $JOB_SECRET" -H 'Content-Type: application/json' \
+            --data-binary @data.json "$WORKER_URL/hot/push") || code=000
+          echo "push: http $code"
+      - name: Hot words
+        env:
+          SRC: ${{ secrets.WORDS_SRC }}
+        run: |
+          set -u
+          ok=0
+          for i in 1 2 3 4; do
+            code=$(curl -s --max-time 60 -o words.json -w '%{http_code}' "$SRC?t=$(date +%s)") || code=000
+            echo "source try $i: http $code"
+            if [ "$code" = "200" ] && [ -s words.json ]; then ok=1; break; fi
+            sleep $((i * 15))
           done
-          echo "::warning::push failed, keep last batch"
+          if [ "$ok" != "1" ]; then echo "::warning::words source unreachable, keep last batch"; exit 0; fi
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST -H "X-Job-Secret: $JOB_SECRET" -H 'Content-Type: application/json' \
+            --data-binary @words.json "$WORKER_URL/words/push") || code=000
+          echo "push: http $code"
