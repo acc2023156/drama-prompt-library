@@ -1090,7 +1090,7 @@ function zipCrc(bytes){let c=-1;for(const b of bytes){c^=b;for(let k=0;k<8;k++)c
 function makeZip(files){
   const enc=new TextEncoder(), parts=[], central=[]; let offset=0;
   const u16=n=>new Uint8Array([n&255,n>>>8&255]), u32=n=>new Uint8Array([n&255,n>>>8&255,n>>>16&255,n>>>24&255]);
-  for(const f of files){const name=enc.encode(f.name),data=enc.encode(f.text),crc=zipCrc(data),head=new Uint8Array([...u32(0x04034b50),...u16(20),...u16(0x800),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(data.length),...u32(data.length),...u16(name.length),...u16(0),...name]);parts.push(head,data);central.push(new Uint8Array([...u32(0x02014b50),...u16(20),...u16(20),...u16(0x800),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(data.length),...u32(data.length),...u16(name.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(offset),...name]));offset+=head.length+data.length}
+  for(const f of files){const name=enc.encode(f.name),data=enc.encode((/\.json$/i.test(f.name)?"":"\uFEFF")+f.text),crc=zipCrc(data),head=new Uint8Array([...u32(0x04034b50),...u16(20),...u16(0x800),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(data.length),...u32(data.length),...u16(name.length),...u16(0),...name]);parts.push(head,data);central.push(new Uint8Array([...u32(0x02014b50),...u16(20),...u16(20),...u16(0x800),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(data.length),...u32(data.length),...u16(name.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(offset),...name]));offset+=head.length+data.length}
   const csize=central.reduce((n,x)=>n+x.length,0),end=new Uint8Array([...u32(0x06054b50),...u16(0),...u16(0),...u16(files.length),...u16(files.length),...u32(csize),...u32(offset),...u16(0)]);return new Blob([...parts,...central,end],{type:'application/zip'});
 }
 function saveBlob(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
@@ -1487,7 +1487,7 @@ function showModal(title, text, fname){
   m.querySelector('pre').textContent=text;
   m.onclick=e=>{if(e.target===m||e.target.closest('[data-x]')) m.remove()};
   m.querySelector('[data-cp]').onclick=e=>copyText(text,e.currentTarget);
-  m.querySelector('[data-dl]').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'}));a.download=fname;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+  m.querySelector('[data-dl]').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(["\uFEFF"+text],{type:'text/plain;charset=utf-8'}));a.download=fname;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
   document.body.appendChild(m);
 }
 
@@ -2935,7 +2935,7 @@ function viewScriptResult(id, fresh){
   document.querySelectorAll('#rtab button').forEach(b=>b.onclick=()=>{ tab=b.dataset.t; if(tab==='script'&&!s.seed) setSeed(); draw(); });
   $('toScript').onclick=()=>{ if(!s.seed) setSeed(); tab='script'; anim=true; draw(); $('rbody').scrollIntoView({behavior:'smooth',block:'start'}); };
   $('scCopy').onclick=e=>copyText(sxScriptText(s),e.currentTarget);
-  $('scDl').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([sxScriptText(s)],{type:'text/plain;charset=utf-8'}));a.download=`${s.title}-10集完整台词.txt`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+  $('scDl').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(["\uFEFF"+sxScriptText(s)],{type:'text/plain;charset=utf-8'}));a.download=`${s.title}-10集完整台词.txt`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
   $('redo').onclick=()=>{ setSeed(); tab='script'; anim=true; draw(); toast('已重写一版台词'); };
   $('seePrompt').onclick=()=>showModal(`《${s.title}》10 集剧本提示词`, prompt, `${s.title}-10集剧本提示词.txt`);
   draw();
@@ -3377,7 +3377,7 @@ function viewAssembler(ep){
   document.querySelectorAll('.sw[data-o]').forEach(b=>b.onclick=()=>{st.opts[b.dataset.o]=!st.opts[b.dataset.o];update()});
   document.getElementById('cpAll').onclick=e=>copyText(assemble(),e.currentTarget);
   document.getElementById('dl').onclick=()=>{
-    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([assemble()],{type:'text/plain;charset=utf-8'}));
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(["\uFEFF"+assemble()],{type:'text/plain;charset=utf-8'}));
     a.download='6.0视频专用提示词.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
   };
   update(); ready=true;
