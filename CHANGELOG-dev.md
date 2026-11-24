@@ -238,3 +238,19 @@
 - 差异：旧页面的 `data-x`、`data-dl`、`data-cp` 只是事件绑定钩子，新弹窗（`TextModalHost`，P1-A）没有，对照时忽略这三个属性
 - 发现：`tests/parity/legacy.ts`、`plugins/load-data.ts` 在 jsdom 环境（`.test.tsx`）里 import 抛 “The URL must be of scheme file”（vitest 的 jsdom 环境下 `import.meta.url` 是 http 地址）；本测试放 node 项目（`.test.ts`），自己装 jsdom 窗口，两个文件未改
 - 验证：全包 20 个文件 488 项通过（含本节 83 项）；`tsc --noEmit` 无错误；`vite build` 产物仍只有 `index.html`，`check:dist` 通过；未做浏览器验证
+
+### 前端 React 重构 P2-D：热词、回收站与会员后台 `packages/web-react`
+
+对照基准：`packages/web/site-template.html` 在 `f331924`（该文件最后改动提交，origin/main 为 `2bc181f` 时取得）；该提交只新增资产回收桶（`viewAssetTrash`、`purgeAssetTrash`），M15 的三个 view 未变；之后的改动不在本节范围。
+
+- [修改] 热词页替换占位：读取 `GET /words`（只走 `getPublic`，无头无选项），分类条（分类多于 1 个时才显示）、序号、热度条（分母取最高热度，至少 1）、走势；点词条把起手话写进 `pl.chat`（沿用旧 `chatState` 的默认值与键序）、`pl.vibeCard` 写 `null`、`pl.pro` 写 `true`，跳 `#/script` 并提示 — `src/features/account/HotwordsPage.tsx`
+- [修改] 回收站替换占位：进入时清理 30 天前的作品（`domain/works` 的 `purgeTrash`，已登录时对每个发 `DELETE /works/:id`），按删除时间倒序列出，剩余天数、还原（删 `trashed`、`time` 改为当前时间）、永久删除、清空（`confirm` 文案同旧页面）；列表订阅 `pl.works`，其他来源写入后自动刷新 — `src/features/account/TrashPage.tsx`
+- [修改] 会员后台替换占位：口令存 `sessionStorage.tjAdmin`（提交时去首尾空格）并经 `adminApi` 作 `X-Admin-Key`，用户表、调用统计面板（今日调用、成功率、平均耗时、忙线 429、逾时、近 1 小时、分模型）、加点（`POST /admin/points`）、改身份（`POST /admin/role`）、403 提示“密码不对”、其他失败提示“读取失败”；每次重新读取后输入框清空 — `src/features/account/AdminPage.tsx`
+- [新增] 对照测试 67 项（`tests/parity/account.test.tsx`）：在 jsdom 里整页运行旧 `site-template.html` 的真实脚本，与新组件在同一份种子、同一组桩响应、同一串操作下逐步比较 DOM（逐节点：标签、属性、style 声明、表单值、文本）、localStorage 与 sessionStorage 原文、fetch 请求（路径、方法、头、体，含参数个数）、toast、confirm 提问、location.hash。覆盖：热词 17 例（读取中、为空、5 种失败、多分类切换、单分类、热度全 0、非空后端地址、点词条 4 种既有存储）、回收站 18 例（空、有数据、已过期登录与未登录、还原、永久删除确认与取消、DELETE 返回 500 被忽略与 401 登出、清空）、后台 31 例（无口令、读取中、403、401 不登出、5 种读取失败、口令提交与空格、加点成功与失败、改身份成功与失败、统计缺失）、对照方法自检 1 例
+- [新增] 交互测试 17 项（`tests/unit/account.test.tsx`）：user-event 真实点击，localStorage 原文、请求的路径 / 方法 / 头 / 体逐字符写死，另覆盖卸载后迟到响应、`pl.works` 外部写入后列表刷新
+- [新增] 对照辅助 `tests/parity/legacy-page.ts`：jsdom 整页载入旧页面（外部脚本不加载，fetch、confirm、matchMedia、`scrollIntoView`、`Date` 打桩），`go()` 先在静态页启动再清空存储写入种子，避免启动时登录态的 `/me`、`/works` 同步混入记录；自带模板路径与 `build.py data` 取数，不 import `legacy.ts`
+- [新增] 变异检验：对三个页面源码的 42 处人为改动（文案、序号位数、分类条阈值、`pl.chat` 键序与字段、`vibeCard`/`pro` 写入、提示文案、热度条取整与分母、剩余天数取整、排序方向、过期边界、`time` 写入、`trashed` 删除、云端删除条件、id 转义、口令去空格、请求方法与体字段顺序、重载清输入框、统计面板各栏、身份下拉选中项、积分与手机号显示等）全部被测试发现；首轮有 3 处逃过（读取中文案、统计缺字段缺省、转义字符），已补用例后复跑 0 存活
+- 差异：后台用户列表响应缺 `users` 数组时，旧页面在 `users.length` 处抛 TypeError 被捕获显示“读取失败”，新页面显式判断数组，结果相同
+- 差异：直角引号（起手话 `以…为题材，`）在源码里写成转义序列，写入的文本与旧页面逐字节相同
+- 发现：`tests/parity/lib.test.ts`、`tests/parity/shell.test.ts` 各 1 项失败，在不含本节改动的 `2bc181f` 上同样失败（`f331924` 新增键 `assetsTrash` 与路由 `#/assets-trash`，`legacy.ts` 读取的是当前模板而非固定快照），不属本节范围，未改
+- 验证：全包 29 个文件 687 项，685 通过（含本节 84 项），2 项为上条的既有失败；`tsc --noEmit` 无错误；`vite build` 产物仍只有 `index.html`，`check:dist` 通过；未做浏览器验证
