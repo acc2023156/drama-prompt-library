@@ -1371,7 +1371,7 @@ const WZ_OPT = {
   aud:['女性向','男性向','男同志向'], pair:['男女','男男（BL）','女女（GL）'],
   genre:['都市','霸总','职场','古装','玄幻','重生穿越','能力系统'],
   hooks:['身分反转','被偏爱','打脸','追妻','先婚后爱','破镜重圆','逆袭'],
-  eps:[10,20,30,60,80], mins:[1,2,3,5],
+  eps:[10,20,30,60,80], mins:[1,2,3,5,8,10],
   ai:[['Claude','Claude（剧情、台词主写）'],['ChatGPT','ChatGPT'],['Grok','Grok'],['Qwen','Qwen 通义千问'],['云端模型','其他云端模型'],['公司模型','公司内部模型']],
 };
 const SUPP = [['core','核心设定与规则','请描述核心设定与限制⋯',true],['diff','与参考作品的差异','和相似作品最不一样的地方'],
@@ -2157,7 +2157,7 @@ function sxScript(s){
   });
 }
 const sxScriptText = s => `《${s.title}》10 集完整台词\n主角：${s.name}（${s.role.type}）\n\n`+sxScript(s).join('\n\n---\n\n');
-function sxHL(txt){ return esc(txt).split('\n').map(l=>/^△|^\[画面\]|^【/.test(l)?`<span class="a">${l}</span>`:/^音乐提示|^&gt;/.test(l)?`<span class="m">${l}</span>`:/^#/.test(l)?`<b class="d">${l.replace(/^#+\s*/,'')}</b>`:/：“|：「/.test(l)?`<span class="d">${l}</span>`:l).join('\n'); }
+function sxHL(txt){ return esc(txt).split('\n').map(l=>/^\d+-\d+\s/.test(l)?`<b class="d">${l}</b>`:/^△|^\[画面\]|^【/.test(l)?`<span class="a">${l}</span>`:/^音乐提示|^&gt;/.test(l)?`<span class="m">${l}</span>`:/^#/.test(l)?`<b class="d">${l.replace(/^#+\s*/,'')}</b>`:/：“|：「/.test(l)||/^[一-龥A-Za-z]{1,8}(（[^）]*）)?：/.test(l)?`<span class="d">${l}</span>`:l).join('\n'); }
 
 /* ---------- 天玑 AI短剧伙伴计划 ---------- */
 function partnerBanner(){
@@ -2487,6 +2487,7 @@ function epMat(t){
   for(const m of t.matchAll(/^场景：[^·]*·\s*([^·\n]+?)\s*·/gm)) locs.add(m[1]);
   for(const m of t.matchAll(/^#{2,4}\s*场\s*\d+\s*[｜|]\s*([^（(\n]+)/gm)) locs.add(m[1].trim());
   for(const m of t.matchAll(/^([一-龥]{2,5})(?:（[^）]*）)?：[「“]/gm)) people.add(m[1]);
+  for(const m of t.matchAll(/^\d+-\d+\s+[^／\n]*／([^／（(\n]+)[^／\n]*／(.+)$/gm)){ locs.add(m[1].trim()); m[2].split(/[、，,]/).map(x=>x.trim()).filter(x=>x&&x.length<=5).forEach(x=>people.add(x)); }
   return {people:[...people], locs:[...locs]};
 }
 let vmEsc=null;
@@ -2599,8 +2600,17 @@ ${YQ_TRAPS}`:''}`;
 function cardText(c){ if(!c) return ''; const r=c.rules||{};
   return [`主线谜底：${c.mystery||''}`, `权力上限：${r.power||''}`, `利益：${r.stakes||''}`, `空间升级：${r.spaces||''}`, `关键物证：${r.evidence||''}`, `主角能力的限制与代价：${r.limit||''}`, `称谓变化：${r.address||''}`,
     ...(c.cast||[]).map(p=>`${p.name}（${p.role}，${p.age||''}岁）外观：${p.look||''}；欲望：${p.want||''}；弱点：${p.flaw||''}；说话：${p.voice||''}`)].join('\n'); }
+/* 交件格式：每分钟约 800 字（含场头、△动作、字卡），场头「集-场 时段／地点（内外）／出场人物」 */
+const YQ_CPM=800;
+const yqFormat=i=>`格式（只输出剧本，不要标题和说明）：
+${i+1}-1 夜／地点（内）／人物甲、人物乙
+△ 拍得出来的动作（一行一个动作或镜头）
+△ 字卡（人名，叠印）：名字｜身分（括号里照写「人名，叠印」四个字；只在该角色全剧第一次出场时加）
+人物甲（语气）：台词
+△ 字卡：次日夜（时间跳转时加）`;
+function yqNewNames(d, i){ const before=d.eps.slice(0,i).join('\n'); return d.cast.filter(c=>!before.includes(c.name)).map(c=>`${c.name}｜${c.role}`); }
 function yqEpPrompt(d, W, i){
-  const dp=depthOf(W), ep=d.outline[i], chars=Math.round((wzMins(W)||1)*400), prev=(d.eps[i-1]||'').slice(dp==='轻度'?-600:-1200);
+  const dp=depthOf(W), ep=d.outline[i], chars=Math.round((wzMins(W)||1)*YQ_CPM), prev=(d.eps[i-1]||'').slice(dp==='轻度'?-600:-1200);
   return `你是短剧编剧。写《${d.title}》第 ${i+1} 集（共 ${d.outline.length} 集），约 ${chars} 字。
 故事：${d.logline}
 人物：${d.cast.map(c=>`${c.name}（${c.role}）${c.bio}`).join('；')}
@@ -2610,16 +2620,68 @@ ${prev?`上一集结尾：\n${prev}\n`:''}
 本集要写：${ep.event}
 集尾钩子：${ep.hook}
 
-格式（只输出剧本，不要标题和说明）：
-场1｜地点（内/外·日/夜）
-[画面] 拍得出来的动作
-人物名：「台词」
+${yqFormat(i)}
+第一次出场要加人名字卡的人：${yqNewNames(d,i).join('、')||'（无）'}
 
 要求：开头 3 秒有钩子，场次 2 到 4 场，台词口语、短而有力，人名与设定一致，不写旁白说明，不用字幕交代剧情；字数尽量贴近约 ${chars} 字。
 ${d.card?`策划卡（必须遵守，人物说话方式照它写）：
 ${cardText(d.card)}
 `:''}${dp!=='轻度'?YQ_SHOOT+'\n'+YQ_TRAPS+'\n':''}${YQ_RULES}
 ${YQ_HEAT[heatOf(W)]}`;
+}
+const yqSceneCount=W=>Math.max(3,Math.min(15,Math.round((wzMins(W)||1)*1.5)+1));
+function yqScenePrompt(d, W, i, n){
+  return `你是短剧编剧。为《${d.title}》第 ${i+1} 集（共 ${d.outline.length} 集，本集约 ${wzMins(W)} 分钟）排分场大纲，正好 ${n} 场。
+故事：${d.logline}
+人物：${d.cast.map(c=>`${c.name}（${c.role}）`).join('、')}
+${d.card?`策划卡：\n${cardText(d.card)}\n`:''}各集大纲：
+${d.outline.map((o,k)=>`第${k+1}集 ${o.title}：${o.event}`).join('\n')}
+上一集结尾：${(d.eps[i-1]||'（这是第一集）').slice(-500)}
+本集要写：${d.outline[i].event}
+集尾钩子：${d.outline[i].hook}
+
+要求：场与场一步步推进，每场有自己的冲突或转折，不重复同一件事；地点 2–5 个、可重复使用；第一场开头 3 秒有钩子，最后一场落在集尾钩子；全集只留一个结尾钩子。
+${YQ_RULES}
+${YQ_HEAT[heatOf(W)]}
+只输出 JSON：{"scenes":[{"time":"日/夜/黄昏/凌晨","place":"地点","io":"内/外","people":["人名"],"card":"需要时间字卡就写（如：次日夜），否则空","beat":"这场发生什么：谁要什么、冲突、转折、结果，两三句"}]}`;
+}
+function yqBatchPrompt(d, W, i, plan, from, to, prevTail){
+  const dp=depthOf(W), per=Math.round(wzMins(W)*YQ_CPM/plan.length), sc=plan.slice(from,to);
+  return `你是短剧编剧。写《${d.title}》第 ${i+1} 集的第 ${from+1}–${to} 场（全集共 ${plan.length} 场），每场约 ${per} 字。
+故事：${d.logline}
+人物：${d.cast.map(c=>`${c.name}（${c.role}）${c.bio}`).join('；')}
+本集要写：${d.outline[i].event}
+本集分场（只写指定的几场，其他场只当前后文参考）：
+${plan.map((x,k)=>`${i+1}-${k+1} ${x.time}／${x.place}（${x.io}）／${(x.people||[]).join('、')}：${x.beat}${x.card?`（字卡：${x.card}）`:''}${k>=from&&k<to?'  ← 这次要写':''}`).join('\n')}
+${prevTail?`紧接在这段之后：\n${prevTail}\n`:''}
+${yqFormat(i)}
+场号从 ${i+1}-${from+1} 开始。第一次出场要加人名字卡的人：${yqNewNames(d,i).join('、')||'（无）'}（同一集前面的场已加过就不要重复）。
+
+要求：照分场写满，每场都要有足够的台词来回与人物反应，不要几句就结束；动作行写镜头拍得到的东西；台词口语、短句、人物说话有辨识度；不写旁白说明。${to===plan.length?'最后一场停在集尾钩子上。':'写到第 '+to+' 场结束就停。'}
+${d.card?`策划卡（必须遵守）：\n${cardText(d.card)}\n`:''}${dp!=='轻度'?YQ_SHOOT+'\n'+YQ_TRAPS+'\n':''}${YQ_RULES}
+${YQ_HEAT[heatOf(W)]}`;
+}
+/* 写一集：短集一次写完；3 分钟以上先排分场，再分批（每批 3 场）同时写 */
+async function yqWriteEpisode(d, W, i){
+  const writer=heatOf(W)==='高尺度'?YQ_HOT:YQ_WRITE, mx=heatOf(W)==='点到为止'?3000:4000;
+  const check=async txt=>{ if(depthOf(W)!=='重度') return [txt,0];
+    try{ const chk=parseJSON(await yqChat(YQ_PLAN, yqCheckPrompt(d, W, i, txt), 1500)), iss=(chk.issues||[]).filter(x=>x&&x.problem);
+      if(iss.length){ const fx=await yqChat(writer, yqFixPrompt(d, W, i, txt, iss), mx); if(fx&&fx.length>txt.length*.6) return [fx, iss.length]; } }catch(e){ if(/登录|积分/.test(e.message)) throw e; }
+    return [txt,0]; };
+  if((wzMins(W)||1)<3){ const t=await yqChat(writer, yqEpPrompt(d, W, i), mx); if(!t) throw new Error('empty episode'); return check(t); }
+  const n=yqSceneCount(W), plan=(parseJSON(await yqChat(YQ_PLAN, yqScenePrompt(d, W, i, n), 4000)).scenes||[]).slice(0,n);
+  if(!plan.length) throw new Error('scene plan empty');
+  const batches=[]; for(let k=0;k<plan.length;k+=3) batches.push([k, Math.min(plan.length,k+3)]);
+  const tailOf=k=>k===0?(d.eps[i-1]||'').slice(-500):`（上一场 ${i+1}-${k}：${plan[k-1].beat}）`;
+  const parts=new Array(batches.length); let fixed=0, next=0;
+  const worker=async()=>{ for(;;){ const b=next++; if(b>=batches.length) return; const [f,t]=batches[b];
+    const raw=await yqChat(writer, yqBatchPrompt(d, W, i, plan, f, t, tailOf(f)), 4000); if(!raw) throw new Error('empty scenes');
+    const [txt,fx]=await check(raw); parts[b]=txt; fixed+=fx; } };
+  await Promise.all([worker(),worker(),worker()]);
+  let text=parts.join('\n\n');
+  if(i===0){ const ages=d.cast.filter(c=>/\d/.test(c.bio||'')).map(c=>`${c.name} ${(c.bio.match(/(\d+)\s*岁/)||[])[1]||''} 岁`).join('；');
+    text=`【角色年龄】所有角色均已年满 18 岁${ages?'。'+ages:''}。所有亲密关系皆为双方自愿。\n\n`+text; }
+  return [text, fixed];
 }
 function yqCheckPrompt(d, W, i, txt){
   return `你是短剧审稿。检查下面这一集剧本，只找真正要改的问题，最多 5 条。
@@ -2672,13 +2734,8 @@ async function yqDrive(wid){
       w=cur(); if(!w||!w.gen||w.gen.status!=='writing'||!w.gen.data) break;
       const d=w.gen.data, i=d.outline.findIndex((_,k)=>!d.eps[k]);
       if(i<0){ updateGen(wid,{status:'done'}); yqRefresh(wid); break; }
-      const Wx=Object.assign({},WZ_DEF,w.W), writer=heatOf(Wx)==='高尺度'?YQ_HOT:YQ_WRITE, mx=heatOf(Wx)==='点到为止'?3000:4000;
-      let txt=await yqChat(writer, yqEpPrompt(d, Wx, i), mx), fixedN=0;
-      if(!txt) throw new Error('empty episode');
-      if(depthOf(Wx)==='重度'){
-        try{ const chk=parseJSON(await yqChat(YQ_PLAN, yqCheckPrompt(d, Wx, i, txt), 1500)), iss=(chk.issues||[]).filter(x=>x&&x.problem);
-          if(iss.length){ const fx=await yqChat(writer, yqFixPrompt(d, Wx, i, txt, iss), mx); if(fx&&fx.length>txt.length*.5){ txt=fx; fixedN=iss.length; } } }catch(e){ if(/登录|积分/.test(e.message)) throw e; }
-      }
+      const Wx=Object.assign({},WZ_DEF,w.W);
+      const [txt, fixedN]=await yqWriteEpisode(d, Wx, i);
       const w2=cur(); if(!w2||!w2.gen||!w2.gen.data) break;
       w2.gen.data.eps[i]=txt; (w2.gen.data.fixed=w2.gen.data.fixed||[])[i]=fixedN; updateGen(wid,{data:w2.gen.data}); yqRefresh(wid);
     }
