@@ -1,10 +1,37 @@
 import { parse } from 'acorn'
 import { readFileSync } from 'node:fs'
+import path from 'node:path'
 import vm from 'node:vm'
 import { fileURLToPath } from 'node:url'
 
-/** 旧页面模板，只读。 */
-export const LEGACY_TEMPLATE = fileURLToPath(new URL('../../../web/site-template.html', import.meta.url))
+/*
+ * 旧页面对照的统一入口：所有新旧对照测试都经这里读取旧模板、抽取内联脚本。
+ * 路径用 fileURLToPath(import.meta.url) 加 path.resolve：vitest 的 jsdom（web）转换只改写 new URL('相对路径', import.meta.url)
+ * 这种写法并把全局 URL 换成 jsdom 的实现，导致 .test.tsx 里 import 即抛 “The URL must be of scheme file”；
+ * 这里不写该模式，import.meta.url 本身在 node 与 jsdom 两个项目里都是 file 地址（字符串），所以两边都能 import。
+ */
+const HERE = path.dirname(fileURLToPath(import.meta.url))
+
+/** 固定的对照基准：旧模板在该提交时的内容（tests/fixtures 下的快照，说明见该目录 README）。 */
+export const LEGACY_SNAPSHOT_COMMIT = '1cf6f6c'
+export const LEGACY_SNAPSHOT_SHA256 = 'e023143e29b88c0c07f7d225e604f8ce2e88ca84deb89e3325133e242fdf524e'
+export const LEGACY_SNAPSHOT = path.resolve(HERE, '../fixtures/legacy-template.1cf6f6c.html')
+/** 仓库里当前的旧模板（只读）；只在设置 LEGACY_TEMPLATE=latest 时使用，给 P6-A 追平阶段对照最新模板。 */
+export const LEGACY_LATEST = path.resolve(HERE, '../../../web/site-template.html')
+
+function pickTemplate(env: string | undefined): string {
+  if (env === undefined || env === '') return LEGACY_SNAPSHOT
+  if (env === 'latest') return LEGACY_LATEST
+  throw new Error(`LEGACY_TEMPLATE 只接受 latest（对照最新模板）或不设置（对照固定快照），收到 ${JSON.stringify(env)}`)
+}
+
+/** 当前生效的旧模板文件路径：默认固定快照，LEGACY_TEMPLATE=latest 时为仓库最新模板。 */
+export const LEGACY_TEMPLATE = pickTemplate(process.env.LEGACY_TEMPLATE)
+
+/** 当前生效的旧模板全文。 */
+export function readLegacyTemplate(): string {
+  return readFileSync(LEGACY_TEMPLATE, 'utf8')
+}
 
 /** 依赖 DOM 的顶层常量，抽取时跳过。 */
 const SKIP_NAMES = new Set(['account', 'accountTrigger', 'SpeechRec'])
@@ -44,7 +71,7 @@ function declaredNames(pattern: any, out: string[] = []): string[] {
 }
 
 /** 取出模板里唯一的内联 <script> 正文。 */
-function inlineScript(html: string): string {
+export function inlineScript(html: string): string {
   const open = '\n<script>\n'
   const start = html.indexOf(open)
   const end = html.lastIndexOf('\n</script>')
@@ -69,6 +96,25 @@ export function extractTopLevel(script: string): string {
   return kept.join('\n')
 }
 
+/** 内联脚本全文，数据与后端地址占位符已替换（后端地址缺省为空，即同源）。 */
+export function legacyScript(opt: { data: unknown; apiBase?: string }): string {
+  return inlineScript(readLegacyTemplate())
+    .replace('/*__DATA__*/null', () => JSON.stringify(opt.data))
+    .replace("/*__API_BASE__*/''", () => JSON.stringify(opt.apiBase ?? ''))
+}
+
+/** 整页 HTML（给整页运行旧页面的 jsdom 用），数据与后端地址占位符已替换。 */
+export function legacyHtml(opt: { data: unknown; apiBase?: string }): string {
+  return readLegacyTemplate()
+    .replace('/*__DATA__*/null', () => JSON.stringify(opt.data))
+    .replace("/*__API_BASE__*/''", () => JSON.stringify(opt.apiBase ?? ''))
+}
+
+/** 抽取后的旧页面顶层声明源码：各对照沙箱（node:vm 或 jsdom 的 vm 上下文）直接 runInContext 它。 */
+export function legacyTopLevel(opt: { data: unknown; apiBase?: string }): string {
+  return extractTopLevel(legacyScript(opt))
+}
+
 export interface LegacyOptions {
   /** build.py data 的内容（对象）。 */
   data: unknown
@@ -88,11 +134,7 @@ export interface Legacy {
 
 /** 在 node:vm 里加载旧页面的顶层纯函数与常量，供新旧对照。 */
 export function loadLegacy(opt: LegacyOptions): Legacy {
-  const script = inlineScript(readFileSync(LEGACY_TEMPLATE, 'utf8'))
-  const withData = script
-    .replace("/*__DATA__*/null", () => JSON.stringify(opt.data))
-    .replace("/*__API_BASE__*/''", () => JSON.stringify(opt.apiBase ?? ''))
-  const source = extractTopLevel(withData)
+  const source = legacyTopLevel(opt)
 
   const storage = new MemoryStorage(opt.storage)
   const location = { hash: '', search: '', pathname: '/', href: 'http://localhost/' }
