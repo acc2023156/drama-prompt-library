@@ -387,3 +387,20 @@
 - [修改] 测试随新模板改写：资产首页涉及 `data-del` 的 4 项用例（旧模板已删掉该按钮）改写为选择模式、过期清理与回收桶入口的 11 项；作品页用例的按钮选择器与确认框文案；键表加 `assetsTrash`；路由用例加 3 个 `#/assets-trash` 地址 — `tests/parity/assets-home.test.tsx`、`pro-home.test.tsx`、`lib.test.ts`、`shell.test.ts`、`tests/unit/assets.test.tsx`
 - [新增] 回收桶新旧对照 13 项（空、有数据、过期清理、缺时间项、返回、还原、永久删除、清空、完整流程）、`purgeAssetTrash` 7 组新旧对照、StrictMode 组件测试 2 项 — `tests/parity/assets-trash.test.tsx`、`domain-base.test.ts`、`tests/unit/assets.test.tsx`
 - 验证：变基到 P6-C 之后全包 48 个文件 1350 项（本节新增 27 项），默认（固定快照）与 `LEGACY_TEMPLATE=latest` 都 0 失败；`tsc --noEmit`、`vite build`、`check:dist` 通过；未做浏览器验证
+
+### GitLab 镜像接入（容器服务模板 `outdoor/service-template`）
+
+依据模板 main `2f28dff9`。组件名 `outdoor-tianji`，制品名 `app`。接入申请材料只写在 Obsidian 项目文档里，未发送。
+
+- [新增] MR 与受保护分支校验 `.gitlab-ci.yml`，与模板逐字一致；Runner 标签沿用模板默认 `devops-verify` 占位，待管理员提供 — `.gitlab-ci.yml`
+- [新增] 与中央 CI（`devops/artifacts`）的约定文件，与模板逐字一致：`build-image.sh`、`manifest.py` 及 4 份 `test_*.py` — `.gitlab/`
+- [新增] `plan.py`：相对模板只改 `RUNNER = 'outdoor-tianji'` 与 `CHECKS = ('policy', 'web', 'worker', 'web-react')`；`IMAGES` 保持 `{'app': ('Dockerfile', '.')}` — `.gitlab/plan.py`
+- [新增] `verify.sh` 项目检查：`web`（`build.py site`，只需 Python）；`worker`（类型检查 + 测试，没设 `TEST_DATABASE_URL` 时 20 项数据库集成测试跳过并打印提示）；`web-react`（类型检查、测试、`vite build`、`check:dist`）；后两项缺 npm 时明确失败；没有 `node_modules` 时先 `npm ci` — `.gitlab/verify.sh`
+- [新增] 检查工具链 `Dockerfile.ci`：模板的 Python 3.12 基础镜像加官方 Node.js 24 与 npm，两个基础镜像都固定 digest — `.gitlab/Dockerfile.ci`
+- [新增] 运行配置键名示例（只有键名与公开默认值，密钥只列名字）— `config/variables.example.json`
+- [修改] `.dockerignore` 补模板项：`*.pem`、`*.key`、`.gitlab-ci.yml`、`.gitlab/`、`config/`、CI 产物；`.gitignore` 补 `.env.*`（保留 `!.env.example`）、`*.pem`、`*.key`、CI 产物 — `.dockerignore`、`.gitignore`
+- [修改] Dockerfile：4 个基础镜像固定 digest（多架构索引）；`USER node` 改为固定数字 `USER 1000:1000`；去掉 `# syntax=docker/dockerfile:1`，中央 CI 的 BuildKit 用内置前端，不再拉取 syntax 镜像 — `Dockerfile`
+- [修改] worker README 容器镜像一节：数字 UID、只读根文件系统、amd64 schema-engine — `packages/worker/README.md`
+- 健康检查沿用已有的 `GET /`（无需登录与 Origin，返回 `{ok:true}`），未新增接口，后端代码未改
+- 验证：本机 macOS 上 `policy` 有 1 项失败（模板测试桩用 GNU `stat -c`，只能在 Linux 跑），其余通过；在 `.gitlab/Dockerfile.ci` 构建的 amd64 镜像里跑 README 的循环命令，接临时 PostgreSQL 16 时 4 项检查全过（policy 15 项、worker 23 项、web-react 1350 项）；不接数据库时 worker 3 过 20 跳过并打印提示；用模板的纯 Python 镜像跑时 `worker` 明确失败（npm not found）
+- 验证（镜像）：`docker build --platform linux/amd64` 通过，镜像 amd64、`User=1000:1000`，含 `schema-engine-linux-musl-openssl-3.0.x`；`docker run --read-only --tmpfs /tmp` 下空库 `migrate:status` 退出码 1、服务拒绝启动，`migrate` 成功后 `migrate:status` 为最新；服务启动后 `GET /` 200、登录、`/me`、保存与读取作品正常，根文件系统写入被拒；不挂 `/tmp` 时 `migrate:status` 与服务也正常；`docker stop` 退出码 0
