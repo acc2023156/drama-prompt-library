@@ -484,6 +484,13 @@ a.pill{text-decoration:none}
 .adm-h{background:transparent;color:var(--text-3);font-size:12px}
 .adm-r select,.adm-r input{height:32px;border-radius:8px;border:1px solid var(--line-2);background:#141416;color:#fff;padding:0 8px;font-size:13px}
 .adm-add{display:flex;gap:6px}.adm-add input[data-n]{width:76px}.adm-add input[data-note]{flex:1;min-width:0}
+.lst{display:flex;flex-direction:column;gap:2px;border-radius:18px;border:1px solid var(--line);background:#151517;padding:6px 18px 16px}
+.lst-r{display:grid;grid-template-columns:120px 1fr auto;gap:14px;align-items:start;padding:14px 0;border-bottom:1px solid var(--line)}
+.lst-r>b{color:var(--text-2);font-size:13px;font-weight:600;display:flex;flex-direction:column;gap:4px}.lst-r>b small{color:#f0a35e;font-weight:500;font-size:11.5px}
+.lst-r>div{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-width:0}.lst-r p{margin:0;width:100%;color:#fff;line-height:1.7}.lst-r p .ui-tag{margin-left:6px;vertical-align:1px}
+.lst-r .mute{color:var(--text-3)}.ui-tag.hot{color:#ffd29a;border-color:rgba(240,154,62,.45);background:rgba(240,154,62,.10)}
+.lst-act{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding-top:14px}
+@media (max-width:640px){.lst-r{grid-template-columns:1fr}.lst-r>.ui-btn{justify-self:start}}
 .pcard{margin:0 0 16px;padding:14px 18px;border-radius:16px;border:1px solid rgba(139,69,255,.35);background:rgba(139,69,255,.07)}
 .pcard summary{cursor:pointer;font-weight:700;display:flex;align-items:center;gap:6px;list-style:none}
 .pcard summary svg{width:16px;height:16px;stroke:#c9a8ff;fill:none;stroke-width:2}
@@ -2837,6 +2844,74 @@ async function yqDrive(wid){
 }
 function startYq(w){ updateGen(w.id,{engine:'yq', status:'outline', at:Date.now(), req:genReq(w.W), data:null, err:null}); }
 /* 作品的剧本：有模型结果就用模型的，否则用模板草稿 */
+/* 上架资料：给生产单位上架短剧平台用。常青词（题材、人设）放标题与固定标签；时效词（热词、热点）标抓取日期，上架前换新 */
+const KW_STOP=new Set('一位 一个 不会 几乎 这种 那种 多次 支持 感谢 项目 真实 日常 大人 主动 宣传 粉丝 耐心 爱心 温柔 社区 我们 他们 什么 没有 这样 怎么 第一次 捐助 市值 加密 日本 大哥'.split(' '));
+// 红线与站名：未成年、亲属关系、非自愿、别家平台与品牌，一律不进上架资料
+const KW_BLOCK=/jav|avhub|七猫|番茄|红果|抖音|快手|女优|\bav\b|学生|校园|少女|萝莉|未成年|初中|高中|幼|童|孩子|儿子|女儿|妈妈|母亲|母女|母子|义母|义父|继母|继父|养母|养父|父女|父子|兄妹|姐弟|表哥|表姐|表妹|堂哥|堂妹|岳母|公公|儿媳|乱伦|迷奸|下药|催眠|强奸|强暴|偷拍|自闭症|精神病/i;
+const KW_RAW=/内射|精液|射精|阴|乳头|性器/;
+const kwOk=t=>t&&!KW_BLOCK.test(t), LST_BUSY=new Set();
+async function listingSources(heat){
+  const get=u=>fetch(TJ_API+u).then(r=>r.ok?r.json():null).catch(()=>null);
+  const [wj,hj]=await Promise.all([get('/words'), get('/hot')]);
+  const words=((wj&&wj.words)||[]).filter(x=>x.cat!=='社会，名单命中' && String(x.word||'').length>=2 && !KW_STOP.has(x.word) && kwOk(x.word) && (heat==='高尺度'||!KW_RAW.test(x.word)))
+    .sort((a,b)=>(b.heat||0)-(a.heat||0)).slice(0,30).map(x=>`${x.word}（热度 ${x.heat}，${x.trend}）`);
+  const topics=((hj&&hj.topics)||[]).filter(x=>!/政|军|国际/.test(x.cat||'') && kwOk(x.t)).slice(0,15).map(x=>`${x.t}（${x.cat||''}，${x.trend||''}）`);
+  return {words, topics, at:(wj&&wj.at)||(hj&&hj.at)||''};
+}
+function listingPrompt(w, d, src){
+  const W=Object.assign({},WZ_DEF,w.W), heat=heatOf(W);
+  return `你是短剧平台的上架运营，熟悉平台站内搜索与推荐。为下面这部短剧写上架资料，交给生产单位，片子拍完上架时直接用。
+片名：《${d.title||w.title}》
+一句话故事：${d.logline||W.pitch||''}
+受众：${W.aud}｜关系：${W.pair}｜题材：${W.genre||''}｜${d.outline.length} 集，每集约 ${wzMins(W)} 分钟｜尺度：${heat}
+人物：${(d.cast||[]).map(c=>`${c.name}（${c.role}）`).join('、')}
+分集：
+${d.outline.map((o,i)=>`第${i+1}集 ${o.title}：${o.event||''}${o.hook?'｜钩子：'+o.hook:''}`).join('\n')}
+
+近期热词（${src.at||'今日'}抓取，只挑跟这部剧真的相关的，不相关就一个都不用）：
+${src.words.join('、')||'（无）'}
+近期热点事件（可借来组长尾词的情境，不相关就不用）：
+${src.topics.join('\n')||'（无）'}
+
+要求：
+- 短尾词：2–4 字的题材、人设、关系核心词，平台上大量人会搜的（例：已婚、禁忌、反差、女上司、大叔、契约、复仇）。放片名与常青标签。
+- 长尾词：3–4 个词组成的具体情境，8–16 字，例如「已婚女上司 出差同房」，用来抓精准观众。放一句话简介的前 20 字。
+- 片名候选 3 个：每个含 1 个短尾词，10 字以内，有反差或悬念。
+- 一句话简介：30 字以内，开头就是长尾情境。
+- 介绍：120–160 字，第一句就是钩子，自然带进 2–4 个关键词，不堆砌、不剧透结局。
+- 标签 8 个：5 个常青（题材、人设，长期有效）＋ 3 个时效（取自上面的热词或热点，没有相关的就少给）。
+- ${heat==='高尺度'?'尺度可以直接，用成人观众熟悉的说法（人妻、偷情、禁忌、出轨这类），但片名与标签不写性器官、体液等字眼。':heat==='正常'?'成人向但含蓄，用暧昧、心动、禁忌这类词，不写露骨字眼。':'走情感向，不写露骨字眼。'}
+- 不写别家平台或品牌名、真实人名、时事政治。
+${YQ_RULES}
+只输出 JSON：{"titles":[{"t":"片名","kw":"用到的短尾词"}],"oneLine":"一句话简介","intro":"介绍","tags":{"evergreen":["常青标签"],"timely":["时效标签"]},"keywords":{"short":["短尾词"],"long":["长尾词"]}}`;
+}
+function listingClean(x){
+  const arr=a=>(Array.isArray(a)?a:[]).map(v=>String(v||'').trim()).filter(kwOk);
+  return { titles:(x.titles||[]).map(t=>typeof t==='string'?{t}:t).filter(t=>t&&kwOk(t.t)).slice(0,3),
+    oneLine:String(x.oneLine||'').trim(), intro:String(x.intro||'').trim(),
+    tags:{evergreen:arr(x.tags&&x.tags.evergreen).slice(0,6), timely:arr(x.tags&&x.tags.timely).slice(0,4)},
+    keywords:{short:arr(x.keywords&&x.keywords.short).slice(0,10), long:arr(x.keywords&&x.keywords.long).slice(0,10)} };
+}
+const lstDay=L=>(L.wordsAt||new Date(L.at).toISOString()).slice(5,10);
+function listingText(w){
+  const L=w.listing; if(!L) return ''; const x=L.data;
+  return `【上架资料】《${w.title}》
+片名候选：
+${x.titles.map((t,i)=>`${i+1}. ${t.t}`).join('\n')}
+
+一句话简介：${x.oneLine}
+
+介绍：
+${x.intro}
+
+常青标签：${x.tags.evergreen.join(' / ')}
+时效标签（${lstDay(L)} 热词，上架前换新）：${x.tags.timely.join(' / ')||'—'}
+
+短尾词：${x.keywords.short.join('、')}
+长尾词：${x.keywords.long.join('、')}
+`;
+}
+
 function vibeData(w){
   const s=vibeSx(w), g=w.gen;
   if(g&&(g.status==='done'||g.status==='writing'||(g.status==='error'&&g.engine==='yq'))&&g.data&&g.data.outline.length){
@@ -2899,7 +2974,7 @@ function viewVibeScript(id, tab){
   if(w.gen && w.gen.status==='writing') yqDrive(w.id);
   let {s, eps}=vibeData(w);
   const W=s.W, ai=W.ai||'Claude', site=AI_SITES[ai];
-  const TABS=[['outline','各集大纲'],['script','剧情对话'],['assets','角色资产库'],['board','分镜图']];
+  const TABS=[['outline','各集大纲'],['script','剧情对话'],['assets','角色资产库'],['board','分镜图'],['listing','上架资料']];
   v.innerHTML=`
     <div class="res-back"><a class="pill" href="#/script">${ico('back')}返回</a></div>
     <section class="done-hero">
@@ -2916,13 +2991,13 @@ function viewVibeScript(id, tab){
   const epTxt=i=>eps[i].split('\n').slice(1).join('\n').trim();
   if($('gResume')) $('gResume').onclick=()=>{ updateGen(w.id,{status:'writing',err:null}); viewVibeScript(w.id,tab); };
   let akind='role';
-  const TAB_FN={outline:'script', script:'script', assets:'assets', board:'storyboard'};
+  const TAB_FN={outline:'script', script:'script', assets:'assets', board:'storyboard', listing:'script'};
   function draw(){
     store('vibeTab',tab);
     const want='#/script/v/'+w.id+'/'+tab; if(location.hash!==want) history.replaceState(null,'',want);
     drawNav({view:'tool', tool:TAB_FN[tab], sub:'vibe', wid:w.id, vibe:{id:w.id, title:w.title, tab}});
     document.querySelectorAll('#vtTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
-    $('vtAI').style.display = tab==='assets'||tab==='board' ? 'none' : '';
+    $('vtAI').style.display = tab==='assets'||tab==='board'||tab==='listing' ? 'none' : '';
     if(tab==='outline'){
       const C=w.gen&&w.gen.data&&w.gen.data.card, R=(C&&C.rules)||{};
       const cardHtml=C?`<details class="pcard" open><summary>${ico('sparkle')}策划卡</summary>
@@ -2937,6 +3012,36 @@ function viewVibeScript(id, tab){
     } else if(tab==='script'){
       $('vtBody').innerHTML=`<div class="scr">${eps.map((x,i)=>`<div class="ep" id="ep${i}"><div class="h"><b>EP${String(i+1).padStart(2,'0')}</b><span>${esc(s.outline[i][0])}</span>${s.real&&s.written[i]&&w.gen.status!=='writing'?`<button class="btn-o ep-redo" data-redo="${i}">${ico('dice')}重写</button>`:''}</div><pre>${sxHL(epTxt(i))}</pre></div>`).join('')}</div>`;
       $('vtBody').querySelectorAll('[data-redo]').forEach(b=>b.onclick=()=>{ const k=+b.dataset.redo, d=w.gen.data; d.eps[k]=null; updateGen(w.id,{data:d, status:'writing', err:null}); viewVibeScript(w.id,'script'); });
+    } else if(tab==='listing'){
+      const d=w.gen&&w.gen.data, L=w.listing, busy=LST_BUSY.has(w.id);
+      const chip=(t,cls)=>`<span class="ui-tag ${cls||''}">${esc(t)}</span>`;
+      const row=(k,v,cp)=>`<div class="lst-r"><b>${k}</b><div>${v}</div>${cp!=null?`<button class="ui-btn secondary" data-lcp="${esc(cp)}">${ico('copy')}复制</button>`:''}</div>`;
+      if(!d||!d.outline||!d.outline.length){ $('vtBody').innerHTML='<div class="empty">大纲写好后才能生成上架资料。</div>'; return; }
+      $('vtBody').innerHTML = !L ? `<div class="empty"><button class="ui-btn primary" id="lstGo" ${busy?'disabled':''}>${busy?'<span class="gw-spin"></span>正在生成…':ico('sparkle')+'生成上架资料'}</button></div>`
+        : `<div class="lst">
+          ${row('片名候选', L.data.titles.map(t=>`<p>${esc(t.t)}${t.kw?` ${chip(t.kw,'mode')}`:''}</p>`).join(''), L.data.titles.map(t=>t.t).join('\n'))}
+          ${row('一句话简介', `<p>${esc(L.data.oneLine)}</p>`, L.data.oneLine)}
+          ${row('介绍', `<p>${esc(L.data.intro)}</p>`, L.data.intro)}
+          ${row('常青标签', L.data.tags.evergreen.map(t=>chip(t,'mode')).join(''), L.data.tags.evergreen.join(' '))}
+          ${row(`时效标签<small>${lstDay(L)} 热词 · 上架前换新</small>`, L.data.tags.timely.map(t=>chip(t,'hot')).join('')||'<p class="mute">—</p>', L.data.tags.timely.join(' '))}
+          ${row('短尾词', L.data.keywords.short.map(t=>chip(t)).join(''), null)}
+          ${row('长尾词', L.data.keywords.long.map(t=>chip(t)).join(''), null)}
+          <div class="lst-act"><button class="ui-btn ghost" id="lstGo" ${busy?'disabled':''}>${busy?'<span class="gw-spin"></span>正在生成…':ico('dice')+'重新生成'}</button><button class="ui-btn secondary" id="lstDl">${ico('dl')}下载 .txt</button><button class="ui-btn primary" id="lstCp">${ico('copy')}复制全部</button></div></div>`;
+      $('vtBody').querySelectorAll('[data-lcp]').forEach(b=>b.onclick=()=>copyText(b.dataset.lcp,b));
+      if($('lstCp')) $('lstCp').onclick=e=>copyText(listingText(w),e.currentTarget);
+      if($('lstDl')) $('lstDl').onclick=()=>saveBlob(new Blob(["﻿"+listingText(w)],{type:'text/plain;charset=utf-8'}),`${(w.title||'作品').replace(/[\\/:*?"<>|]/g,'-')}-上架资料.txt`);
+      $('lstGo').onclick=async()=>{
+        if(!authGet()){ openLogin(); return; }
+        LST_BUSY.add(w.id); draw();
+        try{
+          const W2=Object.assign({},WZ_DEF,w.W), src=await listingSources(heatOf(W2));
+          const raw=await yqChat(heatOf(W2)==='高尺度'?YQ_HOT:YQ_WRITE, listingPrompt(w, d, src), 2500);
+          const data=listingClean(parseJSON(raw)); if(!data.titles.length||!data.intro) throw new Error('上架资料没生成完整');
+          const list=store('works')||[], me=list.find(x=>x.id===w.id); w.listing={at:Date.now(), wordsAt:src.at, data};
+          if(me){ me.listing=w.listing; store('works',list); } toast('上架资料已生成');
+        }catch(e){ toast(/登录|积分/.test(e.message)?e.message:'没生成成功，再试一次'); }
+        LST_BUSY.delete(w.id); if(tab==='listing'&&document.getElementById('lstGo')) draw();
+      };
     } else if(tab==='assets'){
       const core=[W.pitch,W.core].filter(x=>x&&x.trim()).join('；');
       const locCount={}; eps.forEach(e=>epMat(e).locs.forEach(l=>locCount[l]=(locCount[l]||0)+1));
@@ -3010,6 +3115,7 @@ function viewVibeScript(id, tab){
       {name:'XTASY/导入说明.txt',text:'此压缩包已按 XTASY 项目交换格式整理。打开 XTASY 后进入项目/画布导入，选择本 ZIP；若当前版本不支持整包导入，可使用剧本目录中的单集文本逐集创建。'},
       {name:'资产/资产清单.json',text:JSON.stringify({characters:[s.name,s.name2,'对手'],scenes:['主要场景'],ratio:W.ratio||'9:16'},null,2)}
     ];
+    if(w.listing) files.unshift({name:'上架资料.txt',text:listingText(w)});
     s.outline.forEach(([title,outline],i)=>{const no=String(i+1).padStart(2,'0'),t=epTxt(i),m=epMat(t);files.push({name:`剧本/第${no}集-大纲.txt`,text:`第 ${i+1} 集：${title}\n\n${outline}`},{name:`剧本/第${no}集-剧情对话.txt`,text:t},{name:`分镜/第${no}集.json`,text:JSON.stringify({episode:i+1,title,ratio:W.ratio||'9:16',characters:m.people,scenes:m.locs,prompt:t},null,2)});});
     return {safe,blob:makeZip(files)};
   };
@@ -3122,7 +3228,7 @@ function drawNav(route){
   let h = `<div class="ps-row"><button class="pill" id="psClose" title="收起">${pill}</button></div>`;
   if(route.vibe){ const V=route.vibe;
     h += T('当前作品') + A('#/script/v/'+V.id+'/outline','《'+V.title+'》',{cls:'head fn',icon:'script',on:false})
-      + [['outline','各集大纲','text'],['script','剧情对话','pen'],['assets','角色资产库','user'],['board','分镜图','play']]
+      + [['outline','各集大纲','text'],['script','剧情对话','pen'],['assets','角色资产库','user'],['board','分镜图','play'],['listing','上架资料','arrowUp']]
         .map(([k,l,ic])=>A('#/script/v/'+V.id+'/'+k,l,{cls:'fn sub',icon:ic,on:V.tab===k})).join('') + `<div class="ps-hr"></div>`;
   }
 
