@@ -2,3 +2,5 @@ packages/web/site/
 .env
 node_modules/
 __pycache__/
+packages/worker/src/generated/
+packages/worker/dist/

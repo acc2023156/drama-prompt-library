@@ -7,10 +7,12 @@
   "scripts": {
     "build:web": "npm run build -w @tianji/web",
     "dev:web": "npm run dev -w @tianji/web",
+    "build:worker": "npm run build -w @tianji/worker",
     "dev:worker": "npm run dev -w @tianji/worker",
     "start:worker": "npm run start -w @tianji/worker",
     "test:worker": "npm run test -w @tianji/worker",
+    "typecheck:worker": "npm run typecheck -w @tianji/worker",
     "migrate:worker": "npm run migrate -w @tianji/worker",
-    "migrate:create:worker": "npm run migrate:create -w @tianji/worker --"
+    "migrate:dev:worker": "npm run migrate:dev -w @tianji/worker --"
   }
 }

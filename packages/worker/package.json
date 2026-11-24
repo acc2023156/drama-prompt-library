@@ -2,23 +2,37 @@
   "name": "@tianji/worker",
   "private": true,
   "type": "module",
-  "description": "tianji-api：Node.js + PostgreSQL（模型代理、帐号积分、作品、热点、长剧本任务）",
+  "description": "tianji-api：TypeScript + Hono + Prisma + PostgreSQL（模型代理、帐号积分、作品、热点、长剧本任务）",
   "engines": {
-    "node": ">=20"
+    "node": "^20.19 || ^22.12 || >=24.0"
   },
   "scripts": {
-    "dev": "node --watch src/server.js",
-    "start": "node src/server.js",
-    "test": "node --test \"test/*.test.js\"",
-    "migrate": "node-pg-migrate up --migration-file-language sql --advisory-lock-mode wait",
-    "migrate:down": "node-pg-migrate down --migration-file-language sql",
-    "migrate:dry": "node-pg-migrate up --migration-file-language sql --dry-run",
-    "migrate:create": "node-pg-migrate create --migration-file-language sql --migration-filename-format utc",
-    "migrate:status": "node scripts/migration-status.js"
+    "prisma:generate": "prisma generate",
+    "build": "prisma generate && tsc -p tsconfig.build.json",
+    "predev": "prisma generate",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "pretest": "prisma generate",
+    "test": "node --import tsx --test \"test/*.test.ts\"",
+    "pretypecheck": "prisma generate",
+    "typecheck": "tsc --noEmit",
+    "migrate": "prisma migrate deploy",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:status": "prisma migrate status"
   },
   "dependencies": {
+    "@hono/node-server": "^2.1.11",
+    "@hono/zod-validator": "^0.9.1",
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
     "dotenv": "^18.0.10",
-    "node-pg-migrate": "^9.0.0",
-    "pg": "^8.23.1"
+    "hono": "^4.13.21",
+    "prisma": "7.10.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
   }
 }

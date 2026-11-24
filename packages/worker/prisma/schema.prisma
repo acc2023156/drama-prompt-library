@@ -1,0 +1,83 @@
+// 天玑后端数据模型。表结构的唯一来源：改这里，再用 npm run migrate:dev 生成迁移。
+// 表名、列名沿用旧版（snake_case），Prisma 侧用 camelCase 并用 @map 对应。
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// 用户：手机号登录（不验证），积分每日补满
+model User {
+  uid       String  @id
+  phone     String  @unique
+  role      String  @default("free") // free | member | tester
+  points    Int     @default(0)
+  day       String? // 最近一次补点的北京日期；改身份时置空，强制下次补点
+  created   BigInt // 毫秒时间戳
+  lastLogin BigInt? @map("last_login")
+  usedTotal Int     @default(0) @map("used_total")
+
+  @@map("users")
+}
+
+/// 云端作品：data 为作品 JSON 文本
+model Work {
+  uid     String
+  id      String
+  data    String
+  updated BigInt
+
+  @@id([uid, id])
+  @@map("works")
+}
+
+/// 写作调用日志，供管理后台统计
+model YqLog {
+  id     BigInt @id @default(autoincrement())
+  day    String
+  at     BigInt
+  status Int
+  ms     Int
+  model  String
+
+  @@index([day], map: "yqlog_day")
+  @@index([at], map: "yqlog_at")
+  @@map("yqlog")
+}
+
+/// 积分流水
+model Ledger {
+  id     BigInt @id @default(autoincrement())
+  uid    String
+  delta  Int
+  reason String
+  at     BigInt
+  day    String
+
+  @@index([uid, id], map: "ledger_uid")
+  @@map("ledger")
+}
+
+/// 热点、热词的最新一批快照（key 为 hot / words）
+model Snapshot {
+  key     String @id
+  value   String
+  updated BigInt
+
+  @@map("snapshots")
+}
+
+/// 长剧本任务：state 保留 7 天，body（只给 Actions 取用）保留 2 小时
+model Job {
+  id           String  @id
+  state        String
+  stateExpires BigInt  @map("state_expires")
+  body         String?
+  bodyExpires  BigInt? @map("body_expires")
+
+  @@map("jobs")
+}
