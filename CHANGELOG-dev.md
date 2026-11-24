@@ -359,3 +359,15 @@
 - 差异：地址里分页不存在（如 `/xyz`）时旧页面画侧栏抛错，新页面不抛错，显示同旧页面（分页不高亮、内容为空、侧栏不进作品上下文）
 - 差异：旧页面在登录请求返回前已离开作品页时会把作品页画到当前页上，新页面不再进入；旧页面离开作品页时打开着的分镜弹层不关闭，新页面随卸载关闭
 - 验证：全包 45 个文件 1314 项通过（新增 36 项）；`tsc --noEmit` 无错误；`vite build` 与 `check:dist` 通过；未做浏览器验证
+
+### web-react P6-C：错误边界、语音输入合并与锁文件对齐 `packages/web-react`
+
+- [新增] 路由错误边界：页面渲染期抛错时不白屏，保留上一次成功渲染的页面并在控制台记录错误（同旧页面停在上一页）；没有上一页，或保留的上一页再次抛错时，显示“页面出错了”提示与刷新按钮；路由变化（每次 hashchange）自动复位重试；正常路径不增加任何 DOM 节点 — `src/app/ErrorBoundary.tsx`
+- [修改] `App` 在 `RouteView` 外层接入错误边界，`routes.ts`、`RouteView.tsx` 未改 — `src/app/App.tsx`
+- [新增] 错误边界测试 9 项：正常路径无额外节点、抛错保留上一页并记录错误、连续出错停在最后成功页、路由变化复位、无上一页时提示与刷新按钮、保留页再抛错退回提示，以及 `App` 接入后的整体行为 — `tests/unit/error-boundary.test.tsx`、`tests/unit/app-error-boundary.test.tsx`
+- [修改] 合并两份语音输入实现：对话框、作品卡故事框与独家点子框用的 `useMic`，和资产编辑器的话筒，合为 `lib/speech.ts` 一份识别逻辑（`useMic` 增加受控值写回方式 `listenText`）；识别参数、分隔规则、DOM、报错文案不变 — `src/lib/speech.ts`
+- [新增] 资产编辑器话筒组件改放共享位置，基于 `useMic` — `src/components/MicButton.tsx`
+- [删除] 重复实现：原 `features/pro-chat/card/speech.ts`（移到 `lib/speech.ts`）、`features/assets/Mic.tsx`（移到 `components/MicButton.tsx`） — `src/features/pro-chat/card/speech.ts`、`src/features/assets/Mic.tsx`
+- [修改] 调用方只换引用：`Chat.tsx`、`WorkCard.tsx`、`AssetEditorPage.tsx`（`speechRec` 改 `speechCtor`） — `src/features/pro-chat/Chat.tsx`、`src/features/pro-chat/card/WorkCard.tsx`、`src/features/assets/AssetEditorPage.tsx`
+- [修改] 根锁文件里 web-react 的 `engines` 记录对齐 `packages/web-react/package.json`（`^22.22.2 || ^24.15.0 || >=26.0.0`，与 jsdom 31 的要求一致）；此前每次 `npm install` 都会改写这一行；只改这一行，未升级或新增任何依赖 — `package-lock.json`
+- 验证：全包 47 个文件 1323 项通过（新增 9 项，既有对照测试未改动，麦克风相关 45 项结果不变）；`tsc --noEmit` 无错误；`vite build` 与 `check:dist` 通过；`npm ci` 后与 `npm install` 后 `git status` 均干净；Dockerfile 的 build、deps 两个阶段构建通过；未做浏览器验证
