@@ -196,3 +196,15 @@
 - 差异：详情页复制按钮旧写法有 `id="cp"`，`CopyButton` 没有 id 参数，该 id 在旧页面脚本与 CSS 里没有别处引用，对照时忽略这一个 id
 - 发现：`tests/parity/legacy.ts`、`plugins/load-data.ts` 用 `fileURLToPath(new URL(…, import.meta.url))` 取路径，在 jsdom 环境（`.test.tsx`）里 import 即抛 “The URL must be of scheme file”，所以对照辅助文件自带路径与抽取逻辑；这两个文件未改
 - 验证：全包 19 个文件 405 项通过（node 341 项不变，dom 64 项，其中新增 61 项）；`tsc --noEmit` 无错误；变异检验 13 处人为改动（文案、条数、状态截断、6.0 按钮、pick 值、标题剥离、marked 的 gfm 与 breaks、外链 rel、代码卡文案、筛选条件不保留等）全部被测试发现；`vite build` 产物仍只有 `index.html`，`check:dist` 通过，产物 677,200 字节增至 721,884（marked 打进产物）；未做浏览器验证
+
+### 前端 React 重构 P2-C：伙伴计划页与会员页 `packages/web-react`
+
+对照基准：`packages/web/site-template.html` 在 `8d86e1e`（该文件最后改动提交 `1cf6f6c`）；追平之后的改动不在本节范围。
+
+- [修改] 伙伴计划页：替换占位，移植旧 `viewPartner`（头图、六个章节、赛道与奖金卡、报名流程与评审表、“报名与评审”锚点平滑滚动到 `#pt-join`、返回键），沿用旧 CSS 类名 — `src/features/partner/PartnerPage.tsx`
+- [新增] 伙伴计划横幅 `PartnerBanner`：默认是指向 `#/partner` 的链接形态（标准版首页 P3-A 复用，旧 `partnerBanner()`），`big` 为伙伴计划页头图形态（旧页面对其结果做字符串替换得到的结构，无“了解计划”按钮）— `src/features/partner/PartnerBanner.tsx`
+- [修改] 会员页：替换占位，移植旧 `viewMembership`（全屏覆盖层、计费周期页签、四档价格与权益、对比表、关闭按钮；点击购买与选择方案只弹提示，无支付接口）— `src/features/membership/MembershipPage.tsx`
+- [新增] 会员方案、对比表、页签的数据与折算月价、无限生成天数函数 — `src/features/membership/plans.ts`
+- [新增] 新旧对照测试：经 Node 原生 `require` 加载 `legacy.ts` 与 `load-data.ts`（jsdom 转换下它们的 `new URL(…, import.meta.url)` 会被改写而失效，文件本身未改），在 `node:vm` 里实跑旧 `viewPartner`、`viewMembership`、`partnerBanner`，旧脚本的 `document`、`history`、`location` 指向 jsdom 真实对象，直接渲染进真实 DOM；与 React 渲染结果按节点逐一比较（标签、命名空间、属性、文本逐字；忽略内联 `on*` 属性与仅含空白的文本节点），并在两边各跑同一套交互场景（锚点、返回有无历史、关闭有无历史、6 次页签点击、9 个方案按钮提示、页脚按钮无事件）比较观察结果 — `tests/parity/partner.test.tsx`、`tests/parity/membership.test.tsx`、`tests/parity/static-pages-dom.tsx`
+- [新增] 组件测试 10 项：路由挂载真实页面、锚点滚动、返回、关闭、页签、购买提示、横幅两种形态 — `tests/unit/static-pages.test.tsx`
+- 验证：全包 22 个文件 426 项通过（含本包新增 3 个文件 21 项）；`tsc --noEmit` 通过；`vite build` 与 `check:dist` 通过；15 处人为改动（文案、属性、类名、价格、取整、提示语、全角空格、历史判断、取消 preventDefault 等）全部被测试发现；未做浏览器验证
