@@ -224,3 +224,17 @@
 - 差异：`CopyButton` 不支持传 id，旧“复制全部”按钮有 `id="cpAll"`，本页自带一个等价的按钮组件保留该 id
 - 发现：`tests/parity/legacy.ts`、`plugins/load-data.ts` 在 jsdom 环境（`.test.tsx`）里 import 即抛 “The URL must be of scheme file”，所以辅助文件自带路径与抽取逻辑（与 `legacy.ts` 的 `extractTopLevel` 同逻辑，旧页面结构变化时两处一起改）；这两个文件未改
 - 验证：全包 26 个文件 520 项通过（本包新增 4 个文件 94 项）；`tsc --noEmit` 无错误；18 处人为改动（文案、class、display、写存储时机、脏状态、集序钳制、画风校验、章节列表、跳转目标与回收站过滤、链接等）全部被测试发现；`vite build` 与 `check:dist` 通过；未做浏览器验证
+
+### 前端 React 重构 P3-B：标准版结果页 `packages/web-react`
+
+对照基准：`packages/web/site-template.html` 在 `1cf6f6c`（该文件最后改动提交，origin/main 为 `8d86e1e` 时取得）；追平之后的改动不在本节范围。
+
+- [修改] 结果页替换占位：作品标题与角色卡（头像底色、表面 / 内心 / 金手指 / 关系 / 要点、流派标签）、10 集大纲与完整台词（`sxScript`、`sxHL`、`sxScriptText`、`sxPrompt`、`sxBuildWork` 取自 `domain/sx`）、分页切换、重写（换随机种子写回 works）、AI 精写提示词弹窗（`showModal`）、复制全部、下载 .txt、到 PRO 版细修、删除（确认后从 works 直接删掉，不进回收站）、`?new=1` 的撒花与“剧本大纲完成！”徽章、作品不存在的空状态；沿用旧 CSS 类名与元素 id，不改 `legacy.css`；文件名、导出名、props 不变 — `src/features/simple/result/SimpleResultPage.tsx`
+- [新增] 对照测试 83 项：旧 `viewScriptResult` 在 `node:vm` 里实跑、挂独立 jsdom 文档，与新组件的渲染 DOM 逐节点比较；随机数、`Date.now`、剪贴板、下载、`confirm`、滚动、`location.hash` 两边同样打桩并比较记录。覆盖：男频 10 + 女频 10 个角色类型各 fresh 无种子与非 fresh 有种子共 40 例、9 个边界（fresh 带种子、种子为 0、标准版与 PRO 的返回链接、非 simple 的 kind、标题含特殊字符、多作品取对应 id）、作品不存在 3 例（无该 id、无 works 键、works 为 null）、React 服务端渲染原文与旧页面 style 原文逐字符一致（4 组夹具，另有撒花与头像底色的原文检查）、交互 17 例（切页签写种子、完整台词大按钮含滚动、重写三次、重写后切回大纲、重写重挂载条目、复制含 1.3 秒还原边界、下载文件名与 BOM、提示词弹窗 DOM 与开关、弹窗下载文件名、到 PRO 版细修、删除取消与确认、删最后一个、写入时读最新 works、StrictMode 只写一次、换 sid 重挂载、无 sx 的作品）；每个写入点断言 `pl.works`、`pl.pro` 原文与旧页面逐字节相等 — `tests/parity/simple-result.test.ts`
+- [新增] 对照辅助：旧页面沙箱（`result-legacy.ts`）、打桩记录（`result-stubs.ts`）、DOM 树归一与比较（`dom-tree.ts`，style 有 css 与 raw 两种模式）、node 环境手动装 jsdom 全局（`dom-env.ts`）— `tests/parity/`
+- [新增] 变异检验：对旧页面 DOM 的 9 种改动，以及对组件源码的 18 处人为改动（动画延迟系数、种子范围、返回链接判定、`pl.pro` 写入、提示文案、复制还原时长、删除过滤、跳转地址、下载文件名、时间戳、撒花颜色、初始页签、动画开关、滚动调用等）全部被测试发现；检验中发现复制还原时长改 1200 毫秒能逃过，已把用例拆成 1299 毫秒仍显示“已复制”、再 1 毫秒还原
+- 差异：旧页面连点“复制全部”会把“已复制”状态存进还原用的 HTML 而卡住，新页面与 `CopyButton` 一致，重复点击时重新计时
+- 差异：作品存在但没有 `sx` 时，旧页面抛 TypeError 并停在上一页（站内链接到不了），新页面显示“找不到这部剧本”
+- 差异：旧页面的 `data-x`、`data-dl`、`data-cp` 只是事件绑定钩子，新弹窗（`TextModalHost`，P1-A）没有，对照时忽略这三个属性
+- 发现：`tests/parity/legacy.ts`、`plugins/load-data.ts` 在 jsdom 环境（`.test.tsx`）里 import 抛 “The URL must be of scheme file”（vitest 的 jsdom 环境下 `import.meta.url` 是 http 地址）；本测试放 node 项目（`.test.ts`），自己装 jsdom 窗口，两个文件未改
+- 验证：全包 20 个文件 488 项通过（含本节 83 项）；`tsc --noEmit` 无错误；`vite build` 产物仍只有 `index.html`，`check:dist` 通过；未做浏览器验证
