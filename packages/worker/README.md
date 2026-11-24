@@ -87,11 +87,12 @@ docker build -t tianji:dev \
   --build-arg GIT_SHA=$(git rev-parse --short HEAD) .
 ```
 
-- 以非 root 用户（`node`，uid 1000）运行；容器里没有 `.env`，环境变量直接传入。
+- 以非 root 的固定数字 UID 运行（`USER 1000:1000`，即 `node` 用户）；容器里没有 `.env`，环境变量直接传入。
+- 根文件系统可以只读（`docker run --read-only --tmpfs /tmp`，已实测 `server`、`migrate`、`migrate:status`）：服务不写盘；prisma CLI 把 `prisma.config.ts` 的转译缓存写到 `/tmp/jiti`，`/tmp` 不可写时自动跳过。
 - 运行镜像含编译产物 `dist/`、`prisma/` 与 `prisma.config.ts`、迁移用的 prisma CLI 与 schema-engine（Alpine 上依赖 `openssl`，已安装）；设了 `CHECKPOINT_DISABLE=1`，prisma CLI 不向外发版本检查请求。
 - `/app/site/index.html` 是构建好的前端静态页，后端地址由构建参数 `TIANJI_API_BASE` 写入（留空为同源）；需要静态服务器托管时从该目录复制。
 - 镜像里没有 Python、TypeScript 源码、测试和开发依赖；`/` 可作为存活探测路径。
-- schema-engine 按构建机架构下载，给 amd64 集群用的镜像要在 amd64 上或用 `docker buildx --platform linux/amd64` 构建。
+- schema-engine 按构建机架构下载，给 amd64 集群用的镜像要在 amd64 上或用 `docker build --platform linux/amd64` 构建（镜像内为 `schema-engine-linux-musl-openssl-3.0.x`）。GitLab 中央 CI 固定按 `linux/amd64` 构建，见根目录 `.gitlab/`。
 
 ## 环境变量
 
