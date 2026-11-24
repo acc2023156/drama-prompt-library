@@ -1,6 +1,7 @@
 name = "tianji-api"
 main = "src/index.js"
 compatibility_date = "2026-11-01"
+compatibility_flags = ["enable_request_signal"]  # 用户断线时能马上退点
 account_id = "cb9d9fc5702fda12b11daa99aac193b6"
 
 [[kv_namespaces]]

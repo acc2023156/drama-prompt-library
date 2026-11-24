@@ -146,16 +146,48 @@ export default {
       const bodyText = req.method === 'POST' ? await req.text() : undefined;
       let model = ''; try { model = JSON.parse(bodyText || '{}').model || ''; } catch {}
       const t0 = Date.now(), ac = new AbortController(), timer = setTimeout(() => ac.abort('timeout'), 90000);
-      let r, status = 0;
+      let r, status = 0, rd = null, settled = false;
+      // 只结算一次：成功就记录；失败、逾时、用户断线一律退点并记录
+      const settle = async (ok, st) => {
+        if (settled) return null; settled = true; let back = null;
+        if (!ok && chargedUid) back = await refund(env, chargedUid, 1, '写作失败退点').catch(() => null);
+        if (sub === '/v1/chat/completions') await logCall(env, ok ? 200 : st, Date.now() - t0, model).catch(() => {});
+        return back;
+      };
+      // 用户关掉网页或断线（不论在等上游还是串流中）：Cloudflare 很快会停掉这次执行，所以在断线当下就结算
+      req.signal.addEventListener('abort', () => { ac.abort('client'); if (rd) rd.cancel('client gone').catch(() => {}); ctx.waitUntil(settle(false, 499)); }, { once: true });
       try {
         r = await fetch(env.YQ_BASE + sub, { method: req.method, body: bodyText, signal: ac.signal,
           headers: { 'Authorization': 'Bearer ' + env.YQ_KEY, 'Content-Type': 'application/json' } });
         status = r.status;
       } catch (e) { status = ac.signal.aborted ? 504 : 502; }
       clearTimeout(timer);
-      const failed = status !== 200;
-      if (failed && chargedUid) { const back = await refund(env, chargedUid, 1, '写作失败退点'); if (back !== null) left = back; }
-      if (sub === '/v1/chat/completions') ctx.waitUntil(logCall(env, status, Date.now() - t0, model).catch(() => {}));
+      // 串流：边收边转发，等串流结束才判断成败（没收到结尾就退点），上游停住 90 秒没新字就放弃
+      if (status === 200 && /event-stream/.test(r.headers.get('Content-Type') || '')) {
+        const { readable, writable } = new TransformStream(), w = writable.getWriter(), dec = new TextDecoder(); rd = r.body.getReader();
+        const pump = async () => {
+          let tail = '', ended = false, st = 502, idle;
+          const arm = () => { clearTimeout(idle); idle = setTimeout(() => { st = 504; rd.cancel('idle').catch(() => {}); }, 90000); };
+          try {
+            arm();
+            for (;;) {
+              const { done, value } = await rd.read(); if (done) break;
+              const piece = dec.decode(value, { stream: true });
+              if (/"content":"[^"]|finish_reason":"/.test(piece)) arm();   // 上游的 ": PING" 保活不算，要真的有字才算没停
+              tail = (tail + piece).slice(-400);
+              if (!ended && (tail.includes('[DONE]') || /"finish_reason":"[a-z_]+"/.test(tail))) ended = true;
+              await w.write(value);
+            }
+          } catch (e) { rd.cancel().catch(() => {}); /* 上游断线或用户关掉网页 */ }
+          clearTimeout(idle);
+          if (ended) st = 200;
+          await w.close().catch(() => {});
+          await settle(ended, st);
+        };
+        ctx.waitUntil(pump());
+        return new Response(readable, { status: 200, headers: { ...h, 'Cache-Control': 'no-store', 'Content-Type': 'text/event-stream; charset=utf-8', ...(left === null ? {} : { 'X-Points': String(left) }) } });
+      }
+      const back = await settle(status === 200, status); if (back !== null) left = back;
       const xh = { ...h, 'Cache-Control': 'no-store', ...(left === null ? {} : { 'X-Points': String(left) }) };
       if (!r) return json({ error: status === 504 ? 'upstream timeout' : 'upstream unreachable', retry: true }, status, xh);
       return new Response(r.body, { status: r.status, headers: { ...xh, 'Content-Type': r.headers.get('Content-Type') || 'application/json' } });
