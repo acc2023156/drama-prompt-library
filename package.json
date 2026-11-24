@@ -1,12 +1,16 @@
 {
   "name": "tianji",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "build:web": "npm run build -w @tianji/web",
     "dev:web": "npm run dev -w @tianji/web",
     "dev:worker": "npm run dev -w @tianji/worker",
     "start:worker": "npm run start -w @tianji/worker",
-    "test:worker": "npm run test -w @tianji/worker"
+    "test:worker": "npm run test -w @tianji/worker",
+    "migrate:worker": "npm run migrate -w @tianji/worker",
+    "migrate:create:worker": "npm run migrate:create -w @tianji/worker --"
   }
 }

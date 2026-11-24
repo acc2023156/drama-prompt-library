@@ -1,4 +1,4 @@
-/* PostgreSQL：连接池、事务、建表 */
+/* PostgreSQL：连接池、事务（表结构由 migrations/ 下的迁移文件管理，见 README） */
 import pg from 'pg';
 
 // bigint（毫秒时间戳、COUNT）与 numeric（AVG）默认按字符串返回，前端要数字
@@ -25,25 +25,4 @@ export function createDb(databaseUrl, max = 10) {
     },
     end: () => pool.end(),
   };
-}
-
-const SCHEMA = [
-  `CREATE TABLE IF NOT EXISTS users(
-    uid TEXT PRIMARY KEY, phone TEXT UNIQUE, role TEXT DEFAULT 'free', points INTEGER DEFAULT 0,
-    day TEXT, created BIGINT, last_login BIGINT, used_total INTEGER DEFAULT 0)`,
-  `CREATE TABLE IF NOT EXISTS works(uid TEXT, id TEXT, data TEXT, updated BIGINT, PRIMARY KEY(uid, id))`,
-  `CREATE TABLE IF NOT EXISTS yqlog(id BIGSERIAL PRIMARY KEY, day TEXT, at BIGINT, status INTEGER, ms INTEGER, model TEXT)`,
-  `CREATE TABLE IF NOT EXISTS ledger(id BIGSERIAL PRIMARY KEY, uid TEXT, delta INTEGER, reason TEXT, at BIGINT, day TEXT)`,
-  // 热点、热词的最新一批快照（key 为 hot / words）
-  `CREATE TABLE IF NOT EXISTS snapshots(key TEXT PRIMARY KEY, value TEXT NOT NULL, updated BIGINT)`,
-  // 长剧本任务：state 保留 7 天，body（只给 Actions 取用）保留 2 小时
-  `CREATE TABLE IF NOT EXISTS jobs(
-    id TEXT PRIMARY KEY, state TEXT NOT NULL, state_expires BIGINT NOT NULL, body TEXT, body_expires BIGINT)`,
-  `CREATE INDEX IF NOT EXISTS yqlog_day ON yqlog(day)`,
-  `CREATE INDEX IF NOT EXISTS yqlog_at ON yqlog(at)`,
-  `CREATE INDEX IF NOT EXISTS ledger_uid ON ledger(uid, id)`,
-];
-
-export async function ensureSchema(db) {
-  for (const sql of SCHEMA) await db.query(sql);
 }

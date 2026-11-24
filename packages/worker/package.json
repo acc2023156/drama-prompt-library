@@ -9,10 +9,16 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "test": "node --test \"test/*.test.js\""
+    "test": "node --test \"test/*.test.js\"",
+    "migrate": "node-pg-migrate up --migration-file-language sql --advisory-lock-mode wait",
+    "migrate:down": "node-pg-migrate down --migration-file-language sql",
+    "migrate:dry": "node-pg-migrate up --migration-file-language sql --dry-run",
+    "migrate:create": "node-pg-migrate create --migration-file-language sql --migration-filename-format utc",
+    "migrate:status": "node scripts/migration-status.js"
   },
   "dependencies": {
     "dotenv": "^18.0.10",
+    "node-pg-migrate": "^9.0.0",
     "pg": "^8.23.1"
   }
 }

@@ -18,11 +18,32 @@
 ```
 cp packages/worker/.env.example packages/worker/.env   # 填 DATABASE_URL、AUTH_SECRET 等
 npm install                                            # 在仓库根目录执行
+npm run migrate:worker                                 # 建表 / 升级表结构（首次必须先执行）
 npm run dev:worker                                     # 开发，改代码自动重启
 npm run start:worker                                   # 生产
 ```
 
-启动时自动建表（`CREATE TABLE IF NOT EXISTS`）：`users`、`works`、`yqlog`、`ledger`、`snapshots`（热点热词）、`jobs`（长剧本任务）。
+表：`users`、`works`、`yqlog`、`ledger`、`snapshots`（热点热词）、`jobs`（长剧本任务），由迁移文件创建。服务启动时只检查有没有未执行的迁移，有就拒绝启动并提示命令。
+
+## 数据库迁移
+
+用 [node-pg-migrate](https://github.com/salsita/node-pg-migrate)，迁移文件是 `migrations/` 下的纯 SQL，用 `-- Up Migration` / `-- Down Migration` 分隔升级与回退。已执行的版本记录在库里的 `pgmigrations` 表。
+
+| 命令（在仓库根目录） | 作用 |
+|---|---|
+| `npm run migrate:worker` | 执行全部待执行的迁移 |
+| `npm run migrate:dry -w @tianji/worker` | 只打印将要执行的 SQL，不落库 |
+| `npm run migrate:status -w @tianji/worker` | 列出已执行 / 待执行；有待执行项时退出码为 2 |
+| `npm run migrate:create:worker -- 迁移名` | 生成一个带时间戳的新迁移文件 |
+| `npm run migrate:down -w @tianji/worker` | 回退最近一个迁移（会删数据，只用于开发库） |
+
+`DATABASE_URL` 取自环境变量，没设时读 `.env`。
+
+- **改表结构一律新增迁移文件**，已经执行过的文件不要再改；有问题就再写一个新迁移去修正。
+- 多条待执行迁移在同一个事务里，任何一条失败就整批回滚，库不会停在一半。
+- 并发执行安全：`migrate` 带数据库咨询锁并等待，K8s 里多个副本或 Job 同时跑也只会执行一次。
+- 老库接管：初始迁移全部用 `IF NOT EXISTS`，已经有表和数据的库直接跑 `migrate` 即可，数据不动、只补上迁移记录。
+- 上线顺序：**先迁移，再发新版本**。K8s 里把 `npm run migrate -w @tianji/worker` 作为发布前的 Job 或 initContainer 执行，迁移账号需要建表权限。
 
 ## 环境变量
 
@@ -54,7 +75,7 @@ npm run start:worker                                   # 生产
 TEST_DATABASE_URL=postgres://user@127.0.0.1:5432/tianji_test npm run test:worker
 ```
 
-没设 `TEST_DATABASE_URL` 时数据库相关用例会跳过。
+测试开始会先用迁移建表；没设 `TEST_DATABASE_URL` 时数据库相关用例会跳过。
 
 ## 前端如何找到后端
 

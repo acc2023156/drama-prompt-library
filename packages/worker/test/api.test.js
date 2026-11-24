@@ -5,11 +5,16 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { loadConfig, DEFAULT_CORS_ORIGINS } from '../src/config.js';
-import { createDb, ensureSchema } from '../src/db.js';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { runner } from 'node-pg-migrate';
+import { createDb } from '../src/db.js';
+import { migrationFiles, migrationStatus } from '../src/migrations.js';
 import { createApp } from '../src/index.js';
 import { createServer } from '../src/http.js';
 import { createJob, getJobState, purgeExpired } from '../src/store.js';
 
+const MIGRATIONS_DIR = fileURLToPath(new URL('../migrations/', import.meta.url));
 const URL_ = process.env.TEST_DATABASE_URL;
 const skip = !URL_ && '未设 TEST_DATABASE_URL';
 const ORIGIN = DEFAULT_CORS_ORIGINS[2];
@@ -39,7 +44,7 @@ before(async () => {
   });
   const up = await listen(upstream);
   db = createDb(URL_, 4);
-  await ensureSchema(db);
+  await runner({ databaseUrl: URL_, dir: MIGRATIONS_DIR, direction: 'up', migrationsTable: 'pgmigrations', log: () => {} });
   await db.query('TRUNCATE users, works, yqlog, ledger, snapshots, jobs RESTART IDENTITY');
   const cfg = loadConfig({ ...SECRETS, DATABASE_URL: URL_, YQ_BASE: `http://127.0.0.1:${up}`, QWEN_BASE: `http://127.0.0.1:${up}` });
   server = createServer(createApp({ cfg, db }), { maxBodyBytes: 100000 });
@@ -53,7 +58,24 @@ test('配置：CORS 默认值与环境变量覆盖', () => {
   assert.equal(loadConfig({}).upstreamTimeoutMs, 0);
 });
 
-test('建表可重复执行', { skip }, async () => { await ensureSchema(db); await ensureSchema(db); });
+test('迁移文件：命名有序、都含 Up 与 Down 两段', () => {
+  const names = migrationFiles();
+  assert.ok(names.length >= 1);
+  assert.deepEqual(names, [...names].sort());
+  for (const n of names) {
+    assert.match(n, /^\d{14,}_[\w-]+$/, `迁移文件名不规范：${n}`);
+    const sql = readFileSync(MIGRATIONS_DIR + n + '.sql', 'utf8');
+    assert.ok(sql.includes('-- Up Migration') && sql.includes('-- Down Migration'), `${n} 缺少 Up / Down 段`);
+  }
+});
+
+test('迁移：执行后没有待执行项，重复执行无副作用', { skip }, async () => {
+  const run = () => runner({ databaseUrl: URL_, dir: MIGRATIONS_DIR, direction: 'up', migrationsTable: 'pgmigrations', log: () => {} });
+  assert.equal((await migrationStatus(db)).pending.length, 0);
+  assert.deepEqual(await run(), []);   // 已是最新，无事可做
+  const { applied } = await migrationStatus(db);
+  assert.deepEqual(applied, migrationFiles());
+});
 
 test('登录：新号送 50 点，/me 一致，坏来源被拒', { skip }, async () => {
   const r = await call('/auth/login', { method: 'POST', body: { phone: '13800138000' } });

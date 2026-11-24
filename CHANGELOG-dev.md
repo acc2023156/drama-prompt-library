@@ -16,7 +16,7 @@
 - [新增] dotenv：启动时载入 `.env`，已有环境变量优先；新增 `.env.example`；`.env` 加入 `.gitignore` — `src/server.js`、`.env.example`、`.gitignore`
 - [修改] CORS 来源白名单改由 `CORS_ALLOW_ORIGINS`（逗号分隔）读取，原写死的三个来源挪作默认值，设了变量即整组替换 — `src/config.js`、`src/index.js`
 - [修改] 数据库由 Cloudflare D1（SQLite）迁到 PostgreSQL：改用 `pg` 连接池（`DATABASE_URL`）；SQL 全部改写（占位符 `$n`、`SUM(条件)` 改 `COUNT(*) FILTER`、`MAX` 改 `GREATEST`、`AUTOINCREMENT` 改 `BIGSERIAL`、`ORDER BY … NULLS LAST`）；bigint / numeric 按数字返回 — `src/db.js`、`src/account.js`
-- [新增] 启动时自动建表，并新增索引 `yqlog_day`、`yqlog_at`、`ledger_uid`；不再每个请求检查建表 — `src/db.js`
+- [新增] 启动时自动建表，并新增索引 `yqlog_day`、`yqlog_at`、`ledger_uid`；不再每个请求检查建表（已被下方“迁移工具”条目取代）— `src/db.js`
 - [修改] 键值储存 KV 迁到 PostgreSQL：热点、热词最新一批存 `snapshots` 表；长剧本任务存 `jobs` 表（结果保留 7 天、请求体保留 2 小时），服务每小时清理过期数据 — `src/store.js`、`src/index.js`、`src/server.js`
 - [修改] 扣点、退点、补点改为事务并锁用户行（`SELECT … FOR UPDATE`），退点返回精确余额 — `src/account.js`
 - [修改] 口令与密码（`X-Admin-Key`、`X-Job-Secret`、`X-Tianji-Code`）改为常量时间比较；登录 token 算法不变，已登录用户不掉线（已用旧算法互相验证） — `src/account.js`
@@ -26,6 +26,16 @@
 - [修改] 上游地址或密钥未配置时返回 503（原为请求上游失败后回 502） — `src/index.js`
 - [新增] 集成测试 13 项（登录、扣点与退点、已去掉的限流、CORS、热点热词、后台、任务流转、请求体上限）；用 `TEST_DATABASE_URL` 指定测试库 — `test/api.test.js`
 - [修改] `package.json`：`type: module`，脚本改为 `dev` / `start` / `test`，依赖 `dotenv`、`pg`；根目录删 `deploy:worker`、加 `start:worker`、`test:worker`；新增 `package-lock.json` — `package.json`、`packages/worker/package.json`
+
+### 数据库迁移 `packages/worker`
+
+- [新增] 引入迁移工具 `node-pg-migrate`：纯 SQL 迁移文件放 `migrations/`，版本记录在 `pgmigrations` 表；单事务、失败整批回滚、带咨询锁并发安全（`--advisory-lock-mode wait`）— `package.json`、`migrations/`
+- [新增] 初始迁移 `20261124073829054_init-schema.sql`：6 张表和 3 个索引，全部 `IF NOT EXISTS`，已有数据的旧库可直接接管；附回退段 — `migrations/`
+- [删除] 启动时建表（`ensureSchema` 与写死的 `CREATE TABLE`）— `src/db.js`、`src/server.js`
+- [修改] 启动时检查迁移：有未执行的迁移就拒绝启动并提示 `npm run migrate`，避免代码与表结构不一致 — `src/server.js`、`src/migrations.js`
+- [新增] npm 脚本：`migrate`、`migrate:dry`、`migrate:status`（有待执行项时退出码 2）、`migrate:create`、`migrate:down`；根目录加 `migrate:worker`、`migrate:create:worker` — `package.json`、`packages/worker/package.json`、`scripts/migration-status.js`
+- [修改] 测试改为用迁移建表，新增 2 项用例（迁移文件命名与 Up / Down 规范、执行后无待执行项且可重复执行），共 14 项 — `test/api.test.js`
+- [修改] `packages/worker/README.md` 新增“数据库迁移”章节（命令、规则、上线顺序）；文档中“启动时自动建表”的说法改掉
 
 ### 前端 `packages/web`
 

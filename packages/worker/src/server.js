@@ -1,7 +1,8 @@
-/* 启动入口：载入 .env → 读配置 → 连库建表 → 起 HTTP 服务 */
+/* 启动入口：载入 .env → 读配置 → 连库并检查迁移 → 起 HTTP 服务 */
 import { config as loadEnv } from 'dotenv';
 import { loadConfig, checkConfig } from './config.js';
-import { createDb, ensureSchema } from './db.js';
+import { createDb } from './db.js';
+import { migrationStatus } from './migrations.js';
 import { purgeExpired } from './store.js';
 import { createApp } from './index.js';
 import { createServer } from './http.js';
@@ -14,7 +15,12 @@ if (missing.length) { console.error('缺少必填环境变量：' + missing.join
 warn.forEach(w => console.warn('[warn] ' + w));
 
 const db = createDb(cfg.databaseUrl, cfg.poolMax);
-await ensureSchema(db);
+// 表结构由迁移管理（npm run migrate），这里只检查：有未执行的迁移就拒绝启动
+const { pending } = await migrationStatus(db);
+if (pending.length) {
+  console.error('数据库有未执行的迁移：\n  ' + pending.join('\n  ') + '\n请先执行：npm run migrate -w @tianji/worker');
+  await db.end(); process.exit(1);
+}
 
 const purge = setInterval(() => purgeExpired(db).catch(e => console.error('[purge]', e.message)), 3600e3);
 purge.unref();
