@@ -130,3 +130,19 @@
 - [修改] `.gitignore` 忽略 `packages/web-react/dist/` — `.gitignore`
 - [新增] 包说明 — `packages/web-react/README.md`
 - 验证：`Dockerfile` 不改，加入新 workspace 后镜像构建通过，镜像 ID 与改前相同；缺 `DATABASE_URL`、`AUTH_SECRET` 时 `server` 仍拒绝启动（退出码 1）
+
+### 前端 React 重构 P1-B：领域纯函数迁移 `packages/web-react`
+
+对照基准：`packages/web/site-template.html` 在 `aa38d84`（该文件最后改动提交 `1cf6f6c`）；追平之后的改动不在本节范围。
+
+- [新增] 领域层 `src/domain/`：旧页面的纯函数迁成带类型的 TypeScript 模块，不依赖 DOM、localStorage、网络、时间与全局变量；随机源与时间一律作显式参数（随机源默认 `Math.random`）— `src/domain/*.ts`
+- [新增] 作品设定：`WZ_DEF`、`wzEps`、`wzMins`、`wzScore`、`wzTitle`、`wzNeeds`、`wzSettings`、`wzPrompt`、`wzDupCheck`、`wzRollTitle`、`wzGuess`；`wzSaveWork` 与 `wzSeedAssets` 的纯逻辑拆为 `wzBuildWork`、`wzSeedAssets` — `src/domain/wz.ts`
+- [新增] 标准版：`sxOutline`、`sxPrompt`、`sxRng`、`sxScript`、`sxScriptText`、`sxHL`、`pick`；`sxSaveWork` 的纯逻辑拆为 `sxBuildWork` — `src/domain/sx.ts`
+- [新增] 氛围写作与风格：`vibeLeads`、`vibeSx`、`vibeData`、`epMat`、`styleList`、`asmGenreStyle`、`assemble`（旧 `viewAssembler` 内的闭包，改为显式传入 core 数据）— `src/domain/vibe.ts`、`styles.ts`、`assembler.ts`
+- [新增] 写作提示词：`heatOf`、`depthOf`、`cardText`、`parseJSON`、全部 `yq*Prompt`；`genReq`、`genParse`、`updateGen` 的纯逻辑 `applyGenPatch`；写作请求、重试、流式、驱动循环不迁移，留给写作引擎任务 — `src/domain/yq.ts`、`gen.ts`
+- [新增] 上架资料：`kwOk`、`KW_STOP`、`KW_BLOCK`、`KW_RAW`、`listingPrompt`、`listingClean`、`lstDay`、`listingText`；`listingSources` 的拉取不迁移 — `src/domain/listing.ts`
+- [新增] 提示词库与作品列表：`cmpId`、`firstCode`、`usage`、`licClass`、`makeLib`（旧 `lib`）、`filtered`、`liveWorks`、`purgeTrash` 的筛选逻辑、`workHref`、`workType`、`esc`、`nfmt` — `src/domain/library.ts`、`prompts-filter.ts`、`works.ts`、`text.ts`
+- [新增] 云同步合并规则：`workHash`、`mergeCloudWorks`（旧 `cloudPull` 的合并）、`pendingPush`（旧 `cloudPush` 的筛选）— `src/domain/sync.ts`
+- [修改] 旧函数读全局状态处改为显式参数：`wzPrompt` 与 `sxPrompt` 的 `lib`、`wzDupCheck` 的未删除作品列表、`filtered` 的筛选条件 `state`、`styleList` 的 core 画风与条目表和自定义画风、`assemble` 的 core 数据与当前选择、`purgeTrash` 与各 `*Build*` 函数的当前时间与作品列表
+- [新增] 新旧对照测试 106 项（含 3 项元测试），覆盖约 19,300 次新旧输出比较：同一输入分别调用旧实现（抽取器）与新实现并要求深度相等，含边界值与异常结构；随机函数在旧页面 vm 内替换 `Math.random` 为循环序列、新实现传入同序列，时间固定；`cloudPull` 与 `cloudPush` 在旧页面里打桩 `api` 后运行，比较写回结果、推送序列与指纹；元测试检查每个导出都有对照用例，且领域层不触碰 DOM、存储、网络、时钟与全局随机源 — `tests/parity/domain*.test.ts`
+- 验证：`kwOk` 对空值原样返回空值（不是 `false`），对照测试发现后按旧行为保持；对 29 处人为改动（改阈值、改文案、改正则、改排序）逐一运行，全部被测试发现
