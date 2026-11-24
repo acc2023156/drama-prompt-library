@@ -1,2 +1,5 @@
-site/
+packages/web/site/
+packages/worker/.wrangler/
+packages/worker/.dev.vars
+node_modules/
 __pycache__/

@@ -1,14 +1,14 @@
 """把《外部提示词汇总》单文件拆成模块目录。
 
-用法：python tools/split.py <源文件.md> [输出目录，默认为本脚本上一级]
-拆分结果可用 tools/build.py 原样合并回单文件。
+用法：python packages/web/split.py <源文件.md> [输出目录，默认为仓库根目录]
+拆分结果可用 packages/web/build.py 原样合并回单文件。
 """
 import json
 import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 
 CHAPTERS = {  # 章标题前缀 -> (章号, 默认目录)
     "一": ("1", "01-outline"),

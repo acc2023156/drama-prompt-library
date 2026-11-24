@@ -1,14 +1,14 @@
 """从模块目录组装提示词。
 
-  python tools/build.py all [-o 输出.md]
+  python packages/web/build.py all [-o 输出.md]
       合并回《外部提示词汇总》单文件（与拆分前逐字一致，可直接发给团队）。
 
-  python tools/build.py video [--style 末日废土写实] [--option 成人内容] [-o 输出.txt]
+  python packages/web/build.py video [--style 末日废土写实] [--option 成人内容] [-o 输出.txt]
       组装 6.0 视频专用提示词正文（只含代码框里那段，可直接复制给 AI）。
       换项目时在 06-video/styles/ 新建一个风格文件，用 --style 指定。
       可选条款放在 06-video/core/options/，默认关闭，用 --option 逐个打开。
 
-  python tools/build.py patches
+  python packages/web/build.py patches
       列出能补进 6.0 各部分的条目。
 """
 import argparse
@@ -17,7 +17,8 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+HERE = Path(__file__).resolve().parent          # packages/web
+ROOT = HERE.parent.parent                       # 仓库根目录：提示词内容资料
 CORE = ROOT / "06-video" / "core"
 STYLES = ROOT / "06-video" / "styles"
 
@@ -137,15 +138,26 @@ def build_index():
         "",
         "由《外部提示词汇总》拆分而来，一条提示词一个文件，文件开头的元数据写明编号、来源许可、实测状态、适用工具、补 6.0 哪一部分。",
         "",
+        "## 仓库结构（monorepo）",
+        "",
+        "| 位置 | 内容 |",
+        "|---|---|",
+        "| `packages/web` | 天玑网站：`site-template.html` + `build.py`，产出单文件 `packages/web/site/index.html` |",
+        "| `packages/worker` | Cloudflare Worker `tianji-api`（见 [packages/worker/README.md](packages/worker/README.md)） |",
+        "| `01-outline` … `07-compliance`、`_meta`、`data` | 提示词内容资料，网站打包时读取 |",
+        "| `.github/workflows` | 发布网站、长剧本任务、热点同步 |",
+        "",
+        "根目录 `npm run build:web` / `npm run dev:web` / `npm run dev:worker` / `npm run deploy:worker`。",
+        "",
         "## 常用命令",
         "",
         "```bash",
-        "python tools/build.py video --style 末日废土写实 -o 视频提示词.txt   # 组装 6.0 视频专用提示词",
-        "python tools/build.py video --option 成人内容 -o 视频提示词.txt     # 成人线项目：打开 6.0【一】第 7 条",
-        "python tools/build.py patches                                    # 查看能补进 6.0 各部分的条目",
-        "python tools/build.py all -o 外部提示词汇总.md                       # 合并回单文件发给团队",
-        "python tools/build.py index                                        # 增删条目后重新生成本目录",
-        "python tools/build.py site                                         # 生成网页版 site/index.html（双击打开）",
+        "python packages/web/build.py video --style 末日废土写实 -o 视频提示词.txt   # 组装 6.0 视频专用提示词",
+        "python packages/web/build.py video --option 成人内容 -o 视频提示词.txt     # 成人线项目：打开 6.0【一】第 7 条",
+        "python packages/web/build.py patches                                    # 查看能补进 6.0 各部分的条目",
+        "python packages/web/build.py all -o 外部提示词汇总.md                       # 合并回单文件发给团队",
+        "python packages/web/build.py index                                        # 增删条目后重新生成本目录",
+        "python packages/web/build.py site                                         # 生成网页版 packages/web/site/index.html（双击打开）",
         "```",
         "",
         "- 新增一条：在对应目录新建 `编号-名称.md`（照抄任一文件的元数据格式），在 `_meta/manifest.json` 里按位置加一行，再在 `CHANGELOG.md` 记一笔。",
@@ -182,7 +194,7 @@ def build_index():
 
 
 def build_site():
-    """把全部模块打包进 site/index.html（单文件，双击即可打开）。"""
+    """把全部模块打包进 packages/web/site/index.html（单文件，双击即可打开）。"""
     entries = []
     for folder, label in FOLDERS:
         for p in (ROOT / folder).glob("*.md"):
@@ -206,8 +218,8 @@ def build_site():
         "changelog": read(ROOT / "CHANGELOG.md"),
     }
     blob = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
-    html = read(ROOT / "tools" / "site-template.html").replace("/*__DATA__*/null", blob)
-    out = ROOT / "site" / "index.html"
+    html = read(HERE / "site-template.html").replace("/*__DATA__*/null", blob)
+    out = HERE / "site" / "index.html"
     out.parent.mkdir(exist_ok=True)
     out.write_text(html, encoding="utf-8", newline="\n")
     return out

@@ -1,0 +1,9 @@
+{
+  "name": "@tianji/web",
+  "private": true,
+  "description": "天玑网站：把提示词内容与 site-template.html 打包成单文件 site/index.html",
+  "scripts": {
+    "build": "python build.py site",
+    "dev": "python build.py site && python -m http.server 8766 --directory site"
+  }
+}

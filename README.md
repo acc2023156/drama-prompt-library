@@ -2,15 +2,26 @@
 
 由《外部提示词汇总》拆分而来，一条提示词一个文件，文件开头的元数据写明编号、来源许可、实测状态、适用工具、补 6.0 哪一部分。
 
+## 仓库结构（monorepo）
+
+| 位置 | 内容 |
+|---|---|
+| `packages/web` | 天玑网站：`site-template.html` + `build.py`，产出单文件 `packages/web/site/index.html` |
+| `packages/worker` | Cloudflare Worker `tianji-api`（见 [packages/worker/README.md](packages/worker/README.md)） |
+| `01-outline` … `07-compliance`、`_meta`、`data` | 提示词内容资料，网站打包时读取 |
+| `.github/workflows` | 发布网站、长剧本任务、热点同步 |
+
+根目录 `npm run build:web` / `npm run dev:web` / `npm run dev:worker` / `npm run deploy:worker`。
+
 ## 常用命令
 
 ```bash
-python tools/build.py video --style 末日废土写实 -o 视频提示词.txt   # 组装 6.0 视频专用提示词
-python tools/build.py video --option 成人内容 -o 视频提示词.txt     # 成人线项目：打开 6.0【一】第 7 条
-python tools/build.py patches                                    # 查看能补进 6.0 各部分的条目
-python tools/build.py all -o 外部提示词汇总.md                       # 合并回单文件发给团队
-python tools/build.py index                                        # 增删条目后重新生成本目录
-python tools/build.py site                                         # 生成网页版 site/index.html（双击打开）
+python packages/web/build.py video --style 末日废土写实 -o 视频提示词.txt   # 组装 6.0 视频专用提示词
+python packages/web/build.py video --option 成人内容 -o 视频提示词.txt     # 成人线项目：打开 6.0【一】第 7 条
+python packages/web/build.py patches                                    # 查看能补进 6.0 各部分的条目
+python packages/web/build.py all -o 外部提示词汇总.md                       # 合并回单文件发给团队
+python packages/web/build.py index                                        # 增删条目后重新生成本目录
+python packages/web/build.py site                                         # 生成网页版 packages/web/site/index.html（双击打开）
 ```
 
 - 新增一条：在对应目录新建 `编号-名称.md`（照抄任一文件的元数据格式），在 `_meta/manifest.json` 里按位置加一行，再在 `CHANGELOG.md` 记一笔。

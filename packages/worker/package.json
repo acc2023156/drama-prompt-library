@@ -1,0 +1,12 @@
+{
+  "name": "@tianji/worker",
+  "private": true,
+  "description": "tianji-api：Cloudflare Worker（模型代理、帐号积分、作品、热点、长剧本任务）",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

@@ -27,12 +27,12 @@ jobs:
         with:
           python-version: "3.11"
       - name: 生成网页
-        run: python tools/build.py site
+        run: python packages/web/build.py site
         env:
           PYTHONUTF8: "1"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: packages/web/site
       - id: deployment
         uses: actions/deploy-pages@v4

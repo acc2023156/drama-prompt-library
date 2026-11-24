@@ -23,7 +23,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: 生成网页
-        run: python tools/build.py site
+        run: python packages/web/build.py site
         env:
           PYTHONUTF8: "1"
       - name: 推到发布站
@@ -34,7 +34,7 @@ jobs:
           set -eu
           if [ -z "$SITE_TOKEN" ]; then echo "SITE_TOKEN not set, skip"; exit 0; fi
           git clone -q --depth 1 "https://x-access-token:${SITE_TOKEN}@github.com/acc2023156/drama-prompt-library-site.git" pub
-          cp site/index.html pub/index.html
+          cp packages/web/site/index.html pub/index.html
           cd pub
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
