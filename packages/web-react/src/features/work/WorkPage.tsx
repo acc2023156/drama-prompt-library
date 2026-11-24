@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { vibeSx } from '../../domain/vibe'
-import type { Work } from '../../domain/types'
+import type { Listing, Work } from '../../domain/types'
 import { replaceStateHash, setNavRoute } from '../../lib/nav'
 import { get, set, type StorageSchema } from '../../lib/storage'
 import { enterWork, getState, redoEpisode, resumeWriting, retryWork, showDraft, subscribe, type WorkPhase } from '../writing'
+import { useListingBusy } from './listing-busy'
 import { hashTab, TAB_FN } from './model'
 import { ReadyView } from './ReadyView'
 import { FailView, LoginGate, WaitView } from './StatusViews'
@@ -75,6 +76,8 @@ export function WorkPage({ wid, vtab }: WorkPageProps) {
     if (h) enter(h.tab)
   }, [st.refresh, enter, wid])
 
+  useListingBusy()
+
   // 侧栏进入“当前作品”上下文；作品分页还要记住分页并改地址栏（不新增历史、不重画）
   useEffect(() => {
     if (!v || !v.w || v.phase === 'missing') return
@@ -112,6 +115,7 @@ export function WorkPage({ wid, vtab }: WorkPageProps) {
       setTab={(t) => setV((p) => p && { ...p, tab: t })}
       onResume={() => again(() => resumeWriting(wid))}
       onRedo={(k) => again(() => redoEpisode(wid, k), 'script')}
+      onListing={(L: Listing) => setV((p) => (p && p.w ? { ...p, w: { ...p.w, listing: L } } : p))}
     />
   )
 }
