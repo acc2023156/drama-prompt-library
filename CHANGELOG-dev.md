@@ -344,3 +344,19 @@
 - 差异：作品卡切换受众重画、或页面卸载时，正在进行的语音识别会停止；旧页面不停止，识别结果继续写进已脱离页面的旧输入框
 - 差异：旧 `viewScriptHome` 给 `[data-cp]` 绑复制 `wzPrompt`，页面里没有该元素，属不可达代码，未迁移；旧 `wcardOpts` 的 depth、genre、ai 三项卡片上从未渲染，未迁移
 - 验证：全包 43 个文件 1278 项通过；`tsc --noEmit` 无错误；`vite build` 产物仍只有 `index.html`，`check:dist` 通过；未做浏览器验证
+
+### web-react P5-B：作品页 `packages/web-react`
+
+对照基准：旧模板快照 `tests/fixtures/legacy-template.1cf6f6c.html`（`viewVibeScript` 第 2963–3136 行、`genWait` / `loginGate` / `genFail` 第 2926–2962 行、上架资料第 2846–2900 行）。验证力度按 2026-11-24 决定：关键路径行为对照，不做逐节点 DOM 比较与大规模变异检验。
+
+- [修改] 作品页替换占位：进入时写 `pl.lastVibe`、补 `vname` 与 `seed` 后调 `enterWork`；写作引擎每次刷新按地址里的分页重新进入（替代 `yqRefresh`）；卸载不调用 `stopYq`；文件名、导出名、props 不变 — `src/features/work/WorkPage.tsx`
+- [新增] 状态页：登录闸（`doLogin` 后重进，期间已离开本页则不重进）、等待页（秒表；旧版云端作业每 8 秒轮询 `GET /jobs/:id`，90 秒未建单记为出错）、失败页（再写一次、先看草稿）— `src/features/work/StatusViews.tsx`
+- [新增] 作品页主体：标题与写作进度（忙线提示、出错后接着写）、统计、五个分页按钮、编辑作品、AI 审稿（复制提示词并打开对应网站）；分页切换写 `pl.vibeTab`、`replaceState` 改地址、`setNavRoute` 进入作品上下文 — `src/features/work/ReadyView.tsx`、`model.ts`、`CopyBtn.tsx`
+- [新增] 分页：各集大纲（策划卡、分集表、分集大纲弹窗、跳到剧情对话并滚动）、剧情对话（`sxHL` 高亮、不在写时可重写单集）、角色资产库（角色 / 场景切换，点卡片写 `pl.assetSeed`、`pl.assetPick` 跳资产库）、分镜图（时长与素材数、弹层播放器、编辑与去生成跳 `#/assembler?ep=作品.集`）— `src/features/work/tabs/OutlineTab.tsx`、`ScriptTab.tsx`、`AssetsTab.tsx`、`BoardTab.tsx`、`Vm.tsx`
+- [新增] 上架资料：`listingSources` + `yqChat`（2500 tokens，高尺度用 `YQ_HOT`）+ `listingClean` 写回作品；逐行复制、复制全部、下载 .txt（带 BOM）、重新生成；生成中状态为模块级，离开再回来仍显示 — `src/features/work/tabs/ListingTab.tsx`、`listing-busy.ts`
+- [新增] 导出：项目 ZIP 与 XTASY 导入包（文件清单、顺序、JSON 键序、BOM 规则同旧页面），XTASY 另开新窗口 — `src/features/work/export.ts`、`ReadyView.tsx`
+- [新增] 新旧行为对照 29 项：旧页面在 jsdom 整页实跑，新组件同种子同桩（时钟、随机数、fetch、剪贴板、下载、新窗口），每步比较关键区块文字、`pl.*` 原文、请求、hash、提示条、下载文件逐字节、剪贴板、侧栏上下文、是否在写、上架资料入口参数；写作引擎两边打桩 — `tests/parity/work-harness.tsx`、`work.test.tsx`
+- [新增] 组件测试 7 项：StrictMode 只开写一次、卸载不停止并续写、刷新重进、秒表、分页副作用、滚动与弹层 Esc、导出清单 — `tests/unit/work-page.test.tsx`
+- 差异：地址里分页不存在（如 `/xyz`）时旧页面画侧栏抛错，新页面不抛错，显示同旧页面（分页不高亮、内容为空、侧栏不进作品上下文）
+- 差异：旧页面在登录请求返回前已离开作品页时会把作品页画到当前页上，新页面不再进入；旧页面离开作品页时打开着的分镜弹层不关闭，新页面随卸载关闭
+- 验证：全包 45 个文件 1314 项通过（新增 36 项）；`tsc --noEmit` 无错误；`vite build` 与 `check:dist` 通过；未做浏览器验证
