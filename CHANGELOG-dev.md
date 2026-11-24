@@ -208,3 +208,19 @@
 - [新增] 新旧对照测试：经 Node 原生 `require` 加载 `legacy.ts` 与 `load-data.ts`（jsdom 转换下它们的 `new URL(…, import.meta.url)` 会被改写而失效，文件本身未改），在 `node:vm` 里实跑旧 `viewPartner`、`viewMembership`、`partnerBanner`，旧脚本的 `document`、`history`、`location` 指向 jsdom 真实对象，直接渲染进真实 DOM；与 React 渲染结果按节点逐一比较（标签、命名空间、属性、文本逐字；忽略内联 `on*` 属性与仅含空白的文本节点），并在两边各跑同一套交互场景（锚点、返回有无历史、关闭有无历史、6 次页签点击、9 个方案按钮提示、页脚按钮无事件）比较观察结果 — `tests/parity/partner.test.tsx`、`tests/parity/membership.test.tsx`、`tests/parity/static-pages-dom.tsx`
 - [新增] 组件测试 10 项：路由挂载真实页面、锚点滚动、返回、关闭、页签、购买提示、横幅两种形态 — `tests/unit/static-pages.test.tsx`
 - 验证：全包 22 个文件 426 项通过（含本包新增 3 个文件 21 项）；`tsc --noEmit` 通过；`vite build` 与 `check:dist` 通过；15 处人为改动（文案、属性、类名、价格、取整、提示语、全角空格、历史判断、取消 preventDefault 等）全部被测试发现；未做浏览器验证
+
+### 前端 React 重构 P2-B：6.0 组装器与分镜入口 `packages/web-react`
+
+对照基准：`packages/web/site-template.html` 在 `1cf6f6c`（该文件最后改动提交，origin/main 为 `8d86e1e` 时取得）；追平之后的改动不在本节范围。
+
+- [修改] 6.0 组装器：替换占位，移植旧 `viewAssembler`（画风切换、自定义画风文本框、可选条款开关与成人内容警告、补丁条目列表、统计行、下载 .txt、复制全部、返回键“储存并返回”）；组装文本用 `domain/assembler` 的 `assemble`，画风与条款名不拼进选择器，沿用旧 CSS 类名与元素 id — `src/features/assembler/AssemblerPage.tsx`
+- [新增] `?ep=` 分镜编辑：初始状态、作品默认画风（`asmGenreStyle`，命中“末日废土写实”选内置画风，否则走自定义）、`pl.asmW` 优先、追加该集剧本、集序超出取最后一集；集序为负或 NaN 时旧页面拼标题抛异常、页面保持空白，新页面同样不渲染也不写存储 — `src/features/assembler/model.ts`
+- [新增] 存储行为与旧页面一致：普通模式每次更新（含首次渲染）写 `pl.asm`；分镜编辑模式只在“储存并返回”时写 `pl.asmW` 并提示“已储存” — `src/features/assembler/AssemblerPage.tsx`
+- [修改] 分镜入口：替换占位，移植旧 `viewTool('storyboard')`（有氛围写作作品时 `location.replace` 到最近作品分镜页，最近记录失效取第一个，回收站里的作品也算；否则显示占位页与三个入口）— `src/features/assembler/StoryboardEntry.tsx`
+- [新增] 对照测试 69 项：旧 `viewAssembler`、`viewTool` 在 jsdom 窗口里实跑，与新组件渲染的 DOM 逐节点比较（标签、属性、class 排序、style、textarea 值、文本逐字）并比较 localStorage；覆盖普通模式 10 种存储状态、分镜编辑 26 种场景（7 个题材分支、模型结果各状态、作品保存的画风、集序边界、回收站与标准版作品等）、3 个抛异常的集序、9 种分镜入口存储状态；画风切换、自定义文字、条款开关、复制、下载、返回的每一步操作后都比较；合成数据（3 画风、3 条款、补丁跨章节与编号 9.12 / 10.1 排序）另 9 项，8 种条款组合全比较；共 157 次比较、约 2.8 万个节点 — `tests/parity/assembler.test.tsx`、`assembler-synthetic.test.tsx`、`assembler-harness.tsx`、`assembler-legacy-dom.ts`、`assembler-dom-snapshot.ts`
+- [新增] `assemble` 与 `build.py video` 逐字相等（真实数据下画风 × 条款的全部组合）— `tests/parity/assembler-build.test.ts`
+- [新增] 组件测试 21 项（jsdom + user-event）：切换画风、自定义文字、条款开关、复制（假定时器验证 1.3 秒还原）、下载文件名与 BOM、返回键脏状态与保存、分镜编辑各分支、分镜入口跳转与占位 — `tests/unit/assembler.test.tsx`
+- 差异：旧返回键的内联 `onclick` 与脏标记 `data-dirty` 在新页面是事件处理函数与状态，对照时忽略这两个属性，变脏后的类名与文字仍逐字比较；点击行为由组件测试覆盖
+- 差异：`CopyButton` 不支持传 id，旧“复制全部”按钮有 `id="cpAll"`，本页自带一个等价的按钮组件保留该 id
+- 发现：`tests/parity/legacy.ts`、`plugins/load-data.ts` 在 jsdom 环境（`.test.tsx`）里 import 即抛 “The URL must be of scheme file”，所以辅助文件自带路径与抽取逻辑（与 `legacy.ts` 的 `extractTopLevel` 同逻辑，旧页面结构变化时两处一起改）；这两个文件未改
+- 验证：全包 26 个文件 520 项通过（本包新增 4 个文件 94 项）；`tsc --noEmit` 无错误；18 处人为改动（文案、class、display、写存储时机、脏状态、集序钳制、画风校验、章节列表、跳转目标与回收站过滤、链接等）全部被测试发现；`vite build` 与 `check:dist` 通过；未做浏览器验证
