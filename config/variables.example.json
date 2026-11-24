@@ -1,0 +1,6 @@
+{
+  "dev": {
+    "public": {"PORT": "8080", "PG_POOL_MAX": "", "CORS_ALLOW_ORIGINS": "", "MAX_BODY_BYTES": "", "UPSTREAM_TIMEOUT_MS": "", "GH_REPO": "", "GH_WORKFLOW": ""},
+    "secret_names": ["DATABASE_URL", "AUTH_SECRET", "ADMIN_KEY", "ACCESS_CODE", "JOB_SECRET", "YQ_BASE", "YQ_KEY", "QWEN_BASE", "QWEN_KEY", "GH_TOKEN"]
+  }
+}

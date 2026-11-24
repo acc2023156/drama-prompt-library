@@ -11,3 +11,15 @@ Dockerfile
 .dockerignore
 packages/worker/dist
 packages/worker/src/generated
+# 与容器服务模板对齐：密钥文件与 GitLab CI 文件、CI 产物不进构建上下文
+*.pem
+*.key
+.gitlab-ci.yml
+.gitlab/
+config/
+image-metadata/
+release-manifest.json
+ci-plan.json
+child-pipeline.yml
+toolchain.env
+**/__pycache__

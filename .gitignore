@@ -5,3 +5,13 @@ __pycache__/
 packages/worker/src/generated/
 packages/worker/dist/
 packages/web-react/dist/
+# 与容器服务模板对齐：本地环境文件、密钥文件、CI 产物
+.env.*
+!.env.example
+*.pem
+*.key
+image-metadata/
+release-manifest.json
+ci-plan.json
+child-pipeline.yml
+toolchain.env

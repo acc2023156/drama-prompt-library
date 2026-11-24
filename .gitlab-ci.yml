@@ -1,0 +1,23 @@
+workflow:
+  rules:
+    # Creating dev or release-* from an existing commit is not a merge; nothing to verify or build.
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^(main|dev|release-[A-Za-z0-9][A-Za-z0-9._-]*)$/'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_PROTECTED == "true" && $CI_COMMIT_BRANCH =~ /^(main|dev|release-[A-Za-z0-9][A-Za-z0-9._-]*)$/'
+    - when: never
+stages: [verify]
+variables:
+  # A group or project CI/CD variable of the same name overrides this default.
+  VERIFY_RUNNER_TAG: devops-verify
+default:
+  tags: [$VERIFY_RUNNER_TAG]
+  image: python:3.12-bookworm@sha256:4209fae09a3e20afd863e528bfddc235da5fd5977983e1996cd54cc9a72e6267
+# Runs until the project's CI config path points at its artifacts native CI file; that
+# pipeline reads .gitlab/plan.py and builds images, this one only runs the same checks.
+verify:
+  stage: verify
+  script:
+    - if [ "$CI_PIPELINE_SOURCE" = merge_request_event ]; then test "$CI_MERGE_REQUEST_SOURCE_PROJECT_ID" = "$CI_PROJECT_ID" && test "$CI_MERGE_REQUEST_PROJECT_ID" = "$CI_PROJECT_ID" || exit 1; fi
+    - checks=$(python3 .gitlab/plan.py checks)
+    - for check in $checks; do sh .gitlab/verify.sh "$check" || exit 1; done
