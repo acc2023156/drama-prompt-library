@@ -327,3 +327,20 @@
 
 - [删除] 只构建不发布的工作流 `web-react-build.yml`（push main、pull_request 时安装依赖、类型检查、测试、构建、校验产物）；原因：用户决定去掉未被要求的 CI 工作流 — `.github/workflows/web-react-build.yml`
 - [修改] 受影响的 README 说明：`packages/web-react/README.md` 里没有关于该工作流的文字，无需改动；根 `README.md` 与 `build.py` 对 `.github/workflows` 的描述（发布网站、长剧本任务、热点同步）本就不含它，也未改
+
+### web-react P4：PRO 首页与对话框、作品卡、五步表单 `packages/web-react`
+
+对照基准：固定快照 `tests/fixtures/legacy-template.1cf6f6c.html`（`viewScriptHome` 至 `wzSeedAssets`，第 1539–2073 行）；`f331924` 之后的模板改动不在本节范围。
+
+- [修改] PRO 首页替换占位：对话框、作品网格（类型标签、规格、时间）、删除作品选择模式、全选 / 取消、移到回收桶（确认框、30 天提示、写 `trashed` 与 `time`、整页重画）、回收桶入口计数、空状态；文件名、导出名、props 不变 — `src/features/pro-chat/ScriptHomePage.tsx`
+- [新增] 对话框：连接器（CSS 隐藏，DOM 与点击照旧）、三个页签、输入区只在旧 drawBody 时机重画（“清空”按钮、拖放区按重画时的快照）、字数提示、发送（auto 生成作品卡写 `pl.vibeCard`；paste / novel 合并 `pl.scriptDraft` 后跳 `#/script/new`）、风格 / 比例 / 思考强度弹层（滑杆同步写 `pl.vibeCard.depth`）、麦克风 — `src/features/pro-chat/Chat.tsx`、`chat-data.tsx`
+- [新增] 文件读取：docx、pdf 与旧页面一样按需从 cdnjs 加载 mammoth 1.6.0、pdf.js 3.11.174（同地址只加载一次，脚本标签已在即不重试），直接引用全局名使错误提示文字相同；txt / md 依序试 UTF-8、GB18030、Big5 — `src/features/pro-chat/read-file.ts`
+- [新增] 弹层开关：对话框与作品卡共用一个“当前打开的弹层”，点页面任意处关闭 — `src/features/pro-chat/pops.ts`
+- [新增] 作品卡：七星（`QIXING` 男频 / 女频角色与剧本模式）、9 个下拉（风格、比例、受众、角色、模式、尺度三档、配对、集数、时长）、爽点、独家点子起手句、取名骰子、思考深度、切换受众时清掉不在新组的七星并整卡重画、开写（未登录打开登录面板并提示；已登录用 `wzBuildWork` 写 `pl.works`，设 `W.id` 后写回 `pl.vibeCard`，跳 `#/script/v/<id>`，不启动写作）；接口 `WorkCard` 的 props 写在 `types.ts` — `src/features/pro-chat/card/`
+- [新增] 语音输入 hook `useMic`（旧 `micListen` / `addMic`）：对话框、作品卡故事框、独家点子框三处共用；分隔规则、zh-CN、连续识别、再按停止、start 抛错提示同旧页面 — `src/features/pro-chat/card/speech.ts`
+- [修改] 五步表单替换占位：三种模式与 txt / md 汇入（4MB 上限）、读取这份文件取剧名、骨架、第一季规格（自定义集数与时长、每分钟字数）、补充设定、撞题比对、辨识度、就差提示、预览与进度、AI 帮我想弹窗（复用 `components/TextModal`）、草稿自动保存（编辑时不存）、建立作品并写 `pl.assetSeed` 跳资产库；输入框不受控，刷新区按 update() 快照渲染 — `src/features/script-form/ScriptFormPage.tsx`、`progress.ts`
+- [新增] 对照测试 173 项：PRO 首页 102 项、作品卡 35 项、五步表单 36 项；旧页面在独立 jsdom 窗口里实跑，两边同种子、同随机序列与时钟、同一组桩（confirm、剪贴板、语音识别、动态脚本与解析库、FileReader、滚动、下载），每步比较 DOM 逐节点、localStorage 原文、hash、提示条、弹窗、滚动、焦点、桩调用、登录面板、works 推送次数 — `tests/parity/pro-twin.tsx`、`pro-home.test.tsx`、`pro-card.test.tsx`、`script-form.test.tsx`
+- [新增] 变异检验 69 处：首轮 64 处被发现，1 处替换命中注释（无效，改到代码行重做），4 处逃过（回收桶计数阈值、正文只有空白的 paste 状态、弹窗小说截取长度、相似度取整），补用例后全部被发现
+- 差异：作品卡切换受众重画、或页面卸载时，正在进行的语音识别会停止；旧页面不停止，识别结果继续写进已脱离页面的旧输入框
+- 差异：旧 `viewScriptHome` 给 `[data-cp]` 绑复制 `wzPrompt`，页面里没有该元素，属不可达代码，未迁移；旧 `wcardOpts` 的 depth、genre、ai 三项卡片上从未渲染，未迁移
+- 验证：全包 43 个文件 1278 项通过；`tsc --noEmit` 无错误；`vite build` 产物仍只有 `index.html`，`check:dist` 通过；未做浏览器验证
