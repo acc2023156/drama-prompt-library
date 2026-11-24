@@ -254,3 +254,23 @@
 - 差异：直角引号（起手话 `以…为题材，`）在源码里写成转义序列，写入的文本与旧页面逐字节相同
 - 发现：`tests/parity/lib.test.ts`、`tests/parity/shell.test.ts` 各 1 项失败，在不含本节改动的 `2bc181f` 上同样失败（`f331924` 新增键 `assetsTrash` 与路由 `#/assets-trash`，`legacy.ts` 读取的是当前模板而非固定快照），不属本节范围，未改
 - 验证：全包 29 个文件 687 项，685 通过（含本节 84 项），2 项为上条的既有失败；`tsc --noEmit` 无错误；`vite build` 产物仍只有 `index.html`，`check:dist` 通过；未做浏览器验证
+
+### 前端 React 重构 P3-A：标准版首页（七星、角色库、角色卡与 dock）`packages/web-react`
+
+对照基准：`packages/web/site-template.html` 在 `f331924`（该文件最后改动提交，origin/main 为 `3ed5da5` 时取得）；开工时基准为 `1cf6f6c`，两者之间 `viewScriptSimple` 函数体 sha256 相同，它依赖的 `partnerBanner`、`chatState`、`wzGuess`、`sxOutline`、`sxSaveWork`、`toast` 也未变；之后的改动不在本节范围。
+
+- [修改] 标准版首页替换占位：角色库 / 创作平台切换（写 `pl.homeMode`，挂载时按旧页面原样写回）、伙伴计划横幅（复用 `features/partner/PartnerBanner`）、我的作品列表、角色卡（搜索、选中、随机名）、选频道、dock（主角名改动同步剧名、剧名、骰子、一键产出）；沿用旧 CSS 类名与元素 id，不改 `legacy.css`；文件名、导出名、props 不变 — `src/features/simple/home/SimpleHomePage.tsx`
+- [新增] 七星行星排行：剧本热点七星（内置示例按 1 小时 / 24 小时 / 7 天调整热度）与开阳角色七星、实时热点分类页签与渐层配色、核心星 / 行星 / 排行点击、角色排行“角色库”“开剧本”按钮、悬停减速（`getAnimations` 播放速率 0.3）、鼠标落星（35 毫秒节流、900 毫秒移除、减少动态偏好时关闭）；每次重画重建行星与排行节点，轨道动画从头开始，同旧页面 — `src/features/simple/home/Orbit.tsx`、`orbit-data.ts`
+- [新增] `GET /hot` 页面级缓存（旧 `window._hotLive` / `_hotLoading`）：走 `lib/api` 的 `getPublic`，请求中不重复发，成功且 `topics` 非空才缓存，失败或为空时下次切换模式再请求，返回后重画七星 — `src/features/simple/home/hot.ts`
+- [新增] 角色库四级导航（root、男频 / 女频列表、角色详情、服装库 / 发型库整理中）与 `pl.libNav` 记忆（键顺序、额外键、无数据频道改为 wip 的修正与旧页面一致）、用这个角色写剧本、做角色设定板（写 `pl.assetPick` 跳资产库） — `src/features/simple/home/RoleLibrary.tsx`
+- [新增] 写存储的动作：点热点星体写 `pl.chat`（沿用旧 `chatState` 默认值与键序）、`pl.vibeCard`（`WZ_DEF` + `wzGuess` + `depthOf`）、`pl.pro` 并跳 `#/script`；点角色星体写 `pl.sxPick`、`pl.homeMode`、`pl.libNav` 后整页重挂载并滚动；一键产出用 `sxOutline`、`sxBuildWork` 写 `pl.works`、`pl.sxPick` 写 `null`，跳 `#/script/s/<id>?new=1` — `src/features/simple/home/actions.ts`
+- [新增] 对照测试 120 项（`tests/parity/simple-home.test.tsx`）：旧 `viewScriptSimple` 在独立 jsdom 窗口里真跑（顶层声明抽取后在该窗口的 vm 上下文运行），新组件渲染在测试 jsdom 里；两边同一 localStorage 种子、同一随机序列、同一 `Date.now` / `performance.now`、同一 `/hot` 桩，每步操作后逐节点比较 DOM（标签、属性、class 排序、style 解析后比较、输入框当前值、文本），并比较 localStorage 原文、`location.hash`、`/hot` 请求序列、提示条、`scrollIntoView` 调用、动画速率、works 推送钩子次数。覆盖：初次渲染 16 种存储 × 有无 `/hot`（两种模式、角色库各层级、wip 修正、额外键、已选角色、搜索命中与无结果、作品列表、未知模式）、三种时间范围下点星体、实时热点 7 个页签与各页签点击、灵感 8 / 9 字边界、缓存与重试 4 例、角色七星、落星与节流、重画时节点重建 5 例、角色卡与 dock、一键产出 6 例、角色库导航与模式往返、用这个角色写剧本 4 例、做角色设定板；另按旧页面 24 个事件绑定逐个建用例（每个断言新旧相等且确有可见效果）
+- [新增] `/hot` 缓存单测 7 项（`tests/unit/simple-home-hot.test.ts`）：并发去重、成功缓存与通知、5 种失败不缓存、后端地址前缀
+- [新增] 对照辅助：新旧双跑与 DOM 归一（`simple-home-twin.tsx`）、数据与模板路径（`simple-home-data.ts`，不 import `legacy.ts` 与 `plugins/load-data.ts`，绕开 jsdom 下 `import.meta.url` 报错）— `tests/parity/`
+- [新增] 变异检验：对源码 31 处人为改动（热度偏移、实时热度公式、灵感长度阈值、`pl.pro` 与 `vibeCard` 字段、`sxPick` 清空、`homeMode` 写入、缓存条件与去重、节流、减速倍率、落星时长、截字、排行按钮冒泡判断、星体尺寸、wip 返回频道、wip 修正、爆款验证标签、剧名同步、同频道不重置、提示文案、闪烁时长、挂载写回、选卡随机名、搜索范围、重画、空状态样式、设定板文案等），1 处匹配不到源码未生效；生效的 30 处首轮 25 处被发现，5 处逃过：灵感长度阈值、闪烁时长、重画重建节点 3 处补用例后被发现，另 2 处为等价改动（`hotData` 下限 45 在内置数据里不会触发；`go()` 每次都覆盖 `lv`，合并前是否修正不可观测）
+- 差异：`/hot` 返回缺 `works` 数组时，旧页面切到“爆款”页签会在 `H.works.map` 抛 TypeError、七星不重画，新页面按空列表处理（回落内置示例）；后端 `/hot/push` 总会写入 `works`
+- 差异：旧页面在 `/hot` 返回时用发起请求那次渲染的闭包重画（期间若已整页重画，会用旧闭包的板块与分类画到新 DOM 上），新页面总按当前状态重画
+- 差异：React 之外追加的落星节点与旧页面一样挂在舞台末尾；旧页面每次 `drawOrbit` 先删后加行星节点，新页面用重画计数作 key 重建，DOM 顺序相同
+- 发现：`npm install` 会把根 `package-lock.json` 里 web-react 的 `engines` 改成与 `packages/web-react/package.json` 一致（`^22.22.2 || ^24.15.0 || >=26.0.0`），锁文件与清单不同步，归 P0，本节未提交该改动
+- 发现：`tests/parity/lib.test.ts`、`tests/parity/shell.test.ts` 各 1 项失败，在不含本节改动的 `3ed5da5` 上同样失败（`f331924` 新增键 `assetsTrash` 与路由 `#/assets-trash`），不属本节范围，未改
+- 验证：全包 31 个文件 814 项，812 通过（含本节 127 项），2 项为上条的既有失败；`tsc --noEmit` 无错误；`vite build` 产物仍只有 `index.html`，`check:dist` 通过；未做浏览器验证
