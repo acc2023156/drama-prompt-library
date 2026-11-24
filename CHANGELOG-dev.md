@@ -303,7 +303,6 @@
 - 变异检验：85 处人为改动（等待秒数、重试次数、阈值、条件分支、模型选择、字段名与键序、并行与顺序、停止与单飞），首轮 82 处被发现；补用例后“上一集结尾截 500 字”“重写清 err”被发现；剩 1 处为等价改动（第 4 次换模型时去掉 `model!==YQ_PLAN`，原模型已是 `YQ_PLAN` 时两者相同）
 - 差异：`startYq` 参数改为作品 id；`driveYq` 重复调用返回正在跑的那次任务的 Promise（旧为立即 resolve）；`yqDrive` 循环里 `continue` 之后的不可达代码未迁移
 - 验证：全包 36 个文件 982 项通过（新增 167 项）；`tsc --noEmit` 无错误；`vite build` 与 `check:dist` 通过；未做浏览器验证
-||||||| parent of 2f75d23 (docs: record the web-react asset library migration)
 
 ### 前端 React 重构 P4-D：资产库（资产首页与节点编辑器）`packages/web-react`
 
