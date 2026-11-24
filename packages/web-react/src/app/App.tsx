@@ -1,3 +1,4 @@
+import { ErrorBoundary } from './ErrorBoundary'
 import { Layout } from './Layout'
 import { RouteView } from './RouteView'
 import { useRoute } from './useRoute'
@@ -7,7 +8,9 @@ export function App() {
   const { route, hash, rev } = useRoute()
   return (
     <Layout route={route} hash={hash} rev={rev}>
-      <RouteView key={rev} route={route} />
+      <ErrorBoundary resetKey={rev}>
+        <RouteView key={rev} route={route} />
+      </ErrorBoundary>
     </Layout>
   )
 }
