@@ -160,11 +160,11 @@ def main():
             used_paths.add(rel)
 
             if eid == "6.0":
-                text = split_core(out / d, body)
+                text = split_core(out / "docs" / d, body)
                 rel = f"{d}/6.0-说明.md"
             front = "---\n" + "".join(f"{k}: {yaml_val(v)}\n" for k, v in fm.items()) + "---\n"
-            write(out / rel, front + text)
-            item = {"kind": "entry", "path": rel, "id": eid}
+            write(out / "docs" / rel, front + text)
+            item = {"kind": "entry", "path": f"docs/{rel}", "id": eid}
             if toc_line != rest:
                 item["toc"] = toc_line
             manifest.append(item)

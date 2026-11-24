@@ -5,8 +5,8 @@
 
   python packages/web/build.py video [--style 末日废土写实] [--option 成人内容] [-o 输出.txt]
       组装 6.0 视频专用提示词正文（只含代码框里那段，可直接复制给 AI）。
-      换项目时在 06-video/styles/ 新建一个风格文件，用 --style 指定。
-      可选条款放在 06-video/core/options/，默认关闭，用 --option 逐个打开。
+      换项目时在 docs/06-video/styles/ 新建一个风格文件，用 --style 指定。
+      可选条款放在 docs/06-video/core/options/，默认关闭，用 --option 逐个打开。
 
   python packages/web/build.py patches
       列出能补进 6.0 各部分的条目。
@@ -19,9 +19,10 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent          # packages/web
-ROOT = HERE.parent.parent                       # 仓库根目录：提示词内容资料
-CORE = ROOT / "06-video" / "core"
-STYLES = ROOT / "06-video" / "styles"
+ROOT = HERE.parent.parent                       # 仓库根目录
+DOCS = ROOT / "docs"                            # 提示词内容资料（01-outline … 07-compliance、archive）
+CORE = DOCS / "06-video" / "core"
+STYLES = DOCS / "06-video" / "styles"
 
 
 def read(p):
@@ -48,7 +49,7 @@ def all_options():
 
 
 def core_prompt(style, options=()):
-    """options：要打开的可选条款（06-video/core/options/ 下的文件名）。没打开的整行去掉。"""
+    """options：要打开的可选条款（docs/06-video/core/options/ 下的文件名）。没打开的整行去掉。"""
     style_path = STYLES / f"{style}.md"
     if not style_path.exists():
         names = ", ".join(p.stem for p in STYLES.glob("*.md") if not re.match(r"\d", p.stem))
@@ -102,7 +103,7 @@ def build_all(style):
 
 def list_patches():
     rows = {}
-    for p in sorted(ROOT.glob("**/*.md")):
+    for p in sorted(DOCS.glob("**/*.md")):
         fm, _ = split_front(read(p))
         for sec in fm.get("patches", []):
             rows.setdefault(sec, []).append(f"{fm['id']} {fm['title']}  ({p.relative_to(ROOT).as_posix()})")
@@ -145,10 +146,12 @@ def build_index():
         "|---|---|",
         "| `packages/web` | 天玑网站：`site-template.html` + `build.py`，产出单文件 `packages/web/site/index.html` |",
         "| `packages/worker` | 天玑后端 `tianji-api`（Node.js + PostgreSQL，见 [packages/worker/README.md](packages/worker/README.md)） |",
-        "| `01-outline` … `07-compliance`、`_meta`、`data` | 提示词内容资料，网站打包时读取 |",
+        "| `docs/01-outline` … `docs/07-compliance`、`docs/archive` | 提示词内容资料（一条一个 md），网站打包时读取 |",
+        "| `docs/sources.md` | 提示词来源与许可附录 |",
+        "| `_meta`、`data` | 目录顺序与章节元数据（manifest.json）、角色原型（roles.json） |",
         "| `.github/workflows` | 发布网站、长剧本任务、热点同步 |",
         "",
-        "根目录 `npm run build:web` / `npm run dev:web` / `npm run dev:worker` / `npm run deploy:worker`。",
+        "根目录 `npm run build:web` / `dev:web` / `dev:worker` / `start:worker` / `test:worker` / `migrate:worker`。",
         "",
         "## 常用命令",
         "",
@@ -162,9 +165,9 @@ def build_index():
         "```",
         "",
         "- 新增一条：在对应目录新建 `编号-名称.md`（照抄任一文件的元数据格式），在 `_meta/manifest.json` 里按位置加一行，再在 `CHANGELOG.md` 记一笔。",
-        "- 换项目画风：在 `06-video/styles/` 新建风格文件，组装时用 `--style` 指定，不用改 6.0 原文。",
-        "- 改 6.0 主模板：直接改 `06-video/core/parts/` 里对应那一部分。",
-        "- 可选条款：`06-video/core/options/` 里每个文件是一条按项目开关的条款，在 parts 里用 `{{OPT:名称}}` 占位。组装视频提示词时默认关闭，用 `--option 名称` 打开；合并回汇总文档时全部保留。目前有：成人内容（6.0【一】第 7 条，全年龄线项目不要打开）。",
+        "- 换项目画风：在 `docs/06-video/styles/` 新建风格文件，组装时用 `--style` 指定，不用改 6.0 原文。",
+        "- 改 6.0 主模板：直接改 `docs/06-video/core/parts/` 里对应那一部分。",
+        "- 可选条款：`docs/06-video/core/options/` 里每个文件是一条按项目开关的条款，在 parts 里用 `{{OPT:名称}}` 占位。组装视频提示词时默认关闭，用 `--option 名称` 打开；合并回汇总文档时全部保留。目前有：成人内容（6.0【一】第 7 条，全年龄线项目不要打开）。",
         "- 其他资料：更新记录见 [CHANGELOG.md](CHANGELOG.md)，来源与许可见 [docs/sources.md](docs/sources.md)。",
         "",
         usage.replace("## 使用说明", "## 使用说明（原文）").rstrip(),
@@ -172,7 +175,7 @@ def build_index():
         "## 目录",
     ]
     for folder, label in FOLDERS:
-        files = sorted((ROOT / folder).glob("*.md"),
+        files = sorted((DOCS / folder).glob("*.md"),
                        key=lambda p: [int(x) for x in p.name.split("-")[0].split(".") if x.isdigit()])
         if not files:
             continue
@@ -190,7 +193,7 @@ def build_index():
             status = "；".join(x for x in extra if x)
             out.append(f"| {fm['id']} | [{fm['title']}](<{link}>) | {fm['license']} | {status} |")
         if folder == "06-video/core":
-            out.append("| | [6.0 各部分 parts/](<06-video/core/parts>) | | 【一】…【七】分文件，【三】风格取自 styles/ |")
+            out.append("| | [6.0 各部分 parts/](<docs/06-video/core/parts>) | | 【一】…【七】分文件，【三】风格取自 styles/ |")
     return "\n".join(out) + "\n"
 
 
@@ -198,7 +201,7 @@ def build_site():
     """把全部模块打包进 packages/web/site/index.html（单文件，双击即可打开）。"""
     entries = []
     for folder, label in FOLDERS:
-        for p in (ROOT / folder).glob("*.md"):
+        for p in (DOCS / folder).glob("*.md"):
             fm, body = split_front(read(p))
             if not fm:
                 continue

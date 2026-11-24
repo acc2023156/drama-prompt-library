@@ -67,3 +67,9 @@
 - [新增] 本文件 `CHANGELOG-dev.md`
 - [修改] 根目录的 `sources.md`（提示词来源与许可附录）移到 `docs/sources.md`，用 `git mv` 保留历史；同步更新引用：`_meta/manifest.json` 的附录路径（`build.py all` 依赖）、`build.py` 生成 README 的链接文字、`README.md`、`split.py` 的输出路径。已验证 `build.py all` 输出与移动前逐字节一致
 - [新增] `docs/README.md`：docs 目录索引
+- [修改] 提示词内容目录 `01-outline`、`02-adaptation`、`03-revision`、`06-video`、`07-compliance`、`archive`（共 101 个文件）移到 `docs/` 下，用 `git mv` 保留历史；`_meta`、`data` 仍在根目录
+- [修改] `build.py`：新增 `DOCS` 基准目录，6.0 模板、画风块、条目、`patches` 列表都从 `docs/` 读取；网站路由用的逻辑目录键（`01-outline` 等）不变，README 生成器里的路径文字同步更新 — `packages/web/build.py`
+- [修改] `_meta/manifest.json` 的 90 条条目路径加 `docs/` 前缀；一次性拆分脚本 `split.py` 同步改为写入 `docs/`
+- [修改] 网站条目详情页显示的文件路径带 `docs/` 前缀（页面其余内容不变）
+- [修改] 生成的 `README.md` 里陈旧的 `npm run deploy:worker` 改为当前可用的脚本；`docs/README.md` 补全目录索引
+- 验证：`build.py all`、`video`（含成人内容条款）、`patches`、`site` 的输出与移动前一致（仅路径前缀不同）；README 94 个相对链接全部有效；镜像构建通过
