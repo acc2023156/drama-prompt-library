@@ -73,3 +73,45 @@
 - [修改] 网站条目详情页显示的文件路径带 `docs/` 前缀（页面其余内容不变）
 - [修改] 生成的 `README.md` 里陈旧的 `npm run deploy:worker` 改为当前可用的脚本；`docs/README.md` 补全目录索引
 - 验证：`build.py all`、`video`（含成人内容条款）、`patches`、`site` 的输出与移动前一致（仅路径前缀不同）；README 94 个相对链接全部有效；镜像构建通过
+
+### 后端重构：TypeScript + Hono + Prisma + Zod `packages/worker`
+
+对外接口（路由、请求头、状态码、JSON 结构、积分规则、流式扣点退点）保持不变，原 18 项集成测试原样通过；有意的行为变化单列在本节末尾。
+
+- [新增] TypeScript 严格模式（`strict`、`noUncheckedIndexedAccess`）：`tsconfig.json`（类型检查，含测试）、`tsconfig.build.json`（编译到 `dist/`）— `packages/worker`
+- [修改] 路由与中间件改用 Hono + `@hono/node-server`：`src/app.ts` 的 `createApp({ cfg, prisma })` 挂载 `src/routes/` 下按领域拆分的 `account`、`admin`、`feeds`、`jobs`、`yq`、`models`；启动入口 `src/server.ts`（dotenv、配置校验、迁移检查、定时清理、优雅退出）
+- [修改] CORS 改用 `hono/cors`，语义不变（白名单内回显来源，否则回第一个白名单项；暴露 `X-Points`；预检 204）— `src/app.ts`
+- [修改] 请求体上限 `MAX_BODY_BYTES`：`Content-Length` 已超限时直接回 413 且不读请求体，分块上传交给 `hono/body-limit`；超限后 keep-alive 连接仍可复用（直接用 `bodyLimit` 会让 node-server 在 500ms 后强关该连接，客户端复用时 ECONNRESET，已加回归用例）— `src/app.ts`
+- [修改] HEAD 请求：hono 默认用 GET 路由应答 HEAD，这里改回旧版的精确匹配，只有 `/`、`/me` 应答 HEAD，其余回 404 — `src/app.ts`
+- [新增] 统一响应与错误处理：JSON 响应默认 `Cache-Control: no-store`（`/hot`、`/words` 为 `max-age=300`）；`HttpError`、Zod 校验失败、畸形 JSON、未知异常统一输出 `{error: 文本}`，旧版错误文本全部保留 — `src/lib/http.ts`、`src/lib/validate.ts`、`src/app.ts`
+- [新增] Zod 校验：环境变量（非法 URL、非法数字拒绝启动，空值用默认）；各路由的路径参数、查询参数、JSON 请求体（`@hono/zod-validator` + `readJson`）。JSON 请求体不看 `Content-Type`，与旧版一致；热点、热词推送字段缺失或类型不对时给默认值，不整批拒收 — `src/config.ts`、`src/routes/*`
+- [修改] 数据访问改用 Prisma 7.10.1（`@prisma/client`、`@prisma/adapter-pg`、`prisma` 三者固定同一版本）：BIGINT 时间戳对外一律转 number；扣点、退点用 `$transaction` + `SELECT … FOR UPDATE` 锁用户行，退点返回精确余额；后台统计（`FILTER`、`GREATEST`）用参数化的 `$queryRaw` 标签模板 — `src/lib/db.ts`、`src/lib/points.ts`、`src/lib/store.ts`、`src/routes/admin.ts`
+- [修改] 流式写作移植到 Hono：边收边转发、流结束才判成败、无结尾标记退点、浏览器断开取消上游、每次请求只结算一次；实测 `@hono/node-server` 在客户端断开时会触发 `c.req.raw.signal` 的 abort 与响应流的 cancel — `src/routes/yq.ts`
+- [修改] 迁移工具由 node-pg-migrate 换成 Prisma Migrate：`prisma/schema.prisma` 为表结构唯一来源，初始迁移 `prisma/migrations/20261124100000_init`；部分列收紧为 NOT NULL — `prisma/`、`prisma.config.ts`
+- [修改] 启动时的迁移检查改为对照 `prisma/migrations/` 与 `_prisma_migrations` 表（`finished_at` 非空且未回滚才算已执行），有待执行项拒绝启动，提示本地与镜像两种命令 — `src/lib/migrations.ts`、`src/server.ts`
+- [修改] npm 脚本：`build`（prisma generate + tsc）、`dev`（tsx watch）、`start`（node dist/server.js）、`test`、`typecheck`、`migrate`、`migrate:dev`、`migrate:status`、`prisma:generate`；`dev`、`test`、`typecheck` 前自动 `prisma generate`。根目录新增 `build:worker`、`typecheck:worker`、`migrate:dev:worker`，删除 `migrate:create:worker` — `package.json`、`packages/worker/package.json`
+- [修改] 依赖：新增 hono、`@hono/node-server`、`@hono/zod-validator`、zod、Prisma 三件套，开发依赖 typescript、tsx、`@types/node`；移除 pg、node-pg-migrate — `packages/worker/package.json`、`package-lock.json`
+- [修改] 测试改写为 TypeScript（`node --import tsx --test`），原 18 项断言不变（两项迁移用例改为检查 Prisma 迁移目录与 `migrate deploy` 重复执行无副作用）；新增 5 项：环境变量校验、请求校验（畸形 JSON、手机号、后台参数、作品请求体）、热点热词宽容解析、未知路径 404 与错误响应头、请求体超限（分块 413、连接复用），共 23 项 — `test/api.test.ts`
+- [删除] 旧 JS 源码 `src/index.js`、`account.js`、`store.js`、`server.js`、`http.js`、`db.js`、`config.js`、`migrations.js`；node-pg-migrate 的 `migrations/` 与 `scripts/migration-status.js`；旧测试 `test/api.test.js`
+- [新增] `.gitignore` 忽略 `packages/worker/src/generated/`（prisma generate 产物）与 `packages/worker/dist/`；`.dockerignore` 同步排除
+- [修改] `Dockerfile` 改为四阶段：前端静态页、编译（全部依赖 + prisma generate + tsc）、生产依赖（含 prisma CLI 与 schema-engine）、运行镜像；运行镜像装 `openssl`（schema-engine 需要）、含 `dist/`、`prisma/`、`prisma.config.ts`，不含 TypeScript 源码；设 `CHECKPOINT_DISABLE=1`；保留构建参数 `TIANJI_API_BASE`、`GIT_SHA`、`VERSION` 与 `/app/site`，仍以 `node` 用户运行 — `Dockerfile`
+- [修改] 入口子命令：`server` 改为 `node dist/server.js`，`migrate` 改为 `prisma migrate deploy`，`migrate:status` 改为 `prisma migrate status`（有待执行时退出码 1）；其余原样透传 — `docker/entrypoint.sh`
+- [删除] `migrate:dry`（npm 脚本与镜像子命令）
+- [修改] `packages/worker/README.md` 重写技术栈、目录、迁移、接管旧开发库、镜像、测试章节；`build.py` 生成 README 时对 `packages/worker` 的描述改为 TypeScript + Hono + Prisma + PostgreSQL，并重新生成 `README.md` — `packages/worker/README.md`、`packages/web/build.py`、`README.md`
+- 验证：类型检查通过；集成测试 23 项全过（连续 8 次）；去掉流式结算逻辑后 3 个流式失败用例全部失败；Docker 实测构建、未迁移拒绝启动（退出码 1）、`migrate`、`migrate:status`、两个 `migrate` 容器并发、`GET /` 与登录、`docker stop` 0.19 秒退出码 0、缺 `AUTH_SECRET` 拒绝启动；node-pg-migrate 建过的旧库按 README 步骤接管，数据保留
+
+有意的行为变化：
+
+- 未知路径统一回 404 `{error: "not found"}`（旧版对未匹配路径会先做来源与通行码检查，常回 401 `bad access code`；`/admin/` 下未知路径旧版会回 400 `bad json`）
+- `POST /works/:id` 的请求体必须是 JSON 对象，否则 400 `work must be a JSON object`；`POST /jobs` 同样要求对象，否则 400 `job must be a JSON object`（旧版对字符串、数字、`null` 会 500，对数组会建出请求体为 `[]` 的任务）
+- 移除 `migrate:dry`
+- 数据库列收紧为 NOT NULL（`users`、`works`、`yqlog`、`ledger`、`snapshots` 的业务列）
+- 环境变量写了非法值（如 `PORT=abc`、`MAX_BODY_BYTES=-1`、`YQ_BASE` 不是完整 URL）时拒绝启动（旧版静默回退默认值）
+- 请求体为 JSON `null` 等非对象时，`/auth/login`、`/admin/points`、`/admin/role`、`/hot/push`、`/words/push` 回 400 或按默认值处理（旧版抛异常回 500）
+
+其他细微差异（不影响浏览器 CORS 判定与现有调用方，已逐条核对）：
+
+- CORS 的 `Access-Control-Allow-Methods`、`Allow-Headers`、`Max-Age` 只出现在预检响应里（旧版每个响应都带）；`Allow-Methods` 写法为 `GET,POST,DELETE,OPTIONS`（无空格）
+- 旧版不带 CORS 头的响应（热点热词推送、任务回报、413、500）现在也带 CORS 与 `Vary` 头；413、500 响应带 `Cache-Control: no-store`
+- 热点热词推送字段类型不对时归一为默认值：如 `score` 为字符串 `"8"` 存为数字 8（旧版原样存字符串），`cat` 等非字符串存为空串，`ideas` 非数组存为空数组
+- 路径参数按 URL 解码后校验（如 `/works/%41` 视为 id `A`；旧版按原始路径匹配，回 404）
