@@ -1,8 +1,9 @@
 import { ASSET_NAV } from '../../app/nav-data'
+import { FN } from '../assets/menus'
 
 /**
  * 搜索时一并找出剧本 / 资产库 / 分镜里的相关功能：旧 funcIndex（site-template.html 第 3494 行）。
- * 角色类型数据来自内嵌 DATA.roles，资产功能说明文字来自旧 ASSET_MENUS（nav-data 只迁了侧栏字段，没有 desc）。
+ * 角色类型数据来自内嵌 DATA.roles；资产功能的目录来自 nav-data，说明文字来自资产库的完整菜单。
  */
 export interface FuncPick {
   pro: boolean
@@ -19,16 +20,8 @@ export interface FuncHit {
   pick?: FuncPick
 }
 
-export const ASSET_DESC: Record<string, string> = {
-  'role-new': '新建一个空白角色，先写好角色档案，后面再接设定板或特写。',
-  'role-board': '根据角色档案和人物参考图创建角色',
-  'role-close': '根据角色参考图生成角色三视图与脸部特写图',
-  'role-split': '分别准备面部与服装参考，涂抹遮挡小脸。',
-  'scene-new': '新建一个空白场景，先写好场景档案，后面再接设定板或变体。',
-  'scene-board': '根据场景档案和场景参考图创建场景',
-  'scene-var': '基于参考场景生成白天、夜晚、雨天场景',
-  'scene-empty': '基于参考场景生成无人物、无肢体的空镜',
-}
+/** 资产功能的说明文字：取自资产库的完整菜单（旧 ASSET_MENUS 的 desc）。 */
+export const ASSET_DESC: Record<string, string> = Object.fromEntries(Object.entries(FN).map(([id, f]) => [id, f.desc]))
 
 export type RoleTypes = Record<'male' | 'female', Record<string, unknown>[]>
 
