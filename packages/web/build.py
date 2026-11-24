@@ -165,7 +165,7 @@ def build_index():
         "- 换项目画风：在 `06-video/styles/` 新建风格文件，组装时用 `--style` 指定，不用改 6.0 原文。",
         "- 改 6.0 主模板：直接改 `06-video/core/parts/` 里对应那一部分。",
         "- 可选条款：`06-video/core/options/` 里每个文件是一条按项目开关的条款，在 parts 里用 `{{OPT:名称}}` 占位。组装视频提示词时默认关闭，用 `--option 名称` 打开；合并回汇总文档时全部保留。目前有：成人内容（6.0【一】第 7 条，全年龄线项目不要打开）。",
-        "- 其他资料：更新记录见 [CHANGELOG.md](CHANGELOG.md)，来源与许可见 [sources.md](sources.md)。",
+        "- 其他资料：更新记录见 [CHANGELOG.md](CHANGELOG.md)，来源与许可见 [docs/sources.md](docs/sources.md)。",
         "",
         usage.replace("## 使用说明", "## 使用说明（原文）").rstrip(),
         "",

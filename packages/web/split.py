@@ -114,8 +114,8 @@ def main():
         c_end = chunk_start(chap_heads[ci + 1][0]) if ci + 1 < len(chap_heads) else len(lines)
         key = ctitle[2]
         if ctitle.startswith("# 附录"):
-            write(out / "sources.md", "\n".join(lines[c_start:c_end]))
-            manifest.append({"kind": "appendix", "path": "sources.md"})
+            write(out / "docs" / "sources.md", "\n".join(lines[c_start:c_end]))
+            manifest.append({"kind": "appendix", "path": "docs/sources.md"})
             continue
         cnum, cdir = CHAPTERS[key]
         entries = [(i, t) for i, lv, t in heads if lv == 2 and ci_line < i < c_end]

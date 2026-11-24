@@ -65,3 +65,5 @@
 
 - [修改] `packages/worker/README.md` 重写（运行方式、环境变量、测试）；`README.md` 与 `build.py` 中 `packages/worker` 的描述去掉 Cloudflare
 - [新增] 本文件 `CHANGELOG-dev.md`
+- [修改] 根目录的 `sources.md`（提示词来源与许可附录）移到 `docs/sources.md`，用 `git mv` 保留历史；同步更新引用：`_meta/manifest.json` 的附录路径（`build.py all` 依赖）、`build.py` 生成 README 的链接文字、`README.md`、`split.py` 的输出路径。已验证 `build.py all` 输出与移动前逐字节一致
+- [新增] `docs/README.md`：docs 目录索引
