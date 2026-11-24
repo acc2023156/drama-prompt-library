@@ -176,3 +176,23 @@
 - [修改] `engines.node` 收紧为 `^22.22.2 || ^24.15.0 || >=26.0.0`（jsdom 31 的要求）— `packages/web-react/package.json`
 - [修改] `package-lock.json` 只新增 53 个条目与 web-react 工作区自身的依赖声明，已有包版本无变化 — `package-lock.json`
 - 验证：node 项目 341 项不变，dom 项目 3 项，共 344 项通过；`tsc --noEmit` 通过；`dist/` 仍只有 `index.html`，空与有值后端地址下 `check:dist` 均通过；产物 676,918 字节增至 677,200（字体链接 +282；marked 尚未被引用，被引用后约 +34 KB，gzip 约 +10.6 KB）
+
+### 前端 React 重构 P2-A：提示词库与更新记录页 `packages/web-react`
+
+对照基准：`packages/web/site-template.html` 在 `1cf6f6c`（该文件最后改动提交，origin/main 为 `8d86e1e` 时取得）；追平之后的改动不在本节范围。
+
+- [新增] 提示词首页与目录列表：英雄区与搜索框、来源筛选（全部、可直接用、仅参考、内部）、只看已用于生产、`n / m 条` 计数、首页无筛选时按 15 个目录分组、有筛选时平铺卡片、空结果提示；筛选用 `domain/prompts-filter` 的 `filtered`，沿用旧 CSS 类名与元素 id — `src/features/prompts/PromptListPage.tsx`、`parts.tsx`
+- [新增] 搜索条件做成模块级状态，跨路由保留（旧页面的全局 `state`：首页搜过再进目录页，搜索框仍是原来的词）— `src/features/prompts/filter-state.ts`
+- [新增] 搜索命中“相关功能”（旧 `funcIndex` / `drawFuncHits`）：最多显示 9 项，点击带 pick 的项先写 `pl.pro`、`pl.sxPick` 再跳转；资产功能的说明文字旧 `ASSET_MENUS` 才有，`nav-data` 里没有，所以在本目录放一份，由对照测试保证与旧页面逐项相等 — `src/features/prompts/func-index.ts`
+- [新增] 提示词详情：面包屑、标签（详情页状态不截断）、复制提示词正文（`CopyButton`，1.3 秒“已复制”）、6.0 的“在组装器里调整”、文件路径标签、Markdown 正文、上一条 / 下一条；编号不存在显示“找不到这条提示词” — `src/features/prompts/PromptEntryPage.tsx`
+- [新增] 更新记录页：去掉首行标题后渲染 Markdown — `src/features/prompts/ChangelogPage.tsx`
+- [修改] `Markdown` 组件改为 `import { marked } from 'marked'`，选项 `{ gfm: true, breaks: false }` 与旧 `renderMd` 一致；不再读 `window.marked`，删掉无 marked 时输出原文的退路与 `Window.marked` 全局声明 — `src/components/Markdown.tsx`
+- [修改] `route-view.test.ts` 改为按页面组件名判断分派（原按占位页的 `data-placeholder`），占位页被真实页面替换后不用再改；页面模块 import 时会读 `#tj-data`，测试先放一个空内容的假 document 再动态 import，24 项用例与期望表不变 — `tests/unit/route-view.test.ts`
+- [新增] 对照测试 39 项：旧 `viewList`、`viewEntry`、`viewDoc` 在真 jsdom 窗口里实跑，与新组件渲染的 DOM 逐节点比较；覆盖首页、15 个目录分组加 3 个父级目录（03-revision、06-video、archive）共 18 个目录、4 个边界目录（空、不存在、`constructor`、`__proto__`）、90 条提示词详情（含 6.0 主模板、补丁条目、archive 条目）、4 个不存在的编号、更新记录页；3 个场景下 16 步筛选操作（搜索词、来源、生产开关及组合）每一步都比较；`funcIndex` 全部检索项相等 — `tests/parity/prompts.test.tsx`、`prompts-legacy.ts`
+- [新增] Markdown 对照测试 6 项：全部 99 篇内容（90 条提示词、更新记录、`core.parts` 8 段）新旧渲染 HTML 逐字符相等（代码卡 60 个以上、外链出现过，不是空比较）；marked 选项、无 `window.marked` 可渲染、代码卡复制 — `tests/parity/markdown.test.tsx`
+- [新增] 交互测试 16 项（jsdom + testing-library）：搜索与计数、来源与生产开关高亮、分组、条件跨页保留、相关功能点击写存储、详情页复制（假定时器）、代码卡复制、上下条链接、整个 `App` 下侧栏与顶栏高亮随 hash 变化 — `tests/unit/prompts-pages.test.tsx`
+- [新增] jsdom 类型声明（不新增 `@types` 依赖）— `tests/parity/jsdom.d.ts`
+- 差异：`#/e/constructor`、`#/e/__proto__` 等原型键，旧 `viewEntry` 取到原型上的函数后读 `e.body` 抛 TypeError，页面停在上一页（测试已实跑确认抛错）；新页面显示“找不到这条提示词”
+- 差异：详情页复制按钮旧写法有 `id="cp"`，`CopyButton` 没有 id 参数，该 id 在旧页面脚本与 CSS 里没有别处引用，对照时忽略这一个 id
+- 发现：`tests/parity/legacy.ts`、`plugins/load-data.ts` 用 `fileURLToPath(new URL(…, import.meta.url))` 取路径，在 jsdom 环境（`.test.tsx`）里 import 即抛 “The URL must be of scheme file”，所以对照辅助文件自带路径与抽取逻辑；这两个文件未改
+- 验证：全包 19 个文件 405 项通过（node 341 项不变，dom 64 项，其中新增 61 项）；`tsc --noEmit` 无错误；变异检验 13 处人为改动（文案、条数、状态截断、6.0 按钮、pick 值、标题剥离、marked 的 gfm 与 breaks、外链 rel、代码卡文案、筛选条件不保留等）全部被测试发现；`vite build` 产物仍只有 `index.html`，`check:dist` 通过，产物 677,200 字节增至 721,884（marked 打进产物）；未做浏览器验证
