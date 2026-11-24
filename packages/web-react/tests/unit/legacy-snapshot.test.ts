@@ -7,7 +7,7 @@ import { LEGACY_SNAPSHOT, LEGACY_SNAPSHOT_COMMIT, LEGACY_SNAPSHOT_SHA256 } from 
 const sha256 = (b: Buffer) => createHash('sha256').update(b).digest('hex')
 
 describe('旧模板快照守卫', () => {
-  it('快照文件存在，且与提交 1cf6f6c 的内容一致（sha256 与 README 记录相同）', () => {
+  it(`快照文件存在，且与提交 ${LEGACY_SNAPSHOT_COMMIT} 的内容一致（sha256 与 README 记录相同）`, () => {
     const bytes = readFileSync(LEGACY_SNAPSHOT)
     expect(path.basename(LEGACY_SNAPSHOT)).toBe(`legacy-template.${LEGACY_SNAPSHOT_COMMIT}.html`)
     expect(sha256(bytes)).toBe(LEGACY_SNAPSHOT_SHA256)

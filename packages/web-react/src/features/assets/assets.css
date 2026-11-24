@@ -1,0 +1,3 @@
+/* f331924 把多选样式从 .works.picking 放宽到 .picking，资产网格（.grid）也用；legacy.css 拆分（P6-D）时并回去 */
+.picking .acard{cursor:pointer}.picking .pick-box{display:grid}.picking .acard .acts{pointer-events:none;opacity:.5}
+.picking .acard .t .ui-tag{margin-right:34px}

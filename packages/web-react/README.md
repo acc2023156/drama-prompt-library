@@ -33,5 +33,5 @@
 - 工具：`@testing-library/react`（`render`、`screen`）、`@testing-library/user-event`（交互，先 `await userEvent.click(...)`）、`@testing-library/jest-dom`（`toBeInTheDocument` 等）。范例见 `tests/unit/not-implemented.test.tsx`。
 - 单独运行：`npx vitest run --project node` 或 `--project dom`（在本包目录下）。需要 Node 22.22.2 以上（jsdom 31 的要求）。
 - 组件里用到 `localStorage`、`location.hash` 时直接用 jsdom 提供的；每个用例自己清理（`localStorage.clear()`、`location.hash = ''`）。
-- 新旧对照的基准固定为旧模板在提交 `1cf6f6c` 时的快照（`tests/fixtures/legacy-template.1cf6f6c.html`，说明与更新办法见同目录 README），不随 `packages/web/site-template.html` 的日常修改漂移。对照辅助代码只经 `tests/parity/legacy.ts` 读取旧模板（`readLegacyTemplate()`、`legacyScript()`、`legacyTopLevel()`、`legacyHtml()`），在 node 与 jsdom 两个项目里都能 import。
-- 对照最新模板（只给 P6-A 追平阶段用）：`LEGACY_TEMPLATE=latest npm run test -w @tianji/web-react`；失败的用例就是尚未追平的差异。内容数据统一用 `tests/parity/data.ts` 的 `loadData()`。
+- 新旧对照的基准固定为旧模板在提交 `f331924` 时的快照（`tests/fixtures/legacy-template.f331924.html`，说明与追平 SOP 见同目录 README），不随 `packages/web/site-template.html` 的日常修改漂移。对照辅助代码只经 `tests/parity/legacy.ts` 读取旧模板（`readLegacyTemplate()`、`legacyScript()`、`legacyTopLevel()`、`legacyHtml()`），在 node 与 jsdom 两个项目里都能 import。
+- 对照最新模板（追平时用）：`LEGACY_TEMPLATE=latest npm run test -w @tianji/web-react`；失败的用例就是尚未追平的差异。内容数据统一用 `tests/parity/data.ts` 的 `loadData()`。

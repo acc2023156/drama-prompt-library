@@ -23,6 +23,7 @@ const ROUTE_CASES: [string, string][] = [
   ['#/e/2.5', '2'], ['#/e/6.0', '2'], ['#/e/999.9', '2 编号不存在'], ['#/e/', '2 空编号'], ['#/e/__proto__', '2 原型键'],
   ['#/f/03-revision/dialogue', '3 含斜杠'], ['#/f/01-outline', '3'], ['#/f/', '3 空目录'], ['#/f/a?b=1', '3 带查询串'],
   ['#/assembler', '4'], ['#/changelog', '4'], ['#/admin', '4'], ['#/hotwords', '4'], ['#/trash', '4'], ['#/trash/', '14 多尾斜杠'],
+  ['#/assets-trash', '10 资产回收桶'], ['#/assets-trash/', '14 多尾斜杠'], ['#/assets-trash?x=1', '14'],
   ['#/assembler?ep=wabc.3', '5 命中'], ['#/assembler?ep=wnone.3', '5 未命中'], ['#/assembler?ep=wabc', '5 无集序'], ['#/assembler?ep=wabc.x', '5 集序非数字'], ['#/assembler?x=1', '14'],
   ['#/script/s/sabc', '6'], ['#/script/s/sabc?new=1', '6 fresh'], ['#/script/s/sabc?new=0', '6'], ['#/script/s/', '6 空 id'],
   ['#/script/new', '7'], ['#/script/new?x=1', '14'],

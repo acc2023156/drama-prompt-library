@@ -13,10 +13,10 @@ import { fileURLToPath } from 'node:url'
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 
 /** 固定的对照基准：旧模板在该提交时的内容（tests/fixtures 下的快照，说明见该目录 README）。 */
-export const LEGACY_SNAPSHOT_COMMIT = '1cf6f6c'
-export const LEGACY_SNAPSHOT_SHA256 = 'e023143e29b88c0c07f7d225e604f8ce2e88ca84deb89e3325133e242fdf524e'
-export const LEGACY_SNAPSHOT = path.resolve(HERE, '../fixtures/legacy-template.1cf6f6c.html')
-/** 仓库里当前的旧模板（只读）；只在设置 LEGACY_TEMPLATE=latest 时使用，给 P6-A 追平阶段对照最新模板。 */
+export const LEGACY_SNAPSHOT_COMMIT = 'f331924'
+export const LEGACY_SNAPSHOT_SHA256 = '21bd18c2279791fe699882be76a22aad9d0e91589dcf6f70f4a5f9c686ec6500'
+export const LEGACY_SNAPSHOT = path.resolve(HERE, '../fixtures/legacy-template.f331924.html')
+/** 仓库里当前的旧模板（只读）；只在设置 LEGACY_TEMPLATE=latest 时使用，给追平（P6-A 及以后各次）对照最新模板。 */
 export const LEGACY_LATEST = path.resolve(HERE, '../../../web/site-template.html')
 
 function pickTemplate(env: string | undefined): string {

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { FAKE, type Twin, type TwinOptions, teardown, twin } from './assets-twin'
+import { FAKE, NOW, type Twin, type TwinOptions, teardown, twin } from './assets-twin'
 
 vi.mock('../../src/data', async () => {
   const { loadData } = await import('./data')
@@ -7,7 +7,7 @@ vi.mock('../../src/data', async () => {
 })
 
 /**
- * 资产首页对照：旧 viewAssets（site-template.html 第 1261–1291 行）与新 AssetsHomePage 双跑（见 assets-twin.tsx），
+ * 资产首页对照：旧 viewAssets（site-template.html 第 1278–1309 行）与新 AssetsHomePage 双跑（见 assets-twin.tsx），
  * 每步操作后比较 #view DOM、localStorage 原文、hash、请求、提示条、confirm、剪贴板。
  */
 
@@ -141,34 +141,112 @@ describe('事件：我的资产', () => {
     const o = t.same()
     expect(o.execs).toEqual(['copy:根据图1……角色\u300c沈清辞\u300d'])
   })
-  it('data-del：确认后删除第 k 个并重画', async () => {
+  // f331924 去掉了每张卡的“删除”（data-del），改成“删除资产”进入选择模式、批量移到回收桶（旧 pickMode）
+  const fns = (raw: string | undefined) => (JSON.parse(raw ?? 'null') || []).map((a: { fn: string }) => a.fn)
+  it('删除资产：进入选择模式，底栏打开，卡片带勾选框；再点一次退出', async () => {
     await start({ seed: { assets: ASSETS } })
-    await t.click('[data-del]', 1)
-    const o = t.same()
-    expect(o.confirms).toEqual(['删除这个资产？'])
-    expect(JSON.parse(o.storage['pl.assets']).map((a: { fn: string }) => a.fn)).toEqual(['role-board', 'gone-fn', 'scene-empty'])
+    await t.click('#asPick')
+    let o = t.same()
+    expect(text(o)).toContain('已选 <b>0</b> 个')
+    expect(text(o)).toContain('grid picking')
+    await t.click('#asPick')
+    o = t.same()
+    expect(text(o)).not.toContain('picking')
   })
-  it('data-del：取消则不改存储', async () => {
+  it('勾选两张后移到回收桶：确认框问话、按勾选顺序放进回收桶最前、提示条、重画出回收桶入口', async () => {
+    await start({ seed: { assets: ASSETS, assetsTrash: [{ fn: 'role-new', name: '旧', trashed: NOW - 864e5 }] } })
+    await t.click('#asPick')
+    await t.click('[data-ak]', 3)
+    await t.click('[data-ak]', 1)
+    let o = t.same()
+    expect(text(o)).toContain('已选 <b>2</b> 个')
+    await t.click('[data-pk=go]')
+    o = t.same()
+    expect(o.confirms).toEqual(['把 2 个移到回收桶？\n30 天内可以在回收桶还原，之后会永久删除。'])
+    expect(fns(o.storage['pl.assets'])).toEqual(['role-board', 'gone-fn'])
+    expect(JSON.parse(o.storage['pl.assetsTrash'])).toEqual([{ ...ASSETS[3], trashed: NOW }, { ...ASSETS[1], trashed: NOW }, { fn: 'role-new', name: '旧', trashed: NOW - 864e5 }])
+    expect(o.toasts).toEqual(['已移到回收桶（2 个）'])
+    expect(text(o)).toContain('回收桶 3')
+    expect(text(o)).not.toContain('picking')
+  })
+  it('确认框取消：不改存储，仍在选择模式', async () => {
     await start({ seed: { assets: ASSETS }, confirms: [false] })
-    await t.click('[data-del]', 0)
+    await t.click('#asPick')
+    await t.click('[data-ak]', 0)
+    await t.click('[data-pk=go]')
     const o = t.same()
-    expect(o.confirms).toEqual(['删除这个资产？'])
+    expect(o.confirms).toHaveLength(1)
     expect(o.storage['pl.assets']).toBe(J(ASSETS))
+    expect(o.storage['pl.assetsTrash']).toBeUndefined()
+    expect(text(o)).toContain('已选 <b>1</b> 个')
   })
-  it('data-del：连续删光后显示空状态', async () => {
-    await start({ seed: { assets: ASSETS.slice(0, 2) } })
-    await t.click('[data-del]', 0)
-    t.same()
-    await t.click('[data-del]', 0)
+  it('再点已勾的卡取消勾选；一张没选时“移到回收桶”禁用，点了不问', async () => {
+    await start({ seed: { assets: ASSETS } })
+    await t.click('#asPick')
+    await t.click('[data-ak]', 2)
+    await t.click('[data-ak]', 2)
+    await t.click('[data-pk=go]')
     const o = t.same()
+    expect(o.confirms).toEqual([])
+    expect(text(o)).toContain('disabled')
+  })
+  it('全选补齐已选集合（先勾的排在前），移完显示空状态，只剩回收桶入口', async () => {
+    await start({ seed: { assets: ASSETS } })
+    await t.click('#asPick')
+    await t.click('[data-ak]', 2)
+    await t.click('[data-pk=all]')
+    t.same()
+    await t.click('[data-pk=go]')
+    const o = t.same()
+    expect(fns(o.storage['pl.assetsTrash'])).toEqual(['gone-fn', 'role-board', 'scene-var', 'scene-empty'])
     expect(o.storage['pl.assets']).toBe('[]')
     expect(text(o)).toContain('还没有资产')
+    expect(text(o)).toContain('回收桶 4')
+    expect(text(o)).not.toContain('asPick')
+  })
+  it('取消：退出选择模式并清空已选', async () => {
+    await start({ seed: { assets: ASSETS } })
+    await t.click('#asPick')
+    await t.click('[data-ak]', 0)
+    await t.click('[data-pk=x]')
+    const o = t.same()
+    expect(text(o)).toContain('已选 <b>0</b> 个')
+    expect(text(o)).not.toContain('picking')
+  })
+  it('选择模式下点“打开”“复制提示词”只切换勾选，不跳转、不复制', async () => {
+    await start({ seed: { assets: ASSETS } })
+    await t.click('#asPick')
+    await t.click('.acts .primary', 1)
+    await t.click('.acts .secondary', 0)
+    const o = t.same()
+    expect(o.hash).toBe('#/assets')
+    expect(o.clips).toEqual([])
+    expect(text(o)).toContain('已选 <b>2</b> 个')
+  })
+  it('不在选择模式时点卡片没有反应', async () => {
+    await start({ seed: { assets: ASSETS } })
+    await t.click('[data-ak] .s', 0)
+    expect(text(t.same())).toContain('已选 <b>0</b> 个')
   })
   it('删除后复制按钮的已复制状态随重画复原', async () => {
     await start({ seed: { assets: ASSETS } })
     await t.click('.acts .secondary', 0)
-    await t.click('[data-del]', 3)
+    await t.click('#asPick')
+    await t.click('[data-ak]', 3)
+    await t.click('[data-pk=go]')
     t.same()
+  })
+  it('进入首页先清掉回收桶里的过期资产，入口计数按清理后算', async () => {
+    const o = await start({ seed: { assetsTrash: [{ fn: 'role-new', name: '新', trashed: NOW }, { fn: 'role-new', name: '过期', trashed: NOW - 31 * 864e5 }] } })
+    expect(JSON.parse(o.storage['pl.assetsTrash'])).toEqual([{ fn: 'role-new', name: '新', trashed: NOW }])
+    expect(text(o)).toContain('回收桶 1')
+  })
+  it('回收桶入口：跳到资产回收桶', async () => {
+    await start({ seed: { assetsTrash: [{ fn: 'scene-var', name: '雨夜', trashed: NOW }] } })
+    await t.click('a[href="#/assets-trash"]')
+    const o = t.same()
+    expect(o.hash).toBe('#/assets-trash')
+    expect(text(o)).toContain('剩 30 天')
   })
   it('打开：进入编辑器并载入已存状态', async () => {
     await start({ seed: { assets: ASSETS } })

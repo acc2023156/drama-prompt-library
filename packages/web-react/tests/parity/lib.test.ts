@@ -30,6 +30,7 @@ describe('存储格式：set / get 与旧 store() 写出的原文逐字节相等
     scriptDraft: [{ mode: 'paste', doc: '<script>' }],
     sxPick: [{ g: 'male', idx: null, name: '', title: '', q: '' }, { g: 'female', idx: 3 }],
     assets: [[{ fn: 'role-board', name: '林', prompt: 'p', state: { opts: [] }, time: 5 }]],
+    assetsTrash: [[{ fn: 'scene-var', name: '雨夜', prompt: 'p', state: { opts: ['白天'] }, time: 4, trashed: 9 }], []],
     assetSeed: [{ wid: 'w1', title: 't', items: [{ fn: 'role-new', label: 'a', done: true }] }],
     assetPick: [{ fn: 'role-new', name: 'n', profile: 'p' }],
     asm: [{ style: '__custom', custom: '水墨' }],
@@ -43,8 +44,8 @@ describe('存储格式：set / get 与旧 store() 写出的原文逐字节相等
     panel: [true, false],
   }
 
-  it('覆盖全部 18 个键：与旧模板里全部 store(<字面量>) 调用的键集合相等', () => {
-    expect(S.STORE_KEYS.length).toBe(18)
+  it('覆盖全部 19 个键：与旧模板里全部 store(<字面量>) 调用的键集合相等', () => {
+    expect(S.STORE_KEYS.length).toBe(19)
     expect(Object.keys(samples).sort()).toStrictEqual([...S.STORE_KEYS].sort())
     const html = readLegacyTemplate()
     const script = html.slice(html.indexOf('\n<script>\n') + 10, html.lastIndexOf('\n</script>'))

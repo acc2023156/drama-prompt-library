@@ -4,6 +4,7 @@ import { DEFAULT_FILTER, filtered, type PromptFilterState } from '../../src/doma
 import { mergeCloudWorks, pendingPush, workHash } from '../../src/domain/sync'
 import type { Entry, Work } from '../../src/domain/types'
 import { liveWorks, purgeTrash, TRASH_DAYS, workHref, workType } from '../../src/domain/works'
+import { purgeAssetTrash } from '../../src/domain/asset-trash'
 import { esc, nfmt } from '../../src/domain/text'
 import { loadData } from './data'
 import type { Legacy } from './legacy'
@@ -107,6 +108,30 @@ describe('作品列表规则', () => {
     const r = purgeTrash(trashList(), NOW)
     expect(r.gone.map((w) => w.id)).toEqual(['a', 'g'])
     expect(r.kept.map((w) => w.id)).toEqual(['b', 'c', 'd', 'e', 'f'])
+  })
+  it('purgeAssetTrash：边界时间、缺 trashed 的项、空与缺失清单（旧实现只在有过期项时写回）', () => {
+    const cut = NOW - TRASH_DAYS * 864e5
+    const a = (name: string, trashed?: number) => ({ fn: 'role-new', name, prompt: 'p', ...(trashed === undefined ? {} : { trashed }) })
+    const lists = [
+      [a('刚好到期', cut), a('过期 1 毫秒', cut - 1), a('新', NOW)],
+      [a('新', NOW), a('刚好到期', cut)],
+      [a('缺 trashed'), a('新', NOW)],
+      [a('缺 trashed'), a('过期', cut - 864e5)],
+      [a('过期', 0)],
+      [],
+      undefined,
+    ]
+    for (const list of lists) {
+      const l = legacyWith()
+      setLegacyStore(l, 'assetsTrash', list)
+      fixLegacyNow(l, NOW)
+      l.run('(purgeAssetTrash(),1)')
+      const r = purgeAssetTrash(norm(list) as any, NOW)
+      same('purgeAssetTrash(写回)', r.changed ? r.kept : (norm(list) ?? null), JSON.parse(l.storage.getItem('pl.assetsTrash') ?? 'null'))
+      same('purgeAssetTrash(是否写回)', r.changed, l.storage.getItem('pl.assetsTrash') !== (list === undefined ? null : JSON.stringify(list)))
+    }
+    expect(purgeAssetTrash(lists[0], NOW).kept.map((x) => x.name)).toEqual(['刚好到期', '新'])
+    expect(purgeAssetTrash(lists[3] as any, NOW)).toEqual({ kept: [], changed: true })
   })
   it('workHref / workType', () => {
     const ws: any[] = []

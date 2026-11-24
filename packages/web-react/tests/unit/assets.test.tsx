@@ -3,6 +3,7 @@ import { StrictMode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AssetEditorPage } from '../../src/features/assets/AssetEditorPage'
 import { AssetsHomePage } from '../../src/features/assets/AssetsHomePage'
+import { AssetTrashPage } from '../../src/features/assets/AssetTrashPage'
 
 vi.mock('../../src/data', async () => {
   const { loadData } = await import('../parity/data')
@@ -36,15 +37,45 @@ describe('StrictMode', () => {
     unmount()
     expect(remove).toHaveBeenCalledWith('click', expect.any(Function))
   })
-  it('删除资产后重画，计数更新', () => {
+  it('选择模式删除资产后重画，计数更新，回收桶入口出现', () => {
     localStorage.setItem('pl.assets', JSON.stringify([{ fn: 'role-new', name: 'a', prompt: 'p', state: {}, time: 1 }]))
     vi.stubGlobal('confirm', () => true)
     const { container } = strict(<AssetsHomePage />)
     expect(container.textContent).toContain('1 个')
-    fireEvent.click(container.querySelector('[data-del="0"]')!)
+    fireEvent.click(container.querySelector('#asPick')!)
+    expect(container.querySelector('#asGrid')!.className).toBe('grid picking')
+    fireEvent.click(container.querySelector('[data-ak="0"]')!)
+    fireEvent.click(container.querySelector('[data-pk="go"]')!)
     expect(container.textContent).toContain('0 个')
     expect(localStorage.getItem('pl.assets')).toBe('[]')
+    expect(JSON.parse(localStorage.getItem('pl.assetsTrash')!)).toEqual([{ fn: 'role-new', name: 'a', prompt: 'p', state: {}, time: 1, trashed: expect.any(Number) }])
+    expect(container.querySelector('a[href="#/assets-trash"]')!.textContent).toBe('回收桶 1')
     vi.unstubAllGlobals()
+  })
+  it('选择模式下点卡片里的复制按钮只切换选中，不复制', () => {
+    localStorage.setItem('pl.assets', JSON.stringify([{ fn: 'role-new', name: 'a', prompt: 'p', state: {}, time: 1 }]))
+    const writeText = vi.fn(() => Promise.resolve())
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
+    const { container } = strict(<AssetsHomePage />)
+    fireEvent.click(container.querySelector('#asPick')!)
+    fireEvent.click(container.querySelector('.acts .secondary')!)
+    expect(writeText).not.toHaveBeenCalled()
+    expect(container.querySelector('[data-ak="0"]')!.className).toBe('acard on')
+    expect(container.querySelector('.pick-bar b')!.textContent).toBe('1')
+    delete (navigator as { clipboard?: unknown }).clipboard
+  })
+  it('回收桶：进入时清掉过期资产（初始化跑两遍也只写回一次结果），还原后回到我的资产末尾', () => {
+    const now = Date.now()
+    localStorage.setItem('pl.assets', JSON.stringify([{ fn: 'role-new', name: 'a' }]))
+    localStorage.setItem('pl.assetsTrash', JSON.stringify([{ fn: 'scene-var', name: 'b', trashed: now - 864e5 }, { fn: 'role-new', name: 'old', trashed: now - 31 * 864e5 }]))
+    const { container } = strict(<AssetTrashPage />)
+    expect(localStorage.getItem('pl.assetsTrash')).toBe(JSON.stringify([{ fn: 'scene-var', name: 'b', trashed: now - 864e5 }]))
+    expect(container.querySelectorAll('.acard')).toHaveLength(1)
+    expect(container.textContent).toContain('剩 29 天')
+    fireEvent.click(container.querySelector('[data-rs="0"]')!)
+    expect(localStorage.getItem('pl.assets')).toBe(JSON.stringify([{ fn: 'role-new', name: 'a' }, { fn: 'scene-var', name: 'b' }]))
+    expect(localStorage.getItem('pl.assetsTrash')).toBe('[]')
+    expect(container.textContent).toContain('回收桶是空的。')
   })
   it('卸载时停掉正在进行的语音识别', () => {
     const stop = vi.fn()

@@ -9,9 +9,9 @@ import { Chat } from './Chat'
 import { useClosePopsOnDocumentClick } from './pops'
 
 /**
- * PRO 剧本首页（旧 viewScriptHome，site-template.html 第 1539–1569 行）：对话框 + 作品网格 + 批量移到回收桶。
+ * PRO 剧本首页（旧 viewScriptHome，site-template.html 第 1557–1576 行；多选同旧 pickMode，第 1135 行）：对话框 + 作品网格 + 批量移到回收桶。
  * 旧页面移完后整页重画（对话框状态、选择状态全部重来），这里用 key 重新挂载达到同样效果。
- * 旧页面第 1553 行给 [data-cp] 绑了复制 wzPrompt，但页面里没有 data-cp 元素，属于不可达代码，未迁移。
+ * 旧页面第 1571 行给 [data-cp] 绑了复制 wzPrompt，但页面里没有 data-cp 元素，属于不可达代码，未迁移。
  */
 export function ScriptHomePage() {
   const [rev, setRev] = useState(0)
@@ -29,7 +29,7 @@ function Home({ onReload }: { onReload(): void }) {
 
   function moveToTrash() {
     if (!picked.size) return
-    if (!confirm(`把 ${picked.size} 部作品移到回收桶？\n${TRASH_DAYS} 天内可以在回收桶还原，之后会永久删除。`)) return
+    if (!confirm(`把 ${picked.size} 部移到回收桶？\n${TRASH_DAYS} 天内可以在回收桶还原，之后会永久删除。`)) return
     const ids = new Set([...picked].map((k) => works[k].id)), list: Work[] = get('works') || [], now = Date.now()
     list.forEach((w) => {
       if (ids.has(w.id)) {
@@ -90,9 +90,9 @@ function Home({ onReload }: { onReload(): void }) {
       )}
       <div className={picking ? 'pick-bar open' : 'pick-bar'}>
         <span>已选 <b>{picked.size}</b> 部</span>
-        <button className="ui-btn secondary" id="pkAll" onClick={() => setPicked(new Set(works.map((_, k) => k)))}>全选</button>
-        <button className="ui-btn secondary" id="pkCancel" onClick={() => { setPicking(false); setPicked(new Set()) }}>取消</button>
-        <button className="ui-btn primary danger-fill" id="pkGo" disabled={!picked.size} onClick={moveToTrash}><Icon name="trash" />移到回收桶</button>
+        <button className="ui-btn secondary" data-pk="all" onClick={() => setPicked(new Set(works.map((_, k) => k)))}>全选</button>
+        <button className="ui-btn secondary" data-pk="x" onClick={() => { setPicking(false); setPicked(new Set()) }}>取消</button>
+        <button className="ui-btn primary danger-fill" data-pk="go" disabled={!picked.size} onClick={moveToTrash}><Icon name="trash" />移到回收桶</button>
       </div>
     </>
   )

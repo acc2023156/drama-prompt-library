@@ -891,8 +891,8 @@ a.pt-banner:hover{transform:translateY(-2px)}
 .hd-acts{gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
 .acard{position:relative}.pick-box{display:none;position:absolute;top:12px;right:12px;width:24px;height:24px;border-radius:7px;border:2px solid var(--line-2);background:#141416;place-items:center;z-index:2}
 .pick-box svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:3;opacity:0}
-.works.picking .acard{cursor:pointer}.works.picking .pick-box{display:grid}.works.picking .acard .acts{pointer-events:none;opacity:.5}
-.works.picking .acard .t .ui-tag{margin-right:34px}
+.picking .acard{cursor:pointer}.picking .pick-box{display:grid}.picking .acard .acts{pointer-events:none;opacity:.5}
+.picking .acard .t .ui-tag{margin-right:34px}
 .acard.on{border-color:#e5484d;box-shadow:0 0 0 1px #e5484d inset}.acard.on .pick-box{background:#e5484d;border-color:#e5484d}.acard.on .pick-box svg{opacity:1}
 .pick-bar{position:fixed;left:50%;bottom:20px;translate:-50% 140%;z-index:40;display:flex;align-items:center;gap:10px;padding:10px 12px 10px 18px;border-radius:16px;background:#242428;border:1px solid var(--line-2);box-shadow:0 20px 50px rgba(0,0,0,.55);transition:translate .2s;max-width:calc(100vw - 24px);flex-wrap:wrap}
 .pick-bar.open{translate:-50% 0}.pick-bar span{color:var(--text-2);font-size:14px;margin-right:4px}.pick-bar b{color:#fff}
@@ -1129,6 +1129,23 @@ function purgeTrash(){
   store('works', list.filter(w=>!(w.trashed&&w.trashed<cut)));
   if(typeof api==='function' && typeof authGet==='function' && authGet()) gone.forEach(w=>api('/works/'+encodeURIComponent(w.id),{method:'DELETE'}).catch(()=>{}));
 }
+/* 资产回收桶：另存一份清单，「我的资产」的编号不受影响 */
+function purgeAssetTrash(){ const L=store('assetsTrash')||[], cut=Date.now()-TRASH_DAYS*864e5; if(L.some(a=>a.trashed<cut)) store('assetsTrash',L.filter(a=>a.trashed>=cut)); }
+/* 多选删除：点「删除…」进入勾选，底部出现操作条 */
+function pickMode(gridId, btnId, attr, unit, go){
+  let picking=false; const picked=new Set(), n=document.querySelectorAll(`[${attr}]`).length;
+  const bar=document.createElement('div'); bar.className='pick-bar'; document.getElementById('view').append(bar);
+  const draw=()=>{ document.getElementById(gridId)?.classList.toggle('picking',picking);
+    document.querySelectorAll(`[${attr}]`).forEach(c=>c.classList.toggle('on',picked.has(+c.getAttribute(attr))));
+    bar.classList.toggle('open',picking);
+    bar.innerHTML=`<span>已选 <b>${picked.size}</b> ${unit}</span><button class="ui-btn secondary" data-pk="all">全选</button><button class="ui-btn secondary" data-pk="x">取消</button><button class="ui-btn primary danger-fill" data-pk="go" ${picked.size?'':'disabled'}>${ico('trash')}移到回收桶</button>`;
+    bar.querySelector('[data-pk=all]').onclick=()=>{ for(let k=0;k<n;k++) picked.add(k); draw(); };
+    bar.querySelector('[data-pk=x]').onclick=()=>{ picking=false; picked.clear(); draw(); };
+    bar.querySelector('[data-pk=go]').onclick=()=>{ if(picked.size && confirm(`把 ${picked.size} ${unit}移到回收桶？\n${TRASH_DAYS} 天内可以在回收桶还原，之后会永久删除。`)) go([...picked]); }; };
+  document.getElementById(btnId)?.addEventListener('click',()=>{ picking=!picking; picked.clear(); draw(); });
+  document.querySelectorAll(`[${attr}]`).forEach(c=>c.addEventListener('click',e=>{ if(!picking) return; e.preventDefault(); e.stopPropagation(); const k=+c.getAttribute(attr); picked.has(k)?picked.delete(k):picked.add(k); draw(); },true));
+  draw();
+}
 const workHref=w=>w.kind==='simple'?'#/script/s/'+w.id:w.kind==='vibe'?'#/script/v/'+w.id:'#/script/w/'+w.id;
 const workType=w=>w.kind==='simple'?'人物即剧本':w.kind==='vibe'?'氛围写作':((typeof MODE!=='undefined'&&w.W&&MODE[w.W.mode])?MODE[w.W.mode].tab:'作品');
 function makeZip(files){
@@ -1259,7 +1276,8 @@ function backDirty(onSave){
 }
 function backClean(){ const b=document.getElementById('pgBack'); if(!b) return; delete b.dataset.dirty; b.classList.remove('dirty'); b.querySelector('span').textContent='返回'; }
 function viewAssets(){
-  const mine = store('assets')||[];
+  purgeAssetTrash();
+  const mine = store('assets')||[], trashN=(store('assetsTrash')||[]).length;
   const seed = store('assetSeed');
   document.getElementById('view').innerHTML = `
     <h1 class="as-title">选择起点，建立天玑资产</h1>
@@ -1273,21 +1291,21 @@ function viewAssets(){
       </div>`).join('')}
     </div>
     <section class="mine">
-      <div class="sec-head" style="margin:0 0 14px"><h2 style="font-size:20px">我的资产</h2><span class="meta">${mine.length} 个 · 只保存在这台电脑的浏览器里</span></div>
-      ${mine.length ? `<div class="grid">${mine.map((a,k)=>`<div class="acard">
+      <div class="sec-head" style="margin:0 0 14px"><h2 style="font-size:20px">我的资产</h2><span class="meta">${mine.length} 个 · 只保存在这台电脑的浏览器里</span><div class="row hd-acts" style="margin-left:auto">${trashN?`<a class="ui-btn ghost" href="#/assets-trash">${ico('trash')}回收桶 ${trashN}</a>`:''}${mine.length?`<button class="ui-btn secondary" id="asPick">${ico('check')}删除资产</button>`:''}</div></div>
+      ${mine.length ? `<div class="grid" id="asGrid">${mine.map((a,k)=>`<div class="acard" data-ak="${k}"><i class="pick-box">${ico('check')}</i>
           <div class="t">${ico(FN[a.fn]?.menu.key==='scene'?'mount':'user')}${esc(a.name||'未命名')}<span class="ui-tag mode" style="margin-left:auto">${esc(FN[a.fn]?.label||'')}</span></div>
           <div class="s">${esc(a.prompt)}</div>
-          <div class="acts"><a class="ui-btn primary" href="#/assets/${a.fn}?i=${k}">${ico('pen')}打开</a><button class="ui-btn secondary" data-cp="${k}">${ico('copy')}复制提示词</button><button class="ui-btn danger" data-del="${k}">删除</button></div>
+          <div class="acts"><a class="ui-btn primary" href="#/assets/${a.fn}?i=${k}">${ico('pen')}打开</a><button class="ui-btn secondary" data-cp="${k}">${ico('copy')}复制提示词</button></div>
         </div>`).join('')}</div>`
       : `<div class="empty" style="padding:30px 0">还没有资产。点上面任一功能，填好后按“保存到我的资产”。</div>`}
     </section>`;
   document.querySelectorAll('[data-seed]').forEach(b=>b.onclick=()=>{ const x=seed.items[b.dataset.seed]; store('assetPick',{...x,k:+b.dataset.seed,wid:seed.wid}); location.hash='#/assets/'+x.fn; });
   if(seed) document.getElementById('seedX').onclick=()=>{ store('assetSeed',null); viewAssets(); };
   document.querySelectorAll('[data-cp]').forEach(b=>b.onclick=e=>copyText(mine[b.dataset.cp].prompt,e.currentTarget));
-  document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
-    if(!confirm('删除这个资产？')) return;
-    mine.splice(+b.dataset.del,1); store('assets',mine); viewAssets();
-  });
+  pickMode('asGrid','asPick','data-ak','个',keys=>{
+    const now=Date.now(), out=keys.map(k=>({...mine[k],trashed:now}));
+    store('assets',mine.filter((_,k)=>!keys.includes(k))); store('assetsTrash',[...out,...(store('assetsTrash')||[])]);
+    toast(`已移到回收桶（${out.length} 个）`); viewAssets(); drawNav(parse()); });
 }
 
 function viewAssetEditor(fnId, idx){
@@ -1537,7 +1555,7 @@ function showModal(title, text, fname){
 }
 
 function viewScriptHome(){
-  const works=liveWorks(), trashN=(store('works')||[]).filter(w=>w.trashed).length; let picking=false; const picked=new Set();
+  const works=liveWorks(), trashN=(store('works')||[]).filter(w=>w.trashed).length;
   document.getElementById('view').innerHTML=`
     ${chatHtml()}
     <div class="wz-head" style="margin-top:34px">
@@ -1551,20 +1569,9 @@ function viewScriptHome(){
       </div>`).join('')}</div>`
     :`<div class="empty">还没有作品。点右上角「新增作品」开始。<br><span style="font-size:12px">作品只保存在这台电脑的浏览器里。</span></div>`}`;
   document.querySelectorAll('[data-cp]').forEach(b=>b.onclick=e=>copyText(wzPrompt(works[b.dataset.cp].W),e.currentTarget));
-  const pickBar=document.createElement('div'); pickBar.className='pick-bar'; document.getElementById('view').append(pickBar);
-  const drawPick=()=>{ document.getElementById('workGrid')?.classList.toggle('picking',picking);
-    document.querySelectorAll('[data-wk]').forEach(c=>c.classList.toggle('on',picked.has(+c.dataset.wk)));
-    pickBar.classList.toggle('open',picking);
-    pickBar.innerHTML=`<span>已选 <b>${picked.size}</b> 部</span><button class="ui-btn secondary" id="pkAll">全选</button><button class="ui-btn secondary" id="pkCancel">取消</button><button class="ui-btn primary danger-fill" id="pkGo" ${picked.size?'':'disabled'}>${ico('trash')}移到回收桶</button>`;
-    pickBar.querySelector('#pkAll').onclick=()=>{ works.forEach((_,k)=>picked.add(k)); drawPick(); };
-    pickBar.querySelector('#pkCancel').onclick=()=>{ picking=false; picked.clear(); drawPick(); };
-    pickBar.querySelector('#pkGo').onclick=()=>{ if(!picked.size) return;
-      if(!confirm(`把 ${picked.size} 部作品移到回收桶？\n${TRASH_DAYS} 天内可以在回收桶还原，之后会永久删除。`)) return;
-      const ids=new Set([...picked].map(k=>works[k].id)), list=store('works')||[], now=Date.now();
-      list.forEach(w=>{ if(ids.has(w.id)){ w.trashed=now; w.time=now; } }); store('works',list); toast(`已移到回收桶（${ids.size} 部）`); viewScriptHome(); drawNav(parse()); }; };
-  document.getElementById('pickBtn')?.addEventListener('click',()=>{ picking=!picking; picked.clear(); drawPick(); });
-  document.querySelectorAll('[data-wk]').forEach(c=>c.addEventListener('click',e=>{ if(!picking) return; e.preventDefault(); e.stopPropagation(); const k=+c.dataset.wk; picked.has(k)?picked.delete(k):picked.add(k); drawPick(); },true));
-  drawPick();
+  pickMode('workGrid','pickBtn','data-wk','部',keys=>{
+    const ids=new Set(keys.map(k=>works[k].id)), list=store('works')||[], now=Date.now();
+    list.forEach(w=>{ if(ids.has(w.id)){ w.trashed=now; w.time=now; } }); store('works',list); toast(`已移到回收桶（${ids.size} 部）`); viewScriptHome(); drawNav(parse()); });
   bindChat();
 }
 
@@ -3364,6 +3371,21 @@ function viewTrash(){
   const em=document.getElementById('trEmpty'); if(em) em.onclick=()=>{ if(confirm(`永久删除回收桶里全部 ${list.length} 部作品？删除后无法复原。`)) save(list.map(w=>w.id),false); };
 }
 
+function viewAssetTrash(){
+  purgeAssetTrash();
+  const v=document.getElementById('view'), list=store('assetsTrash')||[];
+  const left=a=>Math.max(0,Math.ceil((a.trashed+TRASH_DAYS*864e5-Date.now())/864e5));
+  v.innerHTML=`${backBar('#/assets')}<div class="sec-head" style="margin-top:56px"><h2>回收桶</h2><span class="meta">${list.length} 个 · 删除后保留 ${TRASH_DAYS} 天</span>${list.length?`<button class="ui-btn danger" id="trEmpty" style="margin-left:auto">清空回收桶</button>`:''}</div>
+    ${list.length?`<div class="grid">${list.map((a,k)=>`<div class="acard"><div class="t">${ico(FN[a.fn]?.menu.key==='scene'?'mount':'user')}${esc(a.name||'未命名')}<span class="ui-tag" style="margin-left:auto">剩 ${left(a)} 天</span></div>
+      <div class="tags"><span class="ui-tag mode">${esc(FN[a.fn]?.label||'')}</span></div>
+      <div class="acts"><button class="ui-btn primary" data-rs="${k}">${ico('back')}还原</button><button class="ui-btn danger" data-rm="${k}">永久删除</button></div></div>`).join('')}</div>`
+    :`<div class="empty">回收桶是空的。</div>`}`;
+  const done=keep=>{ store('assetsTrash',keep); drawNav(parse()); viewAssetTrash(); };
+  v.querySelectorAll('[data-rs]').forEach(b=>b.onclick=()=>{ const {trashed,...a}=list[+b.dataset.rs]; store('assets',[...(store('assets')||[]),a]); done(list.filter((_,k)=>k!==+b.dataset.rs)); toast('已还原'); });
+  v.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{ if(confirm('永久删除这个资产？删除后无法复原。')){ done(list.filter((_,k)=>k!==+b.dataset.rm)); toast('已永久删除'); } });
+  const em=document.getElementById('trEmpty'); if(em) em.onclick=()=>{ if(confirm(`永久删除回收桶里全部 ${list.length} 个资产？删除后无法复原。`)) done([]); };
+}
+
 /* 热词：词根、分类、热度、走势；点一个词就带进氛围写作 */
 async function viewHotwords(){
   const v=document.getElementById('view');
@@ -3667,6 +3689,7 @@ function parse(){
   if(h.startsWith('e/')) {const e=byId[h.slice(2)];return {view:'entry',id:h.slice(2),folder:e&&e.folder}}
   if(h.startsWith('f/')) return {view:'list',folder:h.slice(2)};
   if(h==='assembler'||h==='changelog'||h==='admin'||h==='hotwords'||h==='trash') return {view:h};
+  if(h==='assets-trash') return {view:'tool',tool:'assets',trash:true};
   if(h.startsWith('assembler?ep=')){ const [wid,i]=h.slice(13).split('.'), w=(store('works')||[]).find(x=>x.id===wid);
     return w ? {view:'assembler', ep:{wid, i:+i}, vibe:{id:wid, title:w.title, tab:'board'}} : {view:'assembler'}; }
   if(h.startsWith('script/s/')) {const [id,q]=h.slice(9).split('?');return {view:'tool',tool:'script',sub:'result',sid:id,fresh:q==='new=1'}}
@@ -3691,7 +3714,7 @@ function route(){
   else if(r.view==='trash') viewTrash();
   else if(r.view==='entry') viewEntry(r.id);
   else if(r.view==='assembler') viewAssembler(r.ep);
-  else if(r.view==='tool' && r.tool==='assets') r.fn ? viewAssetEditor(r.fn, r.idx) : viewAssets();
+  else if(r.view==='tool' && r.tool==='assets') r.trash ? viewAssetTrash() : r.fn ? viewAssetEditor(r.fn, r.idx) : viewAssets();
   else if(r.view==='tool' && r.tool==='script'){
     if(r.sub==='result') viewScriptResult(r.sid, r.fresh);
     else if(r.sub==='vibe') viewVibeScript(r.wid, r.vtab);

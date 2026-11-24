@@ -27,7 +27,7 @@ export interface Auth {
   user: AuthUser
 }
 
-/** 18 个 pl.* 键的值类型。结构细节见方案文档 web-react-storage-api；归属各 feature 的键先用宽松对象类型。 */
+/** 19 个 pl.* 键的值类型。结构细节见方案文档 web-react-storage-api；归属各 feature 的键先用宽松对象类型。 */
 export interface StorageSchema {
   works: Work[]
   auth: Auth
@@ -36,6 +36,8 @@ export interface StorageSchema {
   scriptDraft: Record<string, unknown>
   sxPick: { g: 'male' | 'female'; idx: number | null; name?: string; title?: string; q?: string; [k: string]: unknown }
   assets: { fn: string; name?: string; prompt?: string; state?: Record<string, unknown>; time?: number; [k: string]: unknown }[]
+  /** 资产回收桶：从 assets 移出的项加上移入时间 trashed，与 assets 分开存放 */
+  assetsTrash: { fn: string; name?: string; prompt?: string; state?: Record<string, unknown>; time?: number; trashed: number; [k: string]: unknown }[]
   assetSeed: { wid: string; title?: string; items: Record<string, unknown>[]; [k: string]: unknown }
   assetPick: { fn: string; name?: string; profile?: string; [k: string]: unknown }
   asm: { style: string; custom?: string; [k: string]: unknown }
@@ -51,7 +53,7 @@ export interface StorageSchema {
 export type StoreKey = keyof StorageSchema
 
 export const STORE_KEYS: readonly StoreKey[] = [
-  'works', 'auth', 'chat', 'vibeCard', 'scriptDraft', 'sxPick', 'assets', 'assetSeed', 'assetPick',
+  'works', 'auth', 'chat', 'vibeCard', 'scriptDraft', 'sxPick', 'assets', 'assetsTrash', 'assetSeed', 'assetPick',
   'asm', 'asmW', 'lastVibe', 'vibeTab', 'pro', 'homeMode', 'libNav', 'tjCode', 'panel',
 ]
 

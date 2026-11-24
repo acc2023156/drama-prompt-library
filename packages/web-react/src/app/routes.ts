@@ -21,6 +21,8 @@ export interface Route {
   vtab?: string
   fn?: string
   idx?: number | null
+  /** #/assets-trash：资产回收桶 */
+  trash?: boolean
 }
 
 /** 顶栏三个功能入口（旧 TOOLS 的键）。保持普通对象，判定方式与旧 TOOLS[h] 相同。 */
@@ -43,6 +45,7 @@ export function parseRoute(hash: string, deps: RouteDeps): Route {
   if (h.startsWith('e/')) return { view: 'entry', id: h.slice(2), folder: deps.entryFolder(h.slice(2)) }
   if (h.startsWith('f/')) return { view: 'list', folder: h.slice(2) }
   if (h === 'assembler' || h === 'changelog' || h === 'admin' || h === 'hotwords' || h === 'trash') return { view: h }
+  if (h === 'assets-trash') return { view: 'tool', tool: 'assets', trash: true }
   if (h.startsWith('assembler?ep=')) {
     const [wid, i] = h.slice(13).split('.')
     const w = deps.findWork(wid)
