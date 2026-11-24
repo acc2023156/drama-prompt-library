@@ -10,7 +10,9 @@ const buildPy = fileURLToPath(new URL('../../web/build.py', import.meta.url))
 
 assert.deepEqual(readdirSync(dist), ['index.html'], 'dist 下必须只有 index.html')
 const html = readFileSync(dist + 'index.html', 'utf8')
-assert.ok(!/<script[^>]*\ssrc=/.test(html) && !/<link[^>]*rel="stylesheet"/.test(html), 'JS 与 CSS 必须全部内联')
+// 与旧页面一致，只允许 Google Fonts 的样式表外链；其余 JS 与 CSS 必须全部内联
+const externalStylesheets = (html.match(/<link[^>]*rel="stylesheet"[^>]*>/g) ?? []).filter((t) => !/href="https:\/\/fonts\.googleapis\.com\//.test(t))
+assert.ok(!/<script[^>]*\ssrc=/.test(html) && externalStylesheets.length === 0, 'JS 与 CSS 必须全部内联（Google Fonts 样式表除外）')
 
 const m = /<script id="tj-data" type="application\/json">([\s\S]*?)<\/script>/.exec(html)
 assert.ok(m, '没有找到 #tj-data')
