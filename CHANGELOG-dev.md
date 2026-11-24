@@ -164,3 +164,15 @@
 - [修改] 入口改为挂载 `App`、引入 `legacy.css`、调用启动副作用 — `src/main.tsx`
 - [新增] 测试 235 项：路由对照 186 个 hash（58 个 14 类与边界用例、模板全部 23 个字面量链接、90 条提示词与 15 个目录链接）与旧 `parse()` 逐字段相等；旧 `drawNav`、`drawAccount` 在旧页面 vm 里放最小 document 实跑，与新组件服务端渲染按结构比较（3 种存储 × 24 个路由、作品页上下文、5 种登录态）；18 个键写出原文与旧 `store()` 逐字节相等、键集合与模板全部 `store(字面量)` 调用一致；ICONS、NAV、FUNCS、资产目录、`makeZip` 字节对照；存储钩子、跨标签页通知、请求层、云同步时序（fake timers）、路由分派单测 — `tests/parity/shell.test.ts`、`lib.test.ts`、`html.ts`、`tests/unit/*.test.ts`
 - 验证：`vite build` 产物仍只有 `index.html`，`check:dist` 通过；浏览器串行对照（同源共用 localStorage，旧页面写入种子）14 个路由中 12 个顶栏、侧栏、PRO 开关、侧栏收起、logo 高亮、积分显示与旧页面一致，其余 2 个（`#/script/v/…`、`#/storyboard`）的差异来自旧作品页与分镜入口自身的重画与跳转，归 P5-B、P2-B；新页面控制台无报错
+
+### 前端 React 重构 P0 补充：字体、marked 与组件测试基础设施 `packages/web-react`
+
+- [修改] `index.html` 补上旧页面的 Google Fonts 三行（两行 `preconnect` 加 Inter、Noto Sans SC 样式表，原样取自 `site-template.html`），不再回落系统字体 — `packages/web-react/index.html`
+- [修改] `check:dist` 放行 `fonts.googleapis.com` 的样式表外链，其余外链样式表与带 `src` 的脚本仍判失败（已用多一个外链的产物验证会失败）— `packages/web-react/scripts/check-dist.mjs`
+- [新增] 依赖 `marked` 12.0.2（固定，不加 `^`），与旧页面 CDN 的 `marked@12.0.2` 同版本；CDN 文件与 npm 包内 `marked.min.js` 字节相同，ESM 与 UMD 对 99 篇内容输出相同；README 写明用法约定，Markdown 组件仍由 P2-A 接入 — `packages/web-react/package.json`、`README.md`
+- [新增] 测试依赖 `jsdom`、`@testing-library/react`、`@testing-library/dom`（RTL 的 peer）、`@testing-library/jest-dom`、`@testing-library/user-event` — `packages/web-react/package.json`
+- [修改] vitest 改为两个项目：`node`（`tests/**/*.test.ts`，环境与原来相同）与 `dom`（`tests/**/*.test.tsx`，jsdom，载入 `tests/setup-dom.ts`）— `packages/web-react/vitest.config.ts`
+- [新增] 组件测试范例（占位页渲染、user-event 点击、用例间自动清理）与 setup 文件 — `packages/web-react/tests/unit/not-implemented.test.tsx`、`tests/setup-dom.ts`
+- [修改] `engines.node` 收紧为 `^22.22.2 || ^24.15.0 || >=26.0.0`（jsdom 31 的要求）— `packages/web-react/package.json`
+- [修改] `package-lock.json` 只新增 53 个条目与 web-react 工作区自身的依赖声明，已有包版本无变化 — `package-lock.json`
+- 验证：node 项目 341 项不变，dom 项目 3 项，共 344 项通过；`tsc --noEmit` 通过；`dist/` 仍只有 `index.html`，空与有值后端地址下 `check:dist` 均通过；产物 676,918 字节增至 677,200（字体链接 +282；marked 尚未被引用，被引用后约 +34 KB，gzip 约 +10.6 KB）
