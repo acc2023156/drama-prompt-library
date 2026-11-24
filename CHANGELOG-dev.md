@@ -287,3 +287,19 @@
 - [修改] 调用点改用统一入口：`readLegacyTemplate()`、`data.ts` 的 `loadData()` — `shell.test.ts`、`lib.test.ts`、`domain-vibe.test.ts`、`prompts.test.tsx`、`markdown.test.tsx`、`assembler.test.tsx`、`assembler-synthetic.test.tsx`、`account.test.tsx`、`simple-home.test.tsx`、`tests/unit/prompts-pages.test.tsx`
 - [修改] 说明文字 — `packages/web-react/README.md`、`tests/parity/dom-env.ts`（只改注释）
 - 验证：全包 815 项（node 436、dom 379）全部通过，含新增 1 项守卫，收敛前后 32 个文件的用例数逐文件相同；`tsc --noEmit`、`vite build`、`check:dist`（后端地址为空与有值）通过；`LEGACY_TEMPLATE=latest` 只有 `f331924` 引入的 2 项失败；快照里改一处文案，jsdom 项目的 27 项对照与守卫失败；3 个包各 3 处变异（提示词库、组装器、结果页）9 处全部发现
+
+### 前端 React 重构 P5-A：写作引擎 `packages/web-react`
+
+对照基准：旧模板快照 `tests/fixtures/legacy-template.1cf6f6c.html` 第 2634–2860 行（`yqReadStream`、`yqOnce`、`yqChat`、`yqWriteEpisode`、`yqDrive`、`startYq`、`listingSources`、`YQ_WAIT`、`YQ_STREAM`）与作品页推进写作状态的部分（第 2932、2955–2974、2992、3014 行）；`startGen` 为死代码，未迁移。
+
+- [新增] 写作调用层：`yqReadStream`（SSE 按行解析、`[DONE]` 或 `finish_reason` 算结尾、100 秒无新字与 15 分钟上限中止、无结尾标记视为流中断）、`yqOnce`（请求头与请求体与旧页面逐字节一致、`X-Points` 回写积分、401 登出并打开登录面板、402 提示积分用完）、`yqChat`（429 / 5xx / 网络 / 空回应 / 流中断重试 3 次，等 5、15、45 秒，末次换 `YQ_PLAN`）— `src/features/writing/request.ts`
+- [新增] 单集写作 `yqWriteEpisode`：短集一次写完；3 分钟以上先排分场、每批 2 场 3 路并行、每批写好即存盘、失败后只补没写成的批次；重度自检与修稿 — `src/features/writing/episode.ts`
+- [新增] 引擎 `createWritingEngine(deps)`：`driveYq`（旧 `yqDrive`，策划卡、大纲、逐集写、忙线提示、出错写回）、`startYq`、`enterWork`（旧 `viewVibeScript` 前半段的分支）、`redoEpisode`、`resumeWriting`、`retryWork`、`showDraft`、`listingSources`、公开 `yqChat`；新增按作品单飞、`stopYq` / `stopAll`（效果同关闭旧页面）、`subscribe` / `getState`（替代 `yqRefresh`，供 `useSyncExternalStore`）；gen 读写经 `applyGenPatch` 与存储层 — `src/features/writing/engine.ts`
+- [新增] 依赖注入接口与默认实现、模块级单例 `writing` — `src/features/writing/deps.ts`、`index.ts`
+- [新增] 引擎说明：入口签名与副作用、进入作品页的判断条件、流程、单飞与离开页面的语义、与旧实现的差异 — `src/features/writing/README.md`
+- [新增] 对照设施：虚拟时钟、记录写入的 localStorage、可脚本化的 fetch 与 SSE 桩（遵守 AbortSignal）、在 vm 里实跑旧引擎（经 `legacy.ts` 的 `legacyTopLevel`，只给渲染层打桩）— `tests/parity/writing-harness.ts`
+- [新增] 对照测试 152 项：SSE 18 种流 × 逐字节单刀切、随机多刀切、逐字节分片，100 秒 / 15 分钟边界，yqOnce 15 种状态码 × 8 种错误体、登录态 × X-Points × 通行码 × 后端地址 × max_tokens，yqChat 1,500 余条失败序列 × 3 个模型（共 4,321 次）；整段写作 557 个场景逐事件比较（每个 fetch 的 URL、头、请求体原文，每次 `pl.works` / `pl.auth` 写入原文，引擎定时器，重画、登录、提示、推送事件，均带时刻）：思考深度 × 尺度 × 时长矩阵、续写与已存批次、分场与大纲异常、各阶段重试 / 重试用尽 / 400 / 401 / 402 / 403、自检与修稿失败、3 路并行调度与失败、运行中改作品、单飞、进入作品页 69 种状态、失败页与进度条按钮、单集重写、13 个时刻停止后再进入；`listingSources` 514 次 — `tests/parity/writing-request.test.ts`、`writing-drive.test.ts`、`writing-listing.test.ts`
+- [新增] 单测 15 项：订阅与快照、单飞、停止（3 路在途、重试等待、停止后才到的 401 / 402）、公开 `yqChat`、默认依赖与单例、核心文件不 import React 与 lib 运行时、不读全局 — `tests/unit/writing-engine.test.ts`
+- 变异检验：85 处人为改动（等待秒数、重试次数、阈值、条件分支、模型选择、字段名与键序、并行与顺序、停止与单飞），首轮 82 处被发现；补用例后“上一集结尾截 500 字”“重写清 err”被发现；剩 1 处为等价改动（第 4 次换模型时去掉 `model!==YQ_PLAN`，原模型已是 `YQ_PLAN` 时两者相同）
+- 差异：`startYq` 参数改为作品 id；`driveYq` 重复调用返回正在跑的那次任务的 Promise（旧为立即 resolve）；`yqDrive` 循环里 `continue` 之后的不可达代码未迁移
+- 验证：全包 36 个文件 982 项通过（新增 167 项）；`tsc --noEmit` 无错误；`vite build` 与 `check:dist` 通过；未做浏览器验证
