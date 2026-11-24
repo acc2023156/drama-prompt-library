@@ -146,3 +146,21 @@
 - [修改] 旧函数读全局状态处改为显式参数：`wzPrompt` 与 `sxPrompt` 的 `lib`、`wzDupCheck` 的未删除作品列表、`filtered` 的筛选条件 `state`、`styleList` 的 core 画风与条目表和自定义画风、`assemble` 的 core 数据与当前选择、`purgeTrash` 与各 `*Build*` 函数的当前时间与作品列表
 - [新增] 新旧对照测试 106 项（含 3 项元测试），覆盖约 19,300 次新旧输出比较：同一输入分别调用旧实现（抽取器）与新实现并要求深度相等，含边界值与异常结构；随机函数在旧页面 vm 内替换 `Math.random` 为循环序列、新实现传入同序列，时间固定；`cloudPull` 与 `cloudPush` 在旧页面里打桩 `api` 后运行，比较写回结果、推送序列与指纹；元测试检查每个导出都有对照用例，且领域层不触碰 DOM、存储、网络、时钟与全局随机源 — `tests/parity/domain*.test.ts`
 - 验证：`kwOk` 对空值原样返回空值（不是 `false`），对照测试发现后按旧行为保持；对 29 处人为改动（改阈值、改文案、改正则、改排序）逐一运行，全部被测试发现
+
+### 前端 React 重构 P1-A：外壳、存储层、路由与占位页 `packages/web-react`
+
+对照基准：`packages/web/site-template.html` 在 `aa38d84`（该文件最后改动提交 `1cf6f6c`）；追平之后的改动不在本节范围。
+
+- [新增] 存储层：18 个 `pl.*` 键的类型表、`get` / `set` / `remove`，键名、JSON 格式、读失败为 `null`、写 `null` 存字符串 `null` 与旧 `store()` 一致；写 `works` 触发推送钩子（旧 `window.cloudPush`）；`subscribe` 与 `useStored`（`useSyncExternalStore`）同页写入与其他标签页 `storage` 事件都通知；`readWorksRaw` / `writeWorksRaw` 供云同步绕过钩子；`sessionStorage.tjAdmin` 读写；`isPro` — `src/lib/storage.ts`
+- [新增] 请求层：`api`（Bearer、401 登出、`noLogout`、非 2xx 抛带 `status` 的错误）、`adminApi`（`X-Admin-Key`）、`tjApi`、`yqPost`（写作接口的请求头与 `X-Points` 积分回写，网络失败抛可重试错误）、`getPublic`（/hot、/words）、`?k=` 通行码入库；后端地址读 `window.TJ_API_BASE` — `src/lib/api.ts`、`src/lib/auth.ts`
+- [修改] 与旧页面的一处差异：后端 `error` 字段为对象（如 Zod 校验）时取其 `message`，旧页面会显示 `[object Object]`；字符串错误行为不变 — `src/lib/api.ts`
+- [新增] 通用工具：`toast`、`copyText`、`saveBlob`、`saveText`、`makeZip` / `zipCrc`、hash 状态与 `refreshRoute` / `replaceHash` / `replaceStateHash`、导航覆盖 `setNavRoute`（作品页带 vibe 上下文画侧栏）、侧栏 `setPanel`、账户面板 `setAccount` / `openLogin`、提示词目录 `NAV` 与内容索引 — `src/lib/*.ts`
+- [新增] 路由：`parseRoute` 逐行移植旧 `parse()`（不用 react-router），作品与提示词查找改为参数；`RouteView` 按旧 `route()` 顺序分派 14 类路由，含 PRO / 标准版切换；每次 `hashchange`（含合成事件）重新挂载页面 — `src/app/routes.ts`、`RouteView.tsx`、`useRoute.ts`、`App.tsx`
+- [新增] 外壳：顶栏（四大功能高亮、PRO 开关）、侧栏四套目录与作品子目录、目录按钮、账户面板（未登录表单、登录、登出、积分与不限、升级跳会员页、Esc 与点外部关闭）、返回按钮对齐、换页滚到顶、手机收起侧栏；沿用旧 CSS 类名与元素 id — `src/app/Layout.tsx`、`Nav.tsx`、`nav-data.ts`、`Account.tsx`
+- [新增] 云同步与启动：`cloudPull`、`cloudPush`、`purgeTrash` 的存储读写、请求与时序（合并、指纹、过期判定复用 `src/domain/sync.ts`、`works.ts`）；`doLogin`、`refreshMe`、`logout`；启动顺序同旧页面（通行码 → /me → /works → 清理回收站）— `src/app/cloud.ts`、`session.ts`、`boot.ts`
+- [新增] 通用组件：`Icon`（旧 ICONS 运行结果，重复键取后者）、`StepNum`、`BackBar`（含“储存并返回”）、`Toast`、`CopyButton`、`TextModal`（旧 `showModal`）、`Markdown`（旧 `renderMd`，有 `window.marked` 时渲染，否则原文）、`NotImplemented` — `src/components/*`
+- [新增] 旧 CSS 原样迁入（第 12–991 行，980 行，96,834 字节），未改写未拆分 — `src/styles/legacy.css`
+- [新增] 17 个功能占位页（各任务包 feature 目录内，导出页面组件与 props 类型）— `src/features/**`
+- [修改] 入口改为挂载 `App`、引入 `legacy.css`、调用启动副作用 — `src/main.tsx`
+- [新增] 测试 235 项：路由对照 186 个 hash（58 个 14 类与边界用例、模板全部 23 个字面量链接、90 条提示词与 15 个目录链接）与旧 `parse()` 逐字段相等；旧 `drawNav`、`drawAccount` 在旧页面 vm 里放最小 document 实跑，与新组件服务端渲染按结构比较（3 种存储 × 24 个路由、作品页上下文、5 种登录态）；18 个键写出原文与旧 `store()` 逐字节相等、键集合与模板全部 `store(字面量)` 调用一致；ICONS、NAV、FUNCS、资产目录、`makeZip` 字节对照；存储钩子、跨标签页通知、请求层、云同步时序（fake timers）、路由分派单测 — `tests/parity/shell.test.ts`、`lib.test.ts`、`html.ts`、`tests/unit/*.test.ts`
+- 验证：`vite build` 产物仍只有 `index.html`，`check:dist` 通过；浏览器串行对照（同源共用 localStorage，旧页面写入种子）14 个路由中 12 个顶栏、侧栏、PRO 开关、侧栏收起、logo 高亮、积分显示与旧页面一致，其余 2 个（`#/script/v/…`、`#/storyboard`）的差异来自旧作品页与分镜入口自身的重画与跳转，归 P5-B、P2-B；新页面控制台无报错
