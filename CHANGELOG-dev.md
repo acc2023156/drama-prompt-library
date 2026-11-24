@@ -27,6 +27,14 @@
 - [新增] 集成测试 13 项（登录、扣点与退点、已去掉的限流、CORS、热点热词、后台、任务流转、请求体上限）；用 `TEST_DATABASE_URL` 指定测试库 — `test/api.test.js`
 - [修改] `package.json`：`type: module`，脚本改为 `dev` / `start` / `test`，依赖 `dotenv`、`pg`；根目录删 `deploy:worker`、加 `start:worker`、`test:worker`；新增 `package-lock.json` — `package.json`、`packages/worker/package.json`
 
+### 流式写作 `packages/worker`
+
+背景：前端 11-24 起写作默认发 `stream: true`（提交 `bda418c`），该提交的后端部分只在 `cloudflare-worker` 分支的 Cloudflare 版里，这里移植到 Node 版。
+
+- [新增] 写作代理支持流式响应：边收边转发；流结束才判成败，没收到结尾标记（`[DONE]` 或 `finish_reason`）就退点；浏览器中途断开立即取消上游请求，已收到结尾标记算成功、否则退点；每次请求只结算一次 — `src/index.js`
+- [新增] 流式集成测试 4 项（边收边转发且首包先到、无结尾标记退点、上游中途断连退点、浏览器断开取消上游并退点），共 18 项；已用旧版对照验证这些用例能抓到缺口 — `test/api.test.js`
+- [修改] `packages/worker/README.md` 路由表注明写作代理支持流式
+
 ### 数据库迁移 `packages/worker`
 
 - [新增] 引入迁移工具 `node-pg-migrate`：纯 SQL 迁移文件放 `migrations/`，版本记录在 `pgmigrations` 表；单事务、失败整批回滚、带咨询锁并发安全（`--advisory-lock-mode wait`）— `package.json`、`migrations/`

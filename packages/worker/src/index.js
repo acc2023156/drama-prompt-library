@@ -145,16 +145,40 @@ export function createApp(ctx) {
       let model = ''; try { model = JSON.parse(bodyText || '{}').model || ''; } catch {}
       const t0 = Date.now(), ac = new AbortController();
       const timer = cfg.upstreamTimeoutMs ? setTimeout(() => ac.abort('timeout'), cfg.upstreamTimeoutMs) : null;
-      let r, status = 0;
+      let r, status = 0, rd = null, ended = false, settled = false;
+      // 只结算一次：成功就记录；失败、超时、浏览器断线一律退点并记录
+      const settle = async (ok, st) => {
+        if (settled) return null; settled = true; let back = null;
+        if (!ok && chargedUid) back = await refund(db, chargedUid, 1, '写作失败退点').catch(() => null);
+        if (sub === '/v1/chat/completions') logCall(db, ok ? 200 : st, Date.now() - t0, model).catch(() => {});
+        return back;
+      };
+      // 浏览器断线（等上游或串流中）：立刻中止上游请求；已收到结尾标记算成功，否则退点
+      req.signal.addEventListener('abort', () => { ac.abort('client'); if (rd) rd.cancel('client gone').catch(() => {}); settle(ended, ended ? 200 : 499); }, { once: true });
       try {
         r = await fetch(cfg.yqBase + sub, { method: req.method, body: bodyText, signal: ac.signal,
           headers: { 'Authorization': 'Bearer ' + cfg.yqKey, 'Content-Type': 'application/json' } });
         status = r.status;
-      } catch (e) { status = ac.signal.aborted ? 504 : 502; }
+      } catch (e) { status = ac.signal.reason === 'client' ? 499 : ac.signal.aborted ? 504 : 502; }
       if (timer) clearTimeout(timer);
-      const failed = status !== 200;
-      if (failed && chargedUid) { const back = await refund(db, chargedUid, 1, '写作失败退点'); if (back !== null) left = back; }
-      if (sub === '/v1/chat/completions') logCall(db, status, Date.now() - t0, model).catch(() => {});
+      // 串流：边收边转发，等串流结束才判断成败（没收到结尾标记就退点）
+      if (status === 200 && /event-stream/.test(r.headers.get('Content-Type') || '')) {
+        rd = r.body.getReader(); const dec = new TextDecoder(); let tail = '';
+        const stream = new ReadableStream({
+          async pull(ctrl) {
+            try {
+              const { done, value } = await rd.read();
+              if (done) { ctrl.close(); await settle(ended, 502); return; }
+              tail = (tail + dec.decode(value, { stream: true })).slice(-400);
+              if (!ended && (tail.includes('[DONE]') || /"finish_reason":"[a-z_]+"/.test(tail))) ended = true;
+              ctrl.enqueue(value);
+            } catch (e) { ctrl.error(e); await settle(false, ac.signal.aborted ? 504 : 502); }
+          },
+          cancel(reason) { rd.cancel(reason).catch(() => {}); return settle(ended, ended ? 200 : 499); },
+        });
+        return new Response(stream, { status: 200, headers: { ...h, 'Cache-Control': 'no-store', 'Content-Type': 'text/event-stream; charset=utf-8', ...(left === null ? {} : { 'X-Points': String(left) }) } });
+      }
+      const back = await settle(status === 200, status); if (back !== null) left = back;
       const xh = { ...h, 'Cache-Control': 'no-store', ...(left === null ? {} : { 'X-Points': String(left) }) };
       if (!r) return json({ error: status === 504 ? 'upstream timeout' : 'upstream unreachable', retry: true }, status, xh);
       return new Response(r.body, { status: r.status, headers: { ...xh, 'Content-Type': r.headers.get('Content-Type') || 'application/json' } });

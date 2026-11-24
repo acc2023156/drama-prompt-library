@@ -21,6 +21,18 @@ const ORIGIN = DEFAULT_CORS_ORIGINS[2];
 const SECRETS = { AUTH_SECRET: 's', ADMIN_KEY: 'adm', ACCESS_CODE: 'code', JOB_SECRET: 'job', YQ_KEY: 'k', QWEN_KEY: 'k' };
 
 let db, upstream, server, base, token, uid;
+const upstreamClosed = new Set();   // 上游连接被我们这边关闭的流式用例
+
+const frame = t => `data: ${JSON.stringify({ choices: [{ delta: { content: t } }] })}\n\n`;
+/* 流式假上游：sse-ok 正常结束；sse-noend 没有结尾标记就结束；sse-cut 中途断连；sse-slow 一直不结束 */
+function sse(m, res) {
+  res.writeHead(200, { 'Content-Type': 'text/event-stream' });
+  res.write(': PING\n\n'); res.write(frame('he'));
+  res.on('close', () => upstreamClosed.add(m));
+  if (m === 'sse-ok') setTimeout(() => { res.write(frame('llo')); res.write('data: {"choices":[{"delta":{},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n'); res.end(); }, 300);
+  else if (m === 'sse-noend') setTimeout(() => { res.write(frame('x')); res.end(); }, 100);
+  else if (m === 'sse-cut') setTimeout(() => res.destroy(), 100);
+}
 
 const listen = srv => new Promise(r => srv.listen(0, '127.0.0.1', () => r(srv.address().port)));
 async function call(path, { method = 'GET', headers = {}, body } = {}) {
@@ -38,6 +50,7 @@ before(async () => {
   upstream = http.createServer((req, res) => {
     let b = ''; req.on('data', c => b += c); req.on('end', () => {
       const m = b ? JSON.parse(b).model : '';
+      if (String(m).startsWith('sse-')) return sse(m, res);
       res.writeHead(m === 'fail' ? 500 : 200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(m === 'fail' ? { error: 'boom' } : { choices: [{ message: { content: 'ok ' + req.url } }] }));
     });
@@ -183,4 +196,52 @@ test('任务：状态流转、请求体保留期、过期清理', { skip }, asyn
 test('请求体超过上限回 413', { skip }, async () => {
   const r = await call('/works/big', { method: 'POST', headers: authed(), body: { d: 'x'.repeat(200000) } });
   assert.equal(r.status, 413);
+});
+
+/* ---- 流式写作：stream:true 时边收边转发，流结束才判成败 ---- */
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function newUser(phone) { const r = await call('/auth/login', { method: 'POST', body: { phone } }); return { token: r.data.token, uid: r.data.user.uid }; }
+const ledgerOf = async uid => (await call(`/admin/ledger?uid=${uid}`, { headers: admin })).data.ledger.map(x => x.delta);
+const streamChat = (u, model, signal) => fetch(base + '/yq/v1/chat/completions', { method: 'POST', signal,
+  headers: { Origin: ORIGIN, 'Content-Type': 'application/json', Authorization: 'Bearer ' + u.token }, body: JSON.stringify({ model, stream: true, messages: [] }) });
+const drain = async r => { const rd = r.body.getReader(), dec = new TextDecoder(); let out = ''; try { for (;;) { const { done, value } = await rd.read(); if (done) break; out += dec.decode(value, { stream: true }); } } catch { out += '[ERR]'; } return out; };
+async function waitFor(fn, ms = 3000) { const t0 = Date.now(); while (Date.now() - t0 < ms) { if (await fn()) return true; await sleep(50); } return false; }
+
+test('流式：边收边转发，正常结束只扣一次点', { skip }, async () => {
+  const u = await newUser('13700000001');
+  const r = await streamChat(u, 'sse-ok');
+  assert.equal(r.status, 200); assert.match(r.headers.get('content-type'), /event-stream/); assert.equal(r.headers.get('x-points'), '49');
+  const rd = r.body.getReader(), dec = new TextDecoder(), t0 = Date.now();
+  let text = dec.decode((await rd.read()).value);
+  assert.ok(Date.now() - t0 < 250, `首包应在上游结束前到达，实际 ${Date.now() - t0}ms`);   // 上游 300ms 后才结束
+  for (;;) { const { done, value } = await rd.read(); if (done) break; text += dec.decode(value); }
+  assert.ok(text.includes('he') && text.includes('llo') && text.includes('[DONE]'));
+  assert.ok(await waitFor(async () => (await db.query('SELECT 1 FROM yqlog WHERE model=$1 AND status=200', ['sse-ok'])).rowCount === 1));
+  assert.deepEqual(await ledgerOf(u.uid), [-1, 50]);
+});
+
+test('流式：没收到结尾标记就退点', { skip }, async () => {
+  const u = await newUser('13700000002');
+  await drain(await streamChat(u, 'sse-noend'));
+  assert.ok(await waitFor(async () => (await ledgerOf(u.uid)).length === 3));
+  assert.deepEqual(await ledgerOf(u.uid), [1, -1, 50]);
+});
+
+test('流式：上游中途断连就退点', { skip }, async () => {
+  const u = await newUser('13700000003');
+  await drain(await streamChat(u, 'sse-cut'));
+  assert.ok(await waitFor(async () => (await ledgerOf(u.uid)).length === 3));
+  assert.deepEqual(await ledgerOf(u.uid), [1, -1, 50]);
+});
+
+test('流式：浏览器中途断开，取消上游请求并退点', { skip }, async () => {
+  const u = await newUser('13700000004'), ac = new AbortController();
+  const r = await streamChat(u, 'sse-slow', ac.signal);
+  await r.body.getReader().read();   // 收到第一包后断开
+  ac.abort();
+  assert.ok(await waitFor(() => upstreamClosed.has('sse-slow')), '上游连接应被关闭');
+  assert.ok(await waitFor(async () => (await ledgerOf(u.uid)).length === 3), '应退点');
+  assert.deepEqual(await ledgerOf(u.uid), [1, -1, 50]);
+  const st = (await call('/admin/stats', { headers: admin })).data;
+  assert.ok(st.models.some(m => m.model === 'sse-slow' && m.ok === 0));   // 记为失败
 });
