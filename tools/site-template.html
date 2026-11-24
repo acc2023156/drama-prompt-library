@@ -876,6 +876,7 @@ a.pt-banner:hover{transform:translateY(-2px)}
 .acard .tags{display:flex;gap:6px;flex-wrap:wrap}
 .ui-btn.ghost{background:transparent;color:var(--text-2);border-color:var(--line-2)}.ui-btn.ghost:hover{color:#fff}
 .ui-btn.danger-fill{background:#e5484d}.ui-btn[disabled]{opacity:.45;cursor:not-allowed}
+#cstat,#conn{display:none!important}
 .hd-acts{gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
 .acard{position:relative}.pick-box{display:none;position:absolute;top:12px;right:12px;width:24px;height:24px;border-radius:7px;border:2px solid var(--line-2);background:#141416;place-items:center;z-index:2}
 .pick-box svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:3;opacity:0}
@@ -1397,7 +1398,7 @@ function viewAssetEditor(fnId, idx){
 
 /* ---------- 剧本：新增作品（1 策划文件 → 5 确认与建立） ---------- */
 const WZ_DEF = {mode:'paste', doc:'', novel:'', title:'', aud:'女性向', pair:'男女', genre:'都市', pitch:'', hooks:[],
-  lang:'中国用语', glyph:'简体', eps:10, epsCustom:'', mins:3, minsCustom:'', wpm:400, sequel:true, ai:'Claude',
+  lang:'简中词库', glyph:'简体', eps:10, epsCustom:'', mins:3, minsCustom:'', wpm:400, sequel:true, ai:'Claude',
   core:'', diff:'', hero:'', rival:'', world:'', adult:false, dup:null};
 const WZ_OPT = {
   aud:['女性向','男性向','男同志向'], pair:['男女','男男（BL）','女女（GL）'],
@@ -1413,6 +1414,7 @@ const MODE = {
   paste:{tab:'上传剧本', step:'上传剧本', btn:'资产库生成', sub:'产生影片内的生动角色与故事场景'},
   novel:{tab:'汇入小说', step:'汇入小说', btn:'资产库生成', sub:'产生影片内的生动角色与故事场景'},
 };
+const langOf = W => W.lang==='台湾用语'||W.lang==='繁中词库' ? '繁中词库' : '简中词库';
 const wzEps = W => W.eps==='自定义' ? (+W.epsCustom||0) : W.eps;
 const wzMins = W => W.mins==='自定义' ? (+W.minsCustom||0) : W.mins;
 const nfmt = n => n.toLocaleString('en-US');
@@ -1440,7 +1442,7 @@ function wzSettings(W){
     `受众：${W.aud}　配对：${W.pair}　类型：${W.genre}`,
     `一句话卖点：${W.pitch.trim()||'（未填）'}`,
     `核心爽点：${W.hooks.join('、')||'（未选）'}`,
-    `台词用语：${W.lang}；剧本字形：${W.glyph}`,
+    `台词词库：${langOf(W)}（${langOf(W)==='繁中词库'?'台湾用语':'中国大陆用语'}）；剧本字形：${W.glyph}`,
     `第一季规格：共 ${eps} 集，每集约 ${mins} 分钟、约 ${nfmt(per)} 字（每分钟约 ${W.wpm} 字），合计约 ${nfmt(per*eps)} 字。`];
   if(W.style&&W.style!=='无') s.push(`画面风格：${W.style}`);
   if(W.ratio) s.push(`画面比例：${W.ratio}`);
@@ -1461,7 +1463,7 @@ ${main}${supTxt}${avoid}
 
 【写作要求】
 - 字数控制在约 ${nfmt(wzMins(W)*W.wpm)} 字，开头 3 秒内给出钩子，集尾留断章。
-- 台词用${W.lang}，剧本用${W.glyph}字形；动作行和台词照下面的单集格式标示，每句台词标出说话人与情绪。
+- 台词用${langOf(W)==='繁中词库'?'繁中词库（台湾用语）':'简中词库（中国大陆用语）'}，剧本用${W.glyph}字形；动作行和台词照下面的单集格式标示，每句台词标出说话人与情绪。
 - 只写第 1 集，不提前揭示后面集数的信息；与策划文件冲突时以策划文件为准。
 
 【单集剧本格式（提示词库 2.5）】
@@ -1528,13 +1530,13 @@ function viewScriptHome(){
   document.getElementById('view').innerHTML=`
     ${chatHtml()}
     <div class="wz-head" style="margin-top:34px">
-      <div class="row" style="justify-content:space-between"><h1>剧本</h1><div class="row hd-acts">${trashN?`<a class="ui-btn ghost" href="#/trash">${ico('trash')}回收桶 ${trashN}</a>`:''}${works.length?`<button class="ui-btn secondary" id="pickBtn">${ico('check')}删除作品</button>`:''}<a class="btn-white" href="#/script/new">${ico('plus')}新增作品</a></div></div>
+      <div class="row" style="justify-content:space-between"><h1>剧本</h1><div class="row hd-acts">${trashN?`<a class="ui-btn ghost" href="#/trash">${ico('trash')}回收桶 ${trashN}</a>`:''}<a class="btn-white" href="#/script/new">${ico('plus')}新增作品</a>${works.length?`<button class="ui-btn secondary" id="pickBtn">${ico('check')}删除作品</button>`:''}</div></div>
 </div>
     ${works.length?`<div class="works" id="workGrid">${works.map((w,k)=>`<div class="acard" data-wk="${k}"><i class="pick-box">${ico('check')}</i>
         <div class="t">${ico('script')}《${esc(w.title||'未命名')}》<span class="ui-tag ${w.kind==='simple'?'simple':'mode'}" style="margin-left:auto">${esc(workType(w))}</span></div>
         <div class="tags">${[w.W.aud,w.W.pair,w.W.genre].filter(Boolean).map(t=>`<span class="ui-tag">${esc(t)}</span>`).join('')}</div>
         <div class="s">${esc(w.W.pitch||'（未填卖点）')}\n${wzEps(w.W)} 集 × ${wzMins(w.W)} 分钟 · ${new Date(w.time).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
-        <div class="acts"><a class="ui-btn primary" href="${workHref(w)}">${ico(w.kind==='vibe'?'user':'script')}${w.kind==='vibe'?'角色与剧情':'打开'}</a>${w.kind==='simple'?'':`<button class="ui-btn secondary" data-cp="${k}">${ico('copy')}复制提示词</button>`}</div>
+        <div class="acts"><a class="ui-btn primary" href="${workHref(w)}">${ico(w.kind==='vibe'?'user':'script')}${w.kind==='vibe'?'角色与剧情':'打开'}</a></div>
       </div>`).join('')}</div>`
     :`<div class="empty">还没有作品。点右上角「新增作品」开始。<br><span style="font-size:12px">作品只保存在这台电脑的浏览器里。</span></div>`}`;
   document.querySelectorAll('[data-cp]').forEach(b=>b.onclick=e=>copyText(wzPrompt(works[b.dataset.cp].W),e.currentTarget));
@@ -1894,10 +1896,10 @@ function viewScriptNew(workId){
       <div class="inrow"><input class="in" data-f="pitch" placeholder="例：重逢的前任，成了她新公司的老板" value="${esc(W.pitch)}"><button class="btn-o" id="aiPitch">AI 帮我想</button></div>
       <label class="fl">核心爽点（可多选）</label><div class="chips">${WZ_OPT.hooks.map(h=>chip('hooks',h)).join('')}</div>
       <div class="g2" style="margin-top:4px">
-        <div><label class="fl">台词用语 <span class="req">必填</span></label><select class="sel" data-f="lang">${['中国用语','台湾用语'].map(o=>`<option ${o===W.lang?'selected':''}>${o}</option>`).join('')}</select></div>
+        <div><label class="fl">台词词库 <span class="req">必填</span></label><select class="sel" data-f="lang">${['简中词库','繁中词库'].map(o=>`<option ${o===langOf(W)?'selected':''}>${o}</option>`).join('')}</select></div>
         <div><label class="fl">剧本字形</label><select class="sel" data-f="glyph">${['简体','繁体'].map(o=>`<option ${o===W.glyph?'selected':''}>${o}</option>`).join('')}</select></div>
       </div>
-      <p class="hint">用语和字形分开：例如繁体字配中国用语也可以。</p>
+      <p class="hint">词库和字形分开：例如繁体字配简中词库也可以。</p>
     </section>
 
     <section class="step"><h3>${sn(3,"on")}第一季规格</h3>
