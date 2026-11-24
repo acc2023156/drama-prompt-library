@@ -10,6 +10,9 @@
 
   python packages/web/build.py patches
       列出能补进 6.0 各部分的条目。
+
+  python packages/web/build.py data [-o 数据.json]
+      只输出网页内嵌的内容数据（JSON），供 packages/web-react 构建时注入。
 """
 import argparse
 import json
@@ -197,8 +200,8 @@ def build_index():
     return "\n".join(out) + "\n"
 
 
-def build_site():
-    """把全部模块打包进 packages/web/site/index.html（单文件，双击即可打开）。"""
+def site_data():
+    """网页内嵌的内容数据（site 与 data 子命令共用）。"""
     entries = []
     for folder, label in FOLDERS:
         for p in (DOCS / folder).glob("*.md"):
@@ -221,7 +224,12 @@ def build_site():
         "roles": json.loads(read(ROOT / "data" / "roles.json")),
         "changelog": read(ROOT / "CHANGELOG.md"),
     }
-    blob = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
+    return data
+
+
+def build_site():
+    """把全部模块打包进 packages/web/site/index.html（单文件，双击即可打开）。"""
+    blob = json.dumps(site_data(), ensure_ascii=False).replace("</", "<\\/")
     html = read(HERE / "site-template.html").replace("/*__DATA__*/null", blob)
     # 后端地址从环境变量 TIANJI_API_BASE 取（不写进代码）；留空则网页与后端同源
     api_base = os.environ.get("TIANJI_API_BASE", "").strip().rstrip("/")
@@ -234,7 +242,7 @@ def build_site():
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("mode", choices=["all", "video", "patches", "index", "site"])
+    ap.add_argument("mode", choices=["all", "video", "patches", "index", "site", "data"])
     ap.add_argument("--style", default="末日废土写实")
     ap.add_argument("--option", action="append", default=[],
                     help="打开 6.0 的可选条款，可多次使用，如 --option 成人内容（默认全部关闭）")
@@ -247,6 +255,13 @@ def main():
         return print("已生成 README.md")
     if a.mode == "site":
         return print(f"已生成 {build_site()}")
+    if a.mode == "data":
+        text = json.dumps(site_data(), ensure_ascii=False)
+        if a.out:
+            Path(a.out).write_text(text, encoding="utf-8", newline="\n")
+            return print(f"已写入 {a.out}")
+        sys.stdout.reconfigure(encoding="utf-8")
+        return sys.stdout.write(text)
     text = build_all(a.style) if a.mode == "all" else core_prompt(a.style, a.option)
     if a.out:
         Path(a.out).write_text(text, encoding="utf-8", newline="\n")
