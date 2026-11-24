@@ -371,3 +371,19 @@
 - [修改] 调用方只换引用：`Chat.tsx`、`WorkCard.tsx`、`AssetEditorPage.tsx`（`speechRec` 改 `speechCtor`） — `src/features/pro-chat/Chat.tsx`、`src/features/pro-chat/card/WorkCard.tsx`、`src/features/assets/AssetEditorPage.tsx`
 - [修改] 根锁文件里 web-react 的 `engines` 记录对齐 `packages/web-react/package.json`（`^22.22.2 || ^24.15.0 || >=26.0.0`，与 jsdom 31 的要求一致）；此前每次 `npm install` 都会改写这一行；只改这一行，未升级或新增任何依赖 — `package-lock.json`
 - 验证：全包 47 个文件 1323 项通过（新增 9 项，既有对照测试未改动，麦克风相关 45 项结果不变）；`tsc --noEmit` 无错误；`vite build` 与 `check:dist` 通过；`npm ci` 后与 `npm install` 后 `git status` 均干净；Dockerfile 的 build、deps 两个阶段构建通过；未做浏览器验证
+
+### web-react P6-A：追平 f331924（资产回收桶与共用多选）`packages/web-react`
+
+对照基准：由 `1cf6f6c` 推进到 `f331924`（`git log` 核对：两者之间 `site-template.html` 只有这一次改动，也是开工时的最新改动）。验证力度按 2026-11-24 决定：关键路径行为对照。
+
+- [新增] 资产回收桶页 `#/assets-trash`（旧 `viewAssetTrash`）：剩余天数、清空回收桶、还原到我的资产末尾、永久删除，进入与每次写回后清理过期项 — `src/features/assets/AssetTrashPage.tsx`、`trash-store.ts`
+- [新增] 领域函数 `purgeAssetTrash`（旧同名函数的纯逻辑：只在有过期项时写回，缺 `trashed` 的项随之丢掉）— `src/domain/asset-trash.ts`
+- [新增] 存储键 `assetsTrash`，键数 18 → 19 — `src/lib/storage.ts`
+- [新增] 路由 `#/assets-trash` 解析为 `{ view: 'tool', tool: 'assets', trash: true }`，分派到回收桶页 — `src/app/routes.ts`、`src/app/RouteView.tsx`
+- [修改] 我的资产：去掉每张卡的“删除”，改为“删除资产”选择模式（勾选框、全选按已选顺序补齐、取消、移到回收桶确认框与提示条），按勾选顺序放到回收桶最前；标题右侧新增回收桶入口与计数；进入时先清理过期项 — `src/features/assets/AssetsHomePage.tsx`
+- [新增] 选择模式样式 `.picking …`（旧模板由 `.works.picking` 放宽而来；`legacy.css` 不改，P6-D 拆分时并回去）— `src/features/assets/assets.css`
+- [修改] 作品页多选同旧 `pickMode`：底栏按钮 `id="pkAll|pkCancel|pkGo"` 改为 `data-pk="all|x|go"`，确认框文案随旧模板改为“把 N 部移到回收桶？” — `src/features/pro-chat/ScriptHomePage.tsx`
+- [修改] 固定快照换成 `legacy-template.f331924.html`（332,119 字节，sha256 `21bd18c2…6500`），删除 `1cf6f6c` 快照（留在 git 历史）；README 改写为可重复的追平 SOP；统一入口与守卫指向新快照 — `tests/fixtures/`、`tests/parity/legacy.ts`、`tests/unit/legacy-snapshot.test.ts`、`packages/web-react/README.md`
+- [修改] 测试随新模板改写：资产首页涉及 `data-del` 的 4 项用例（旧模板已删掉该按钮）改写为选择模式、过期清理与回收桶入口的 11 项；作品页用例的按钮选择器与确认框文案；键表加 `assetsTrash`；路由用例加 3 个 `#/assets-trash` 地址 — `tests/parity/assets-home.test.tsx`、`pro-home.test.tsx`、`lib.test.ts`、`shell.test.ts`、`tests/unit/assets.test.tsx`
+- [新增] 回收桶新旧对照 13 项（空、有数据、过期清理、缺时间项、返回、还原、永久删除、清空、完整流程）、`purgeAssetTrash` 7 组新旧对照、StrictMode 组件测试 2 项 — `tests/parity/assets-trash.test.tsx`、`domain-base.test.ts`、`tests/unit/assets.test.tsx`
+- 验证：变基到 P6-C 之后全包 48 个文件 1350 项（本节新增 27 项），默认（固定快照）与 `LEGACY_TEMPLATE=latest` 都 0 失败；`tsc --noEmit`、`vite build`、`check:dist` 通过；未做浏览器验证
