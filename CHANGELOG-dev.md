@@ -322,3 +322,8 @@
 - 差异：比较时不比较旧 `backDirty` 的内部标记 `data-dirty`（样式表不用它，`dirty` 类与“储存并返回”文字照常比较），由 P1-A 的 `BackBar` 用 props 表达
 - 发现：保存或删除资产后，新侧栏（P1-A `Nav` 订阅 `pl.assets`）立即更新“我的资产”目录，旧页面要到下次换页才重画侧栏
 - 验证：全包 36 个文件 938 项通过（node 451、dom 487）；`tsc --noEmit` 无错误；`vite build` 产物仍只有 `index.html`，`check:dist` 在后端地址为空与 `https://api.example.test/` 下通过；`LEGACY_TEMPLATE=latest` 下 36 项失败（既有 2 项加资产库 34 项，均来自 `f331924`）；未做浏览器验证
+
+### web-react 撤销构建工作流
+
+- [删除] 只构建不发布的工作流 `web-react-build.yml`（push main、pull_request 时安装依赖、类型检查、测试、构建、校验产物）；原因：用户决定去掉未被要求的 CI 工作流 — `.github/workflows/web-react-build.yml`
+- [修改] 受影响的 README 说明：`packages/web-react/README.md` 里没有关于该工作流的文字，无需改动；根 `README.md` 与 `build.py` 对 `.github/workflows` 的描述（发布网站、长剧本任务、热点同步）本就不含它，也未改
