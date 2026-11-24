@@ -115,3 +115,18 @@
 - 旧版不带 CORS 头的响应（热点热词推送、任务回报、413、500）现在也带 CORS 与 `Vary` 头；413、500 响应带 `Cache-Control: no-store`
 - 热点热词推送字段类型不对时归一为默认值：如 `score` 为字符串 `"8"` 存为数字 8（旧版原样存字符串），`cat` 等非字符串存为空串，`ideas` 非数组存为空数组
 - 路径参数按 URL 解码后校验（如 `/works/%41` 视为 id `A`；旧版按原始路径匹配，回 404）
+
+### 前端 React 重构 P0：脚手架与构建链路 `packages/web-react`
+
+方案见 Obsidian `plans/web-react/`；旧页面与发布链路不变，本节只新增新包与校验。
+
+- [新增] `build.py data [-o 文件]` 子命令：输出网页内嵌的内容数据 JSON；`build_site` 里组装数据的部分抽成 `site_data()`，`site`、`all`、`video`（含 `--option 成人内容`）、`patches`、`index` 的输出与改前逐字节一致 — `packages/web/build.py`
+- [新增] workspace 包 `@tianji/web-react`：Vite 8.3.8、React 19.3.1、TypeScript 7.0.2、`@vitejs/plugin-react` 6.3.0、`vite-plugin-singlefile` 2.3.4，产物为 `dist/` 下唯一的 `index.html`；`src/main.tsx` 目前只渲染构建信息占位 — `packages/web-react/package.json`、`vite.config.ts`、`tsconfig.json`、`index.html`、`src/main.tsx`
+- [新增] Vite 插件 `tjInject`：构建与 dev 时把数据 JSON 与 `TIANJI_API_BASE`（去尾部斜杠、留空同源）写进 `index.html`；数据取自 `TJ_DATA` 文件或现调 `build.py data`；`<` 一律转义为 `\u003c` — `plugins/tj-inject.ts`、`plugins/load-data.ts`、`src/data.ts`
+- [新增] 构建后校验脚本：只有 `index.html`、JS/CSS 内联、内嵌数据与 `build.py data` 深度相等、`TJ_API_BASE` 与环境变量规范化结果一致 — `scripts/check-dist.mjs`
+- [新增] 旧实现抽取器：用 acorn 从 `site-template.html`（只读）抽出顶层函数与常量，在 `node:vm` 中运行；`parse()` 冒烟对照 14 项、注入函数单测 9 项（vitest 5.1.1）— `tests/parity/legacy.ts`、`tests/parity/parse.test.ts`、`tests/unit/inject.test.ts`
+- [新增] 只构建不发布的工作流：push main、pull_request 时安装 web-react 依赖、类型检查、测试、构建、校验产物；不用密钥，不限定仓库（与 `pages.yml`、`publish-site.yml` 不同，它不发布，需要在每个副本上都能校验）— `.github/workflows/web-react-build.yml`
+- [修改] 根目录新增脚本 `build:web-react`、`dev:web-react`、`test:web-react`、`typecheck:web-react`；`package-lock.json` 只新增 web-react 的依赖，已有包版本不变 — `package.json`、`package-lock.json`
+- [修改] `.gitignore` 忽略 `packages/web-react/dist/` — `.gitignore`
+- [新增] 包说明 — `packages/web-react/README.md`
+- 验证：`Dockerfile` 不改，加入新 workspace 后镜像构建通过，镜像 ID 与改前相同；缺 `DATABASE_URL`、`AUTH_SECRET` 时 `server` 仍拒绝启动（退出码 1）
