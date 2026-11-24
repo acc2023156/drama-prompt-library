@@ -45,6 +45,14 @@
 - [修改] 测试改为用迁移建表，新增 2 项用例（迁移文件命名与 Up / Down 规范、执行后无待执行项且可重复执行），共 14 项 — `test/api.test.js`
 - [修改] `packages/worker/README.md` 新增“数据库迁移”章节（命令、规则、上线顺序）；文档中“启动时自动建表”的说法改掉
 
+### 容器镜像
+
+- [新增] `Dockerfile`：三阶段构建（前端静态页、后端生产依赖、运行镜像），一个镜像包含 API 服务、数据库迁移、迁移状态检查和构建好的前端静态页；非 root 用户运行；构建参数 `TIANJI_API_BASE`、`GIT_SHA`、`VERSION` — `Dockerfile`
+- [新增] 入口分发脚本，子命令 `server`（默认）、`migrate`、`migrate:dry`、`migrate:status`，其余命令原样透传 — `docker/entrypoint.sh`
+- [新增] `.dockerignore`：排除 `.git`、`node_modules`、`.env`、本地构建产物；提示词 `*.md` 是前端构建的输入，不排除 — `.dockerignore`
+- [修改] 有未执行迁移而拒绝启动时的提示，同时给出本地与镜像两种执行方式 — `src/server.js`
+- [修改] `packages/worker/README.md` 新增“容器镜像”章节
+
 ### 前端 `packages/web`
 
 - [修改] 后端地址由写死的 `workers.dev` 地址改为建置时环境变量 `TIANJI_API_BASE`（留空表示同源，末尾斜杠自动去掉）— `site-template.html`、`build.py`

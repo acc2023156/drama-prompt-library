@@ -45,6 +45,28 @@ npm run start:worker                                   # 生产
 - 老库接管：初始迁移全部用 `IF NOT EXISTS`，已经有表和数据的库直接跑 `migrate` 即可，数据不动、只补上迁移记录。
 - 上线顺序：**先迁移，再发新版本**。K8s 里把 `npm run migrate -w @tianji/worker` 作为发布前的 Job 或 initContainer 执行，迁移账号需要建表权限。
 
+## 容器镜像
+
+仓库根目录的 `Dockerfile` 构建出**一个镜像**，包含全部入口，用子命令切换（`docker/entrypoint.sh`）：
+
+| 命令 | 作用 |
+|---|---|
+| `docker run <镜像>` | 启动 API 服务（默认），监听 `PORT`，默认 8080 |
+| `docker run <镜像> migrate` | 执行待执行的数据库迁移（发布前的 Job 或 initContainer） |
+| `docker run <镜像> migrate:dry` | 只打印将要执行的 SQL |
+| `docker run <镜像> migrate:status` | 已执行 / 待执行；有待执行时退出码为 2 |
+| `docker run <镜像> 其他命令` | 原样执行，例如 `sh` |
+
+```
+docker build -t tianji:dev \
+  --build-arg TIANJI_API_BASE=https://后端域名 \
+  --build-arg GIT_SHA=$(git rev-parse --short HEAD) .
+```
+
+- 以非 root 用户（`node`，uid 1000）运行；容器里没有 `.env`，环境变量直接传入。
+- `/app/site/index.html` 是构建好的前端静态页，后端地址由构建参数 `TIANJI_API_BASE` 写入（留空为同源）；需要静态服务器托管时从该目录复制。
+- 镜像里没有 Python、测试和开发依赖；`/` 可作为存活探测路径。
+
 ## 环境变量
 
 本机从 `.env` 读取（dotenv）；线上直接给环境变量。已存在的环境变量优先于 `.env`。完整示例见 `.env.example`。

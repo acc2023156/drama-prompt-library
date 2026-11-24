@@ -18,7 +18,7 @@ const db = createDb(cfg.databaseUrl, cfg.poolMax);
 // 表结构由迁移管理（npm run migrate），这里只检查：有未执行的迁移就拒绝启动
 const { pending } = await migrationStatus(db);
 if (pending.length) {
-  console.error('数据库有未执行的迁移：\n  ' + pending.join('\n  ') + '\n请先执行：npm run migrate -w @tianji/worker');
+  console.error('数据库有未执行的迁移：\n  ' + pending.join('\n  ') + '\n请先执行迁移：本地 npm run migrate:worker；镜像 docker run <镜像> migrate');
   await db.end(); process.exit(1);
 }
 

@@ -1,0 +1,11 @@
+# 提示词内容（*.md）是前端构建的输入，不能忽略
+.git
+.github
+**/node_modules
+**/.env
+**/.env.*
+!**/.env.example
+packages/web/site
+**/*.log
+Dockerfile
+.dockerignore
