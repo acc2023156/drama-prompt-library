@@ -274,3 +274,16 @@
 - 发现：`npm install` 会把根 `package-lock.json` 里 web-react 的 `engines` 改成与 `packages/web-react/package.json` 一致（`^22.22.2 || ^24.15.0 || >=26.0.0`），锁文件与清单不同步，归 P0，本节未提交该改动
 - 发现：`tests/parity/lib.test.ts`、`tests/parity/shell.test.ts` 各 1 项失败，在不含本节改动的 `3ed5da5` 上同样失败（`f331924` 新增键 `assetsTrash` 与路由 `#/assets-trash`），不属本节范围，未改
 - 验证：全包 31 个文件 814 项，812 通过（含本节 127 项），2 项为上条的既有失败；`tsc --noEmit` 无错误；`vite build` 产物仍只有 `index.html`，`check:dist` 通过；未做浏览器验证
+
+### 前端 React 重构：固定对照基准与测试基础设施收尾 `packages/web-react`
+
+背景：旧模板每天在改，对照基准随之漂移；`f331924`（资产回收站，新增存储键 `assetsTrash` 与路由 `#/assets-trash`）使 `lib.test.ts`、`shell.test.ts` 各 1 项失败。另外 `legacy.ts` 与 `plugins/load-data.ts` 在 jsdom 项目里 import 会抛错，P2、P3 的 6 个包各自写了一份加载旧模板的绕开代码。
+
+- [新增] 旧模板快照：`git show 1cf6f6c:packages/web/site-template.html` 原样存档（329,328 字节，sha256 `e023143e…524e`）；README 写明提交、固定原因、更新办法 — `tests/fixtures/legacy-template.1cf6f6c.html`、`tests/fixtures/README.md`
+- [修改] `legacy.ts` 成为读取旧模板的唯一入口：默认读快照，`LEGACY_TEMPLATE=latest` 读仓库最新模板（给 P6-A 追平用），其他取值报错；新增导出 `readLegacyTemplate`、`legacyScript`、`legacyTopLevel`、`legacyHtml`、`inlineScript` — `tests/parity/legacy.ts`
+- [修改] 路径改用 `fileURLToPath(import.meta.url)` 加 `path.resolve`，不再写 `new URL('相对路径', import.meta.url)`（vitest jsdom 转换会改写它并替换全局 URL），`legacy.ts` 与 `load-data.ts` 在 node、jsdom 两个项目里都能 import — `tests/parity/legacy.ts`、`plugins/load-data.ts`
+- [新增] 快照守卫：快照存在、sha256 与记录一致、README 同步记录 — `tests/unit/legacy-snapshot.test.ts`
+- [删除] 6 个包各自重复的加载层：脚本抽取（`extractTopLevel`、`declaredNames`、`inlineScript`）、模板与 build.py 路径、数据加载（`loadDataDom`、`loadContentData`、`simple-home-data.ts`）、用 `createRequire` 绕开 vitest 加载 `legacy.ts` 的代码；各包的 DOM 对照、桩与快照逻辑保留，断言未改 — `tests/parity/prompts-legacy.ts`、`assembler-legacy-dom.ts`、`static-pages-dom.tsx`、`legacy-page.ts`、`result-legacy.ts`、`simple-home-twin.tsx`、`simple-home-data.ts`
+- [修改] 调用点改用统一入口：`readLegacyTemplate()`、`data.ts` 的 `loadData()` — `shell.test.ts`、`lib.test.ts`、`domain-vibe.test.ts`、`prompts.test.tsx`、`markdown.test.tsx`、`assembler.test.tsx`、`assembler-synthetic.test.tsx`、`account.test.tsx`、`simple-home.test.tsx`、`tests/unit/prompts-pages.test.tsx`
+- [修改] 说明文字 — `packages/web-react/README.md`、`tests/parity/dom-env.ts`（只改注释）
+- 验证：全包 815 项（node 436、dom 379）全部通过，含新增 1 项守卫，收敛前后 32 个文件的用例数逐文件相同；`tsc --noEmit`、`vite build`、`check:dist`（后端地址为空与有值）通过；`LEGACY_TEMPLATE=latest` 只有 `f331924` 引入的 2 项失败；快照里改一处文案，jsdom 项目的 27 项对照与守卫失败；3 个包各 3 处变异（提示词库、组装器、结果页）9 处全部发现

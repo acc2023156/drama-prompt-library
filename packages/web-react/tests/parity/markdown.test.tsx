@@ -1,12 +1,13 @@
 import { fireEvent, render, waitFor } from '@testing-library/react'
 import { beforeAll, describe, expect, it } from 'vitest'
-import { type LegacyDom, loadDataDom, loadLegacyDom } from './prompts-legacy'
+import { type LegacyDom, loadLegacyDom } from './prompts-legacy'
+import { loadData } from './data'
 
 /**
  * Markdown 组件对照：旧 renderMd 在 jsdom 沙箱里真跑，与新 Markdown 组件对全部 99 篇内容比较渲染后的 HTML。
  * 99 = 90 条提示词正文 + 更新记录（去掉首行标题，同旧 viewDoc）+ 6.0 各部分（core.parts 共 8 段）。
  */
-const data = loadDataDom()
+const data = loadData()
 let legacy: LegacyDom
 let M: typeof import('../../src/components/Markdown')
 

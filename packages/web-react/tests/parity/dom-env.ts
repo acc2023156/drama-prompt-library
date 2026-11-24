@@ -1,8 +1,8 @@
 import { JSDOM } from 'jsdom'
 
 /**
- * 在 node 环境里手动装一个 jsdom 窗口当全局（vitest 的 dom 项目里 import.meta.url 会变成 http 地址，
- * 加载不了 tests/parity/data.ts 与 legacy.ts，所以结果页对照放在 node 项目，自己装 DOM）。
+ * 在 node 环境里手动装一个 jsdom 窗口当全局（结果页对照放在 node 项目，自己装 DOM；
+ * legacy.ts 与 plugins/load-data.ts 现在在 node、jsdom 两个项目里都能 import）。
  * 必须在导入 react-dom、@testing-library/react 与被测组件之前调用。
  */
 const FORCE = new Set(['window', 'document', 'navigator', 'localStorage', 'sessionStorage', 'location', 'history', 'Event', 'EventTarget', 'MouseEvent', 'KeyboardEvent', 'Node', 'Element', 'HTMLElement', 'getComputedStyle'])

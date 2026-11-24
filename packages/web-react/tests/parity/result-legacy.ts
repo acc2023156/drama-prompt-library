@@ -1,7 +1,6 @@
-import { readFileSync } from 'node:fs'
 import vm from 'node:vm'
 import { JSDOM } from 'jsdom'
-import { LEGACY_TEMPLATE, MemoryStorage, extractTopLevel } from './legacy'
+import { MemoryStorage, legacyTopLevel } from './legacy'
 import { RecBlob, newCalls, patchWindow } from './result-stubs'
 
 /**
@@ -18,19 +17,8 @@ export interface LegacyPageOptions {
   confirmAnswer?: boolean
 }
 
-function inlineScript(html: string): string {
-  const open = '\n<script>\n'
-  const start = html.indexOf(open)
-  const end = html.lastIndexOf('\n</script>')
-  if (start < 0 || end < start) throw new Error('site-template.html 里没有找到内联 <script>')
-  return html.slice(start + open.length, end)
-}
-
 export function loadLegacyPage(opt: LegacyPageOptions) {
-  const script = inlineScript(readFileSync(LEGACY_TEMPLATE, 'utf8'))
-    .replace('/*__DATA__*/null', () => JSON.stringify(opt.data))
-    .replace("/*__API_BASE__*/''", () => "''")
-  const source = extractTopLevel(script)
+  const source = legacyTopLevel({ data: opt.data })
 
   const dom = new JSDOM('<!doctype html><html><body><div id="view"></div><div class="toast" id="toast"></div></body></html>')
   const win = dom.window as any

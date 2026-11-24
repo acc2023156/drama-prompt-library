@@ -1,6 +1,4 @@
 import { act, fireEvent, render } from '@testing-library/react'
-import { parse } from 'acorn'
-import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import vm from 'node:vm'
 import { vi } from 'vitest'
@@ -8,7 +6,8 @@ import { SimpleHomePage } from '../../src/features/simple/home/SimpleHomePage'
 import { resetHot } from '../../src/features/simple/home/hot'
 import { setWorksPushHook } from '../../src/lib/storage'
 import { getToast, subscribeToast } from '../../src/lib/toast'
-import { LEGACY_TEMPLATE, loadData } from './simple-home-data'
+import { loadData } from './data'
+import { legacyTopLevel } from './legacy'
 
 /**
  * 标准版首页的新旧双跑：旧 viewScriptSimple 在独立 jsdom 窗口里真跑（innerHTML + onclick），
@@ -18,31 +17,6 @@ import { LEGACY_TEMPLATE, loadData } from './simple-home-data'
 
 // jsdom 没有类型声明（不新增依赖），按 any 使用
 const { JSDOM } = createRequire(import.meta.url)('jsdom') as { JSDOM: any }
-
-/*
- * 本文件在 jsdom 环境（.test.tsx）里运行；P0 的 legacy.ts、plugins/load-data.ts 用 new URL(…, import.meta.url) 取路径，
- * jsdom 下全局 URL 被替换，import 即抛错，所以这里自带路径、数据与抽取逻辑（抽取规则与 legacy.ts 的 extractTopLevel 相同）。
- */
-const SKIP_NAMES = new Set(['account', 'accountTrigger', 'SpeechRec'])
-function declaredNames(p: any, out: string[] = []): string[] {
-  if (p.type === 'Identifier') out.push(p.name)
-  else if (p.type === 'ObjectPattern') p.properties.forEach((x: any) => declaredNames(x.value ?? x.argument, out))
-  else if (p.type === 'ArrayPattern') p.elements.forEach((e: any) => e && declaredNames(e, out))
-  else if (p.type === 'AssignmentPattern') declaredNames(p.left, out)
-  else if (p.type === 'RestElement') declaredNames(p.argument, out)
-  return out
-}
-/** 顶层只保留函数、类、变量声明；表达式语句（启动副作用）与依赖 DOM 的常量丢掉。 */
-function extractTopLevel(script: string): string {
-  const kept: string[] = []
-  for (const node of parse(script, { ecmaVersion: 'latest', sourceType: 'script' }).body as any[]) {
-    if (node.type === 'FunctionDeclaration' || node.type === 'ClassDeclaration') kept.push(script.slice(node.start, node.end))
-    else if (node.type === 'VariableDeclaration') {
-      if (!node.declarations.flatMap((d: any): string[] => declaredNames(d.id)).some((n: string) => SKIP_NAMES.has(n))) kept.push(script.slice(node.start, node.end))
-    }
-  }
-  return kept.join('\n')
-}
 
 const NOW = 1795500000000
 /** 固定随机序列（循环）：覆盖 0 附近与接近 1 的值。 */
@@ -67,14 +41,7 @@ export interface Observed {
 
 let scriptCache: string | null = null
 function legacySource(): string {
-  if (scriptCache) return scriptCache
-  const html = readFileSync(LEGACY_TEMPLATE, 'utf8')
-  const open = '\n<script>\n'
-  const start = html.indexOf(open), end = html.lastIndexOf('\n</script>')
-  if (start < 0 || end < start || html.indexOf(open, start + 1) >= 0) throw new Error('site-template.html 里没有找到唯一的内联 <script>')
-  const script = html.slice(start + open.length, end)
-  const withData = script.replace('/*__DATA__*/null', () => JSON.stringify(loadData())).replace("/*__API_BASE__*/''", () => JSON.stringify(''))
-  return (scriptCache = extractTopLevel(withData))
+  return (scriptCache ??= legacyTopLevel({ data: loadData() }))
 }
 
 /** 元素的可比较结构：标签、属性（class 排序、style 取解析后的 cssText、空 class/style 视为无）、input 的当前值、子节点（合并相邻文本、去掉纯空白文本、空白折叠）。 */

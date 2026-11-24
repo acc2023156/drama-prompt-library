@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { FAKE, type Twin, gated, teardown, twin } from './simple-home-twin'
 
 vi.mock('../../src/data', async () => {
-  const { loadData } = await import('./simple-home-data')
+  const { loadData } = await import('./data')
   return { DATA: loadData(), API_BASE: '', parseData: JSON.parse }
 })
 

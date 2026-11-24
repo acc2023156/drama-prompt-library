@@ -2,13 +2,13 @@ import { act } from '@testing-library/react'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { getToast } from '../../src/lib/toast'
 import { A, type Action, type Ep, installData, installNewSideStubs, mountPair, neu, prepareLegacy, readBlob, sleep, stats } from './assembler-harness'
-import { loadContentData } from './assembler-legacy-dom'
+import { loadData } from './data'
 
 /**
  * P2-B 对照：旧 viewAssembler / viewTool('storyboard') 在 jsdom 沙箱里真跑，
  * 与新组件渲染出的 DOM 逐节点比较（含渲染后的 class、style、textarea 值），并在每次操作后比较 localStorage。
  */
-const data = loadContentData()
+const data = loadData()
 const STYLES: string[] = Object.keys(data.core.styles)
 const OPTS: string[] = Object.keys(data.core.options)
 const ADULT = '成人内容'

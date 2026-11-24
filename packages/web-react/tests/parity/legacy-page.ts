@@ -1,8 +1,5 @@
-import { execFileSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import * as jsdomModule from 'jsdom'
+import { legacyHtml } from './legacy'
 
 // tests/parity/jsdom.d.ts（别的任务包写的）只声明了 JSDOM 的一小部分；这里用到 VirtualConsole 与更多选项，按 any 取用，不改共享的声明文件
 const { JSDOM, VirtualConsole } = jsdomModule as any
@@ -12,25 +9,6 @@ const { JSDOM, VirtualConsole } = jsdomModule as any
  * 与 legacy.ts（node:vm 抽取纯函数）互补：这里要真实 DOM、事件与 localStorage。
  * 外部脚本（marked、mammoth 等 CDN）不加载；fetch、confirm、matchMedia 由调用方打桩。
  */
-
-/**
- * 旧页面模板与 build.py 的路径、内容数据：与 legacy.ts、plugins/load-data.ts 同一来源，但不 import 它们。
- * 这两个文件在模块顶层用 new URL(相对路径, import.meta.url)，vitest 的 jsdom 环境里全局 URL 会把它解析成 http 地址，
- * 组件测试（.test.tsx，jsdom）无法载入它们；这里用 node:path 取同样的路径。
- */
-const WEB = resolve(dirname(fileURLToPath(import.meta.url)), '../../../web')
-const LEGACY_TEMPLATE = resolve(WEB, 'site-template.html')
-
-let cachedData: any
-/** build.py data 的内容（对象），整个测试进程只生成一次；TJ_DATA、TJ_PYTHON 的含义同 plugins/load-data.ts。 */
-export function loadData(): any {
-  if (cachedData) return cachedData
-  const env = process.env
-  const text = env.TJ_DATA
-    ? readFileSync(env.TJ_DATA, 'utf8')
-    : execFileSync(env.TJ_PYTHON || 'python3', ['-I', '-B', resolve(WEB, 'build.py'), 'data'], { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 })
-  return (cachedData = JSON.parse(text))
-}
 
 export interface FetchCall {
   url: string
@@ -106,9 +84,7 @@ function dump(s: Storage): Record<string, string> {
  * 之后 go() 清空存储再写种子，避免启动流程（登录态下的 /me、/works 同步）混进对照记录。
  */
 export function loadLegacyPage(opt: LegacyPageOptions): LegacyPage {
-  const html = readFileSync(LEGACY_TEMPLATE, 'utf8')
-    .replace('/*__DATA__*/null', () => JSON.stringify(opt.data))
-    .replace("/*__API_BASE__*/''", () => JSON.stringify(opt.apiBase ?? ''))
+  const html = legacyHtml({ data: opt.data, apiBase: opt.apiBase })
   const errors: string[] = []
   const virtualConsole = new VirtualConsole()
   virtualConsole.on('jsdomError', (e: Error) => errors.push(String(e.stack || e)))

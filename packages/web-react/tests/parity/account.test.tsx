@@ -5,7 +5,8 @@ import { AdminPage } from '../../src/features/account/AdminPage'
 import { HotwordsPage } from '../../src/features/account/HotwordsPage'
 import { TrashPage } from '../../src/features/account/TrashPage'
 import { getToast, subscribeToast } from '../../src/lib/toast'
-import { type DomNode, type FetchCall, type FetchRoutes, type StubReply, domTree, loadData, loadLegacyPage, makeFetch, settle } from './legacy-page'
+import { type DomNode, type FetchCall, type FetchRoutes, type StubReply, domTree, loadLegacyPage, makeFetch, settle } from './legacy-page'
+import { loadData } from './data'
 
 /**
  * 热词、回收站、会员后台（M15）的新旧对照：同一份种子、同一组桩响应、同一串操作，

@@ -1,5 +1,4 @@
 import { parse } from 'acorn'
-import { readFileSync } from 'node:fs'
 import vm from 'node:vm'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ASSET_FN, ASSET_NAV, FUNCS } from '../../src/app/nav-data'
@@ -7,7 +6,7 @@ import { maskPhone, ROLE_NAME } from '../../src/lib/auth'
 import * as S from '../../src/lib/storage'
 import { zipCrc, zipParts } from '../../src/lib/zip'
 import { loadData } from './data'
-import { LEGACY_TEMPLATE, type Legacy, MemoryStorage, loadLegacy } from './legacy'
+import { type Legacy, MemoryStorage, loadLegacy, readLegacyTemplate } from './legacy'
 
 describe('存储格式：set / get 与旧 store() 写出的原文逐字节相等', () => {
   let legacy: Legacy
@@ -47,7 +46,7 @@ describe('存储格式：set / get 与旧 store() 写出的原文逐字节相等
   it('覆盖全部 18 个键：与旧模板里全部 store(<字面量>) 调用的键集合相等', () => {
     expect(S.STORE_KEYS.length).toBe(18)
     expect(Object.keys(samples).sort()).toStrictEqual([...S.STORE_KEYS].sort())
-    const html = readFileSync(LEGACY_TEMPLATE, 'utf8')
+    const html = readLegacyTemplate()
     const script = html.slice(html.indexOf('\n<script>\n') + 10, html.lastIndexOf('\n</script>'))
     const keys = new Set<string>()
     const walk = (n: any): void => {

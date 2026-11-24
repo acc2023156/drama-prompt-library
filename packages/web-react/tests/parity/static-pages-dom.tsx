@@ -1,10 +1,8 @@
 import { render } from '@testing-library/react'
 import type { ReactElement } from 'react'
 import { Toast } from '../../src/components/Toast'
-import { dirname, resolve } from 'node:path'
-import { createRequire } from 'node:module'
-import { fileURLToPath } from 'node:url'
-import type { Legacy } from './legacy'
+import { loadDataJson } from '../../plugins/load-data'
+import { type Legacy, loadLegacy } from './legacy'
 
 /**
  * 静态页（伙伴计划、会员）的新旧 DOM 对照工具。仅用于 jsdom 组件测试（.test.tsx）。
@@ -90,27 +88,16 @@ export function countNodes(s: Snap | Snap[]): number {
 
 let cachedLegacy: Legacy | undefined
 
-/** 绕过 vitest 转换，用 Node 原生 require(esm) 加载（Node 24 原生支持 .ts 类型擦除；两个文件只依赖 node 内置与 acorn）。 */
-const nodeRequire = createRequire(import.meta.url)
-const here = dirname(fileURLToPath(import.meta.url))
-
-/**
- * 加载旧页面沙箱（每个测试文件在 beforeAll 里 await 一次）。
- * legacy.ts 与 plugins/load-data.ts 在模块顶层写了 new URL('相对路径', import.meta.url)；
- * 在 jsdom（web）转换下 vite 会把这种写法改写成 http://localhost 地址，fileURLToPath 随即报错。
- * 所以这里不走 vitest 的模块转换，原样用 Node 加载这两个文件（不改动它们）。
- */
+/** 加载旧页面沙箱（每个测试文件在 beforeAll 里 await 一次）。 */
 export async function loadLegacyPages(): Promise<Legacy> {
   if (cachedLegacy) return cachedLegacy
-  const { loadLegacy } = nodeRequire(resolve(here, 'legacy.ts'))
-  const { loadDataJson } = nodeRequire(resolve(here, '../../plugins/load-data.ts'))
   cachedLegacy = loadLegacy({ data: JSON.parse(loadDataJson()) })
-  return cachedLegacy!
+  return cachedLegacy
 }
 
 /** build.py data 的 JSON 文本（给需要 #tj-data 的真实路由组件用）。 */
 export function siteDataJson(): string {
-  return nodeRequire(resolve(here, '../../plugins/load-data.ts')).loadDataJson()
+  return loadDataJson()
 }
 
 export function legacyPages(): Legacy {

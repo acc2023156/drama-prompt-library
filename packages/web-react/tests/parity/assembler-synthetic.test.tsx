@@ -1,13 +1,13 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import { A, type Action, installData, installNewSideStubs, mountPair, prepareLegacy, stats } from './assembler-harness'
-import { loadContentData } from './assembler-legacy-dom'
+import { loadData } from './data'
 
 /**
  * 真实内容只有 1 个画风、1 个可选条款，覆盖不到多项并存时的排版与顺序。
  * 这里把内容数据换成合成的：3 个画风、3 个可选条款（占位行在开头、中间、末尾且末尾无换行）、
  * 补丁条目跨多个章节、编号 9.12 / 10.1 检验按数值排序，再与旧页面逐节点比较。
  */
-const real = loadContentData()
+const real = loadData()
 const data = structuredClone(real)
 data.core.styles = { 末日废土写实: real.core.styles['末日废土写实'], 古风写实: '古风画风正文\n第二行', '赛博 <朋克>&"': '含特殊字符的画风' }
 data.core.options = { 成人内容: real.core.options['成人内容'], 第二条: '第二条正文，\n两行', 第三条: '第三条' }

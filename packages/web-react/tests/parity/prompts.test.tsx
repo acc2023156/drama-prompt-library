@@ -1,12 +1,13 @@
 import { fireEvent, render } from '@testing-library/react'
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { type LegacyDom, canon, loadDataDom, loadLegacyDom } from './prompts-legacy'
+import { type LegacyDom, canon, loadLegacyDom } from './prompts-legacy'
+import { loadData } from './data'
 
 /**
  * 提示词库（P2-A）对照：旧 viewList / viewEntry / viewDoc 在 jsdom 沙箱里真跑，
  * 与新组件渲染出的 DOM 逐节点比较（结构见 prompts-legacy.ts 的 canon）。
  */
-const data = loadDataDom()
+const data = loadData()
 let legacy: LegacyDom
 let List: typeof import('../../src/features/prompts/PromptListPage')
 let Entry: typeof import('../../src/features/prompts/PromptEntryPage')

@@ -1,13 +1,12 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { readFileSync } from 'node:fs'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { type Route, funcOf, parseRoute } from '../../src/app/routes'
 import { ICONS } from '../../src/components/icons'
 import { NAV, indexContent } from '../../src/lib/content'
 import { loadData } from './data'
 import { navItems, textOf } from './html'
-import { LEGACY_TEMPLATE, type Legacy, MemoryStorage, loadLegacy } from './legacy'
+import { type Legacy, MemoryStorage, loadLegacy, readLegacyTemplate } from './legacy'
 
 const json = <T>(v: T): T => (v === undefined ? v : JSON.parse(JSON.stringify(v)))
 
@@ -38,7 +37,7 @@ const ROUTE_CASES: [string, string][] = [
 
 /** 模板里所有字面量站内链接（不含模板插值的部分）。 */
 function templateHrefs(): string[] {
-  const html = readFileSync(LEGACY_TEMPLATE, 'utf8')
+  const html = readLegacyTemplate()
   return [...new Set([...html.matchAll(/['"](#\/[^'"`$<>\s]*)['"]/g)].map((m) => m[1]))]
 }
 

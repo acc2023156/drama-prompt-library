@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { asmGenreStyle, assemble, OPT_INFO, type AsmCore, type AsmState } from '../../src/domain/assembler'
 import { makeById } from '../../src/domain/library'
@@ -7,7 +6,7 @@ import { sxScript } from '../../src/domain/sx'
 import type { Entry, Gender } from '../../src/domain/types'
 import { epMat, vibeData, vibeLeads, vibeSx } from '../../src/domain/vibe'
 import { loadData } from './data'
-import { LEGACY_TEMPLATE, type Legacy, loadLegacy } from './legacy'
+import { type Legacy, loadLegacy, readLegacyTemplate } from './legacy'
 import { callLegacy, legacyOutcome, legacyWith, lit, norm, outcome, printStats, same, seedLegacyRandom, seqRng, setLegacyStore } from './domain-helpers'
 import { PITCHES } from './domain-fixtures'
 
@@ -152,7 +151,7 @@ describe('asmGenreStyle', () => {
 })
 
 describe('assemble（旧 viewAssembler 内的闭包）', () => {
-  const src = readFileSync(LEGACY_TEMPLATE, 'utf8')
+  const src = readLegacyTemplate()
   const m = src.match(/function assemble\(\)\{[\s\S]*?\n  \}\n/)
   const legacyAssemble = (l: Legacy, st: AsmState, epTxt: string) => {
     if (!m) throw new Error('模板里没有找到 assemble 闭包，需要同步调整抽取方式')

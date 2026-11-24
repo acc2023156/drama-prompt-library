@@ -1,10 +1,10 @@
 import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { loadDataDom } from '../parity/prompts-legacy'
+import { loadData } from '../parity/data'
 
 /** 提示词库页面的交互：筛选、复制、相关功能点击、侧栏高亮（jsdom + testing-library）。 */
-const data = loadDataDom()
+const data = loadData()
 let App: typeof import('../../src/app/App')
 let List: typeof import('../../src/features/prompts/PromptListPage')
 let Entry: typeof import('../../src/features/prompts/PromptEntryPage')

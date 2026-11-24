@@ -1,58 +1,14 @@
-import { parse } from 'acorn'
-import { execFileSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
-import path from 'node:path'
 import vm from 'node:vm'
 import { JSDOM } from 'jsdom'
 import { marked } from 'marked'
-
-/**
- * 本文件在 jsdom 环境（.test.tsx）里运行。P0 的 legacy.ts、plugins/load-data.ts 用 fileURLToPath(new URL(…, import.meta.url))
- * 取路径，jsdom 环境下全局 URL 被替换，import 时即抛 “The URL must be of scheme file”，所以这里自带路径与抽取逻辑（逻辑与 legacy.ts 的 extractTopLevel 相同）。
- */
-const PKG_WEB = path.resolve(import.meta.dirname, '../../../web')
-export const LEGACY_TEMPLATE = path.join(PKG_WEB, 'site-template.html')
-
-/** build.py data 的内容（对象）；TJ_DATA 指向已生成文件时直接读。 */
-export function loadDataDom(): any {
-  const f = process.env.TJ_DATA
-  const text = f ? readFileSync(f, 'utf8') : execFileSync('python3', ['-I', '-B', path.join(PKG_WEB, 'build.py'), 'data'], { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 })
-  return JSON.parse(text)
-}
-
-const SKIP_NAMES = new Set(['account', 'accountTrigger', 'SpeechRec'])
-function declaredNames(pattern: any, out: string[] = []): string[] {
-  if (pattern.type === 'Identifier') out.push(pattern.name)
-  else if (pattern.type === 'ObjectPattern') pattern.properties.forEach((p: any) => declaredNames(p.value ?? p.argument, out))
-  else if (pattern.type === 'ArrayPattern') pattern.elements.forEach((e: any) => e && declaredNames(e, out))
-  else if (pattern.type === 'AssignmentPattern') declaredNames(pattern.left, out)
-  else if (pattern.type === 'RestElement') declaredNames(pattern.argument, out)
-  return out
-}
-function extractTopLevel(script: string): string {
-  const kept: string[] = []
-  for (const node of parse(script, { ecmaVersion: 'latest', sourceType: 'script' }).body as any[]) {
-    if (node.type === 'FunctionDeclaration' || node.type === 'ClassDeclaration') kept.push(script.slice(node.start, node.end))
-    else if (node.type === 'VariableDeclaration') {
-      const names = node.declarations.flatMap((d: any): string[] => declaredNames(d.id))
-      if (!names.some((n: string) => SKIP_NAMES.has(n))) kept.push(script.slice(node.start, node.end))
-    }
-  }
-  return kept.join('\n')
-}
+import { legacyTopLevel } from './legacy'
 
 /**
  * 提示词库对照用：把旧页面顶层函数装进一个真 jsdom 窗口里运行，
  * 旧 viewList / viewEntry / viewDoc / renderMd 直接写这个窗口的 #view，得到真实 DOM 来和新组件比较。
  * 页头 CDN 的 marked@12.0.2 以 npm 的 marked 12.0.2 代替（P0 已核实两者的 marked.min.js 字节相同）。
+ * 旧模板的读取与顶层声明抽取统一在 legacy.ts。
  */
-function inlineScript(html: string): string {
-  const open = '\n<script>\n'
-  const start = html.indexOf(open)
-  const end = html.lastIndexOf('\n</script>')
-  if (start < 0 || end < start) throw new Error('site-template.html 里没有找到内联 <script>')
-  return html.slice(start + open.length, end)
-}
 
 export interface LegacyDom {
   win: any
@@ -66,16 +22,13 @@ export interface LegacyDom {
 }
 
 export function loadLegacyDom(data: unknown): LegacyDom {
-  const script = inlineScript(readFileSync(LEGACY_TEMPLATE, 'utf8'))
-    .replace('/*__DATA__*/null', () => JSON.stringify(data))
-    .replace("/*__API_BASE__*/''", () => JSON.stringify(''))
   const dom = new JSDOM('<!doctype html><html><body><div id="view"></div><div id="toast"></div></body></html>', { runScripts: 'outside-only', url: 'http://localhost/' })
   const win = dom.window as any
   win.marked = marked
   const copied: string[] = []
   Object.defineProperty(win.navigator, 'clipboard', { value: { writeText: async (t: string) => void copied.push(t) }, configurable: true })
   const ctx = dom.getInternalVMContext()
-  vm.runInContext(extractTopLevel(script), ctx, { filename: 'legacy-site-template.js' })
+  vm.runInContext(legacyTopLevel({ data }), ctx, { filename: 'legacy-site-template.js' })
   const run = <T>(expr: string): T => vm.runInContext(expr, ctx) as T
   return {
     win,
