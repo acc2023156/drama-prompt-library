@@ -6,6 +6,7 @@
     "build:web": "npm run build -w @tianji/web",
     "dev:web": "npm run dev -w @tianji/web",
     "dev:worker": "npm run dev -w @tianji/worker",
-    "deploy:worker": "npm run deploy -w @tianji/worker"
+    "start:worker": "npm run start -w @tianji/worker",
+    "test:worker": "npm run test -w @tianji/worker"
   }
 }

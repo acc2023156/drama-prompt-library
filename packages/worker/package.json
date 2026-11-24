@@ -1,12 +1,18 @@
 {
   "name": "@tianji/worker",
   "private": true,
-  "description": "tianji-api：Cloudflare Worker（模型代理、帐号积分、作品、热点、长剧本任务）",
-  "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy"
+  "type": "module",
+  "description": "tianji-api：Node.js + PostgreSQL（模型代理、帐号积分、作品、热点、长剧本任务）",
+  "engines": {
+    "node": ">=20"
   },
-  "devDependencies": {
-    "wrangler": "^4.0.0"
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "dependencies": {
+    "dotenv": "^18.0.10",
+    "pg": "^8.23.1"
   }
 }

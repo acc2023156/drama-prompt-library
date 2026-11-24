@@ -30,6 +30,7 @@ jobs:
         run: python packages/web/build.py site
         env:
           PYTHONUTF8: "1"
+          TIANJI_API_BASE: ${{ vars.TIANJI_API_BASE }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

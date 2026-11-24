@@ -13,6 +13,7 @@
 """
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -143,7 +144,7 @@ def build_index():
         "| 位置 | 内容 |",
         "|---|---|",
         "| `packages/web` | 天玑网站：`site-template.html` + `build.py`，产出单文件 `packages/web/site/index.html` |",
-        "| `packages/worker` | Cloudflare Worker `tianji-api`（见 [packages/worker/README.md](packages/worker/README.md)） |",
+        "| `packages/worker` | 天玑后端 `tianji-api`（Node.js + PostgreSQL，见 [packages/worker/README.md](packages/worker/README.md)） |",
         "| `01-outline` … `07-compliance`、`_meta`、`data` | 提示词内容资料，网站打包时读取 |",
         "| `.github/workflows` | 发布网站、长剧本任务、热点同步 |",
         "",
@@ -219,6 +220,9 @@ def build_site():
     }
     blob = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     html = read(HERE / "site-template.html").replace("/*__DATA__*/null", blob)
+    # 后端地址从环境变量 TIANJI_API_BASE 取（不写进代码）；留空则网页与后端同源
+    api_base = os.environ.get("TIANJI_API_BASE", "").strip().rstrip("/")
+    html = html.replace("/*__API_BASE__*/''", json.dumps(api_base).replace("</", "<\\/"))
     out = HERE / "site" / "index.html"
     out.parent.mkdir(exist_ok=True)
     out.write_text(html, encoding="utf-8", newline="\n")
