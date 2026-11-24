@@ -9,3 +9,5 @@ packages/web/site
 **/*.log
 Dockerfile
 .dockerignore
+packages/worker/dist
+packages/worker/src/generated
