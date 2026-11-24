@@ -8,7 +8,8 @@ import { get, set } from '../../lib/storage'
 import { toast } from '../../lib/toast'
 import { AssetsHomePage } from './AssetsHomePage'
 import type { AssetFn } from './menus'
-import { MicButton, speechRec } from './Mic'
+import { MicButton } from '../../components/MicButton'
+import { speechCtor } from '../../lib/speech'
 import { buildAssetPrompt } from './prompt'
 import { Pv } from './Pv'
 import { type AssetSeed, type AssetState, type SeedItem, fnOf, readAssets, seedBoard } from './seed'
@@ -132,7 +133,7 @@ function Editor({ f, idx }: { f: AssetFn; idx: number | null }) {
     return () => removeEventListener('resize', draw)
   }, [drawTick])
 
-  const mic = !!speechRec()
+  const mic = !!speechCtor()
   const profile = (
     <textarea
       id="pf"

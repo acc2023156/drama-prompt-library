@@ -8,7 +8,7 @@ import { toast } from '../../../lib/toast'
 import { openLogin } from '../../../lib/ui'
 import { closePop, togglePop, usePopOpen } from '../pops'
 import { CARD_PILLS, type CardMenu, type CardOption, type CardPill, QIXING, WC_SEEDS, cardMenus, qxSide } from './options'
-import { speechCtor, useMic } from './speech'
+import { speechCtor, useMic } from '../../../lib/speech'
 import { ThinkSlider, thinkLabel } from './ThinkSlider'
 import type { WorkCardProps } from './types'
 
