@@ -303,3 +303,22 @@
 - 变异检验：85 处人为改动（等待秒数、重试次数、阈值、条件分支、模型选择、字段名与键序、并行与顺序、停止与单飞），首轮 82 处被发现；补用例后“上一集结尾截 500 字”“重写清 err”被发现；剩 1 处为等价改动（第 4 次换模型时去掉 `model!==YQ_PLAN`，原模型已是 `YQ_PLAN` 时两者相同）
 - 差异：`startYq` 参数改为作品 id；`driveYq` 重复调用返回正在跑的那次任务的 Promise（旧为立即 resolve）；`yqDrive` 循环里 `continue` 之后的不可达代码未迁移
 - 验证：全包 36 个文件 982 项通过（新增 167 项）；`tsc --noEmit` 无错误；`vite build` 与 `check:dist` 通过；未做浏览器验证
+||||||| parent of 2f75d23 (docs: record the web-react asset library migration)
+
+### 前端 React 重构 P4-D：资产库（资产首页与节点编辑器）`packages/web-react`
+
+对照基准：旧模板快照 `tests/fixtures/legacy-template.1cf6f6c.html`（`viewAssets` 第 1261–1291 行、`viewAssetEditor` 第 1293–1408 行）；`f331924` 的资产回收站与“我的资产”选择模式不在本节范围，留给 P6-A 追平。
+
+- [新增] 完整资产菜单常量 `ASSET_MENUS`、`FN`（文案、模板、预览格、参考图节点、多选项与默认值），逐字取自旧页面；`fnOf` 只认菜单里的 id，不命中 `constructor` 等原型键 — `src/features/assets/menus.ts`、`seed.ts`
+- [修改] 资产首页替换占位：两张菜单卡与悬停预览、作品导入条（逐项进入编辑器并写 `pl.assetPick`、关闭写 `pl.assetSeed` 为 `null`、全部完成后“去分镜”高亮，目标按旧 `seedBoard`）、我的资产（复制提示词、确认后删除、空状态）；删除与关闭导入条后整页重挂载，同旧页面整页重画；文件名、导出名、props 不变 — `src/features/assets/AssetsHomePage.tsx`、`Pv.tsx`
+- [修改] 节点编辑器替换占位：参考图上传只做预览不保存、名称与档案、多选项（按功能原顺序重排）、风格弹层（页签、搜索、选中后收起，格子高亮沿用旧页面只在重画时更新的时机）、比例与分辨率、按节点位置画连线并随窗口尺寸重画、手改提示词（再改表单即被模板覆盖）、保存与“储存并返回”、带入后标记导入条完成并在全部完成时 0.9 秒后跳分镜；功能 id 不在菜单里时显示资产首页 — `src/features/assets/AssetEditorPage.tsx`、`StylePop.tsx`、`prompt.ts`
+- [新增] 档案框语音输入（旧 `addMic` / `micListen`）：浏览器支持语音识别时才出现话筒，结果接在原文后，原文不以标点结尾时用逗号连接；卸载时停止识别 — `src/features/assets/Mic.tsx`
+- [修改] 提示词搜索的资产功能说明改为从资产库完整菜单取 `desc`，去掉重复的一份；P2-A 对照测试 39 项照常通过 — `src/features/prompts/func-index.ts`
+- [新增] 新旧双跑对照：旧页面在独立 jsdom 窗口整页运行（真实内联脚本与 hashchange 路由），新页面经 `RouteView` 渲染；同一 localStorage 种子与同一组桩（时钟、手动推进的定时器、confirm、剪贴板、FileReader、语音识别、元素尺寸、计算样式），每步比较 `#view` DOM、localStorage 原文、hash、请求、提示条、confirm、剪贴板 — `tests/parity/assets-twin.tsx`
+- [新增] 对照与单测 123 项：资产首页 30 项、编辑器 74 项（8 个功能 × 新建 / 已存 / 带入，`assetPick` 指向别的功能、缺字段、`?i=` 越界与非数字、`$&` 与占位符、未知风格、自定义画风、未知功能、连线层隐藏；旧代码 21 个事件各有用例并断言可见变化）、常量与提示词拼装 15 项、StrictMode 4 项 — `tests/parity/assets-home.test.tsx`、`assets-editor.test.tsx`、`assets-menus.test.ts`、`tests/unit/assets.test.tsx`
+- [新增] 变异检验：源码 53 处人为改动（文案、阈值、键名、键顺序、正则、分支、跳转目标、定时、连线坐标），首轮 49 处被发现、1 处匹配多处未生效；3 处逃过（`assetPick` 键顺序、`seedBoard` 的 kind 判断、导入条标记序号），补 4 个用例后连同修正的 1 处全部被发现
+- 差异：旧页面菜单与“我的资产”用普通对象查 `FN`，`#/assets/constructor` 等原型键会抛错；新页面按未知功能显示资产首页
+- 差异：语音识别在离开编辑器时停止；旧页面不停止，之后的识别结果会写到已移除的输入框并抛错
+- 差异：比较时不比较旧 `backDirty` 的内部标记 `data-dirty`（样式表不用它，`dirty` 类与“储存并返回”文字照常比较），由 P1-A 的 `BackBar` 用 props 表达
+- 发现：保存或删除资产后，新侧栏（P1-A `Nav` 订阅 `pl.assets`）立即更新“我的资产”目录，旧页面要到下次换页才重画侧栏
+- 验证：全包 36 个文件 938 项通过（node 451、dom 487）；`tsc --noEmit` 无错误；`vite build` 产物仍只有 `index.html`，`check:dist` 在后端地址为空与 `https://api.example.test/` 下通过；`LEGACY_TEMPLATE=latest` 下 36 项失败（既有 2 项加资产库 34 项，均来自 `f331924`）；未做浏览器验证
