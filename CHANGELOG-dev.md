@@ -6,6 +6,15 @@
 
 ---
 
+## 2026-11-25
+
+### GitLab dev 分支与首次合入（`outdoor/tianji`，项目 37）
+
+- [新增] GitLab `dev` 分支：用 API 从合入 CI 文件前的 main `e2f3677` 创建，未设保护；创建未触发流水线
+- [修改] `dfb48ef`、`2d68b5c`、`a45ecf8` 快进推送到 GitHub 与 GitLab 的 main；GitLab main 推送触发校验流水线 #5407，failed：作业实际标签为 `outdoor-verify`（Runner `outdoor-mr-verify`），镜像 `python:3.12-bookworm`，`policy`（15 项）与 `web` 通过，`worker` 因镜像里没有 npm 明确失败
+- [新增] MR !1（main → dev，保留源分支）：MR 流水线 #5408 failed，原因同上；项目未开“流水线成功才能合并”，GitLab 判定可合并，按现有规则合入，合并提交 `37e45ab`
+- 合入后 4 分钟内 dev 上没有流水线：dev 不是受保护分支，`.gitlab-ci.yml` 的 workflow 只对受保护分支的推送运行；项目 CI 配置路径仍为空（未切到 `devops/artifacts`），容器镜像库仍为 0 个，没有构建镜像
+
 ## 2026-11-24
 
 基线：`a3541a4`（monorepo 改造后）。
