@@ -1,15 +1,37 @@
-import { createElement } from 'react'
-import { renderToStaticMarkup } from 'react-dom/server'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { RouteView } from '../../src/app/RouteView'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { parseRoute } from '../../src/app/routes'
 import { MemoryStorage } from '../parity/legacy'
 
 const deps = { entryFolder: () => '02-adaptation', findWork: (id: string) => (id === 'wabc' ? { id, title: 't' } : undefined) }
-const pkgOf = (hash: string) => {
-  const html = renderToStaticMarkup(createElement(RouteView, { route: parseRoute(hash, deps) }))
-  return html.match(/data-placeholder="([^"]+)"/)?.[1] ?? (html === '' ? '(空)' : html)
+
+/**
+ * 页面组件 → 所属任务包。按组件名判断分派，不渲染：占位页被真实页面替换后这里不用改，
+ * 页面模块 import 时会读 #tj-data（src/data.ts），所以先放一个空内容的假 document 再动态 import。
+ */
+const PKG_OF: Record<string, string> = {
+  MembershipPage: 'P2-C', PartnerPage: 'P2-C',
+  PromptEntryPage: 'P2-A', PromptListPage: 'P2-A', ChangelogPage: 'P2-A',
+  AssemblerPage: 'P2-B', StoryboardEntry: 'P2-B',
+  AdminPage: 'P2-D', HotwordsPage: 'P2-D', TrashPage: 'P2-D',
+  SimpleHomePage: 'P3-A', SimpleResultPage: 'P3-B',
+  ScriptHomePage: 'P4-A', ScriptFormPage: 'P4-C', AssetsHomePage: 'P4-D', AssetEditorPage: 'P4-D',
+  WorkPage: 'P5-B',
 }
+let RouteView: typeof import('../../src/app/RouteView').RouteView
+const pkgOf = (hash: string) => {
+  const el = RouteView({ route: parseRoute(hash, deps) }) as { type: { name: string } } | null
+  return el === null ? '(空)' : (PKG_OF[el.type.name] ?? `未登记的组件 ${el.type.name}`)
+}
+
+beforeAll(async () => {
+  const empty = JSON.stringify({ groups: [], entries: [], core: { parts: [], styles: {}, options: {} }, roles: {}, changelog: '' })
+  vi.stubGlobal('window', { TJ_API_BASE: '' })
+  vi.stubGlobal('document', { getElementById: (id: string) => (id === 'tj-data' ? { textContent: empty } : null) })
+  ;({ RouteView } = await import('../../src/app/RouteView'))
+})
+afterAll(() => {
+  vi.unstubAllGlobals()
+})
 
 let mem: MemoryStorage
 beforeEach(() => {
@@ -17,7 +39,7 @@ beforeEach(() => {
   vi.stubGlobal('localStorage', mem)
 })
 afterEach(() => {
-  vi.unstubAllGlobals()
+  vi.stubGlobal('localStorage', undefined)
 })
 
 /** 期望值即方案文档 web-react-routes 判定表的“所属任务包”一列。 */

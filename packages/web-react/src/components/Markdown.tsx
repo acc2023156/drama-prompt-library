@@ -1,18 +1,11 @@
+import { marked } from 'marked'
 import { useLayoutEffect, useRef } from 'react'
 import { copyText } from '../lib/clipboard'
 import { icoHtml } from './Icon'
 
-declare global {
-  interface Window {
-    marked?: { parse(md: string, opt: { gfm: boolean; breaks: boolean }): string }
-  }
-}
-
-const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
-
-/** markdown 转 HTML：同旧 renderMd，有 window.marked 时用它（gfm、不转换单换行），否则原文放进 pre。 */
+/** markdown 转 HTML：同旧 renderMd 的 marked 调用（gfm、不转换单换行）。marked 锁 12.0.2，与旧页面同版本。 */
 export function mdHtml(md: string): string {
-  return window.marked ? window.marked.parse(md, { gfm: true, breaks: false }) : '<pre style="white-space:pre-wrap">' + esc(md) + '</pre>'
+  return marked.parse(md, { gfm: true, breaks: false }) as string
 }
 
 /** 渲染后的 DOM 处理（同旧 renderMd）：外链新窗口；每个 pre 换成带“复制”按钮的提示词正文卡片。 */
@@ -44,7 +37,7 @@ export function enhanceMd(box: HTMLElement): void {
 
 /**
  * markdown 正文（仓库内的提示词与更新记录，来自 build.py data，非用户输入）。
- * marked 尚未打包进产物（新增依赖需 P0 合入），此前与旧页面在 marked 加载失败时的表现相同。
+ * 对应旧 renderMd 返回的外层 div：内容经 marked 渲染后做外链与代码卡处理。
  */
 export function Markdown({ md, className }: { md: string; className?: string }) {
   const ref = useRef<HTMLDivElement>(null)
