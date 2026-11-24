@@ -4,3 +4,4 @@ node_modules/
 __pycache__/
 packages/worker/src/generated/
 packages/worker/dist/
+packages/web-react/dist/

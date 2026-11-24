@@ -7,6 +7,10 @@
   "scripts": {
     "build:web": "npm run build -w @tianji/web",
     "dev:web": "npm run dev -w @tianji/web",
+    "build:web-react": "npm run build -w @tianji/web-react",
+    "dev:web-react": "npm run dev -w @tianji/web-react",
+    "test:web-react": "npm run test -w @tianji/web-react",
+    "typecheck:web-react": "npm run typecheck -w @tianji/web-react",
     "build:worker": "npm run build -w @tianji/worker",
     "dev:worker": "npm run dev -w @tianji/worker",
     "start:worker": "npm run start -w @tianji/worker",
