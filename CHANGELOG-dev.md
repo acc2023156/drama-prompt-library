@@ -10,6 +10,8 @@
 
 ### 上手指南 `packages/web`
 
+- [修改] 两段教学视频换成带配乐的剪辑版（720×1280、30fps，约 2.4 MB / 3.5 MB），并移到指南首屏、「打开天玑开始写」按钮之前并排显示；原「看视频学」区块删除，次按钮改为「看图文教程」 — `packages/web/guide/index.html`、`packages/web/guide/video/`
+
 - [新增] 上手指南静态页：图文教程（两条起点、氛围写作设定、资产库、提示词库、常见问题）＋ 两段竖屏教学视频（快速上手 26 秒、氛围写作 50 秒，720×1280）；截图 1600×1000 按原比例显示 — `packages/web/guide/`
 - [新增] 顶栏在 PRO 开关与账户按钮之间加「上手指南」入口，链接到 `guide/`；760px 以下只显示图标 — `packages/web/site-template.html`
 - [修改] `build.py site` 生成 `index.html` 后把 `guide/` 整个复制到 `site/guide/`，GitHub Pages 发布随之带上 — `packages/web/build.py`
