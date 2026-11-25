@@ -18,6 +18,7 @@ import argparse
 import json
 import os
 import re
+import shutil
 import sys
 from pathlib import Path
 
@@ -237,6 +238,11 @@ def build_site():
     out = HERE / "site" / "index.html"
     out.parent.mkdir(exist_ok=True)
     out.write_text(html, encoding="utf-8", newline="\n")
+    # 上手指南是独立静态页（含截图与教学视频），原样复制到 site/guide/，顶栏「上手指南」链接到这里
+    guide_out = out.parent / "guide"
+    if guide_out.exists():
+        shutil.rmtree(guide_out)
+    shutil.copytree(HERE / "guide", guide_out)
     return out
 
 

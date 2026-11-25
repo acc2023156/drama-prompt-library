@@ -30,6 +30,10 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 .tb-seg svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .tb-stat{font-size:14px;color:var(--text-2);white-space:nowrap}
 .account{position:relative;margin-left:auto;flex:none}
+.tb-guide{margin-left:auto;flex:none;height:42px;display:flex;align-items:center;gap:7px;padding:0 14px;border-radius:12px;background:#1d1d20;border:1px solid var(--line);color:#fff;font-weight:700;font-size:14px;white-space:nowrap;text-decoration:none}
+.tb-guide:hover{background:#29292d;border-color:var(--line-2)}
+.tb-guide svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tb-guide + .account{margin-left:0}
 .account-trigger{height:42px;display:flex;align-items:center;gap:9px;padding:0 7px 0 12px;border-radius:12px;background:#1d1d20;border:1px solid var(--line);color:#fff;font-weight:700}
 .account-trigger:hover,.account-trigger[aria-expanded="true"]{background:#29292d;border-color:var(--line-2)}
 .account-trigger .spark{width:17px;height:17px;fill:#fff}
@@ -948,6 +952,7 @@ a.pt-banner:hover{transform:translateY(-2px)}
   .tb-seg{padding:3px;gap:0}
   .tb-pro .pro em{display:none}
   .account-trigger{height:34px;padding:0 4px 0 8px;gap:6px}
+  .tb-guide{height:34px;padding:0 8px}.tb-guide span{display:none}
   .account-trigger .spark{width:14px;height:14px}.account-trigger .points-number{font-size:12px}.account-trigger .account-avatar{width:26px;height:26px;font-size:14px}
   .account-panel{position:fixed;top:62px;right:10px;width:min(390px,calc(100vw - 20px));max-height:calc(100vh - 72px);overflow:auto}
   .membership-page{padding:18px 14px 50px}.membership-close{top:12px;right:12px;width:44px;height:44px}.membership-title{font-size:21px;margin:2px 50px 24px}.billing-row{display:block}.billing-tabs{display:flex;overflow-x:auto}.billing-tabs button{min-width:130px}.billing-links{margin:14px 0 24px;justify-content:center}.plans{display:flex;overflow-x:auto;scroll-snap-type:x mandatory}.plan{min-width:285px;scroll-snap-align:start}.plan-body{padding:24px 22px}.plan-extra{margin:22px -22px -24px;padding:20px 22px}

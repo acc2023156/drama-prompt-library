@@ -8,6 +8,14 @@
 
 ## 2026-11-25
 
+### 上手指南 `packages/web`
+
+- [新增] 上手指南静态页：图文教程（两条起点、氛围写作设定、资产库、提示词库、常见问题）＋ 两段竖屏教学视频（快速上手 26 秒、氛围写作 50 秒，720×1280）；截图 1600×1000 按原比例显示 — `packages/web/guide/`
+- [新增] 顶栏在 PRO 开关与账户按钮之间加「上手指南」入口，链接到 `guide/`；760px 以下只显示图标 — `packages/web/site-template.html`
+- [修改] `build.py site` 生成 `index.html` 后把 `guide/` 整个复制到 `site/guide/`，GitHub Pages 发布随之带上 — `packages/web/build.py`
+- [修改] 同步发布站时一并复制 `guide/` 目录 — `.github/workflows/publish-site.yml`
+- [新增] React 版顶栏同步加入「上手指南」入口与样式（React 版构建产物仍为单文件，上线前需另行带上 `guide/`）— `packages/web-react/src/app/Layout.tsx`、`packages/web-react/src/styles/legacy.css`
+
 ### GitLab dev 分支与首次合入（`outdoor/tianji`，项目 37）
 
 - [新增] GitLab `dev` 分支：用 API 从合入 CI 文件前的 main `e2f3677` 创建，未设保护；创建未触发流水线

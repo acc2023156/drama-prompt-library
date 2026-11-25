@@ -76,6 +76,13 @@ export function Layout({ route, hash, rev, children }: { route: Route; hash: str
         </a>
         <TopSeg route={nav} />
         <ProSwitch />
+        <a className="tb-guide" href="guide/" title="上手指南：图文教程与教学视频" aria-label="上手指南">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M2 5.5C4.5 4 8 4 12 6c4-2 7.5-2 10-.5V19c-2.5-1.5-6-1.5-10 .5-4-2-7.5-2-10-.5Z" />
+            <path d="M12 6v13.5" />
+          </svg>
+          <span>上手指南</span>
+        </a>
         <Account />
       </header>
       <div className="shell">
