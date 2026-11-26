@@ -95,6 +95,13 @@ export default {
       const v = await env.JOBS.get('words:last');
       return v ? new Response(v, { headers: { ...h, 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'max-age=300' } }) : json({ error: 'words unavailable' }, 503, h);
     }
+    // 标签配比：词表不放进网页原始码，存在 KV（tags:v1、tags:v2…），tags:cur 指向现用版号；换版只要上传新版再改 tags:cur
+    if (p === '/tags' && req.method === 'GET') {
+      if (origin && !ALLOW.includes(origin)) return json({ error: 'origin not allowed' }, 403, h);
+      const cur = await env.JOBS.get('tags:cur');
+      const v = cur && await env.JOBS.get('tags:v' + cur);
+      return v ? new Response(v, { headers: { ...h, 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'max-age=300' } }) : json({ error: 'tags unavailable' }, 503, h);
+    }
     if (p === '/hot' && req.method === 'GET') {
       if (origin && !ALLOW.includes(origin)) return json({ error: 'origin not allowed' }, 403, h);
       const v = await env.JOBS.get('hot:last');
